@@ -8,7 +8,7 @@ class block_panopto extends block_base
 	// Set system properties of plugin.
 	function init()
 	{
-        $this->title = "Panopto Focus";
+        $this->title = get_string('pluginname', 'block_panopto');
     }
 
     // Block has global config (display "Settings" link on blocks admin page)
@@ -66,7 +66,7 @@ class block_panopto extends block_base
         
         if(empty($panopto_data->servername) || empty($panopto_data->instancename) || empty($panopto_data->applicationkey))
         {
-			$this->content->text = "Global block configuration is incomplete.<br /><br />Please contact your system administrator.";
+			$this->content->text = get_string('unconfigured', 'block_panopto');
 			$this->content->footer = "";
 			
         	return $this->content;
@@ -76,7 +76,7 @@ class block_panopto extends block_base
         {
 			if(!$panopto_data->sessiongroup_id)
 			{
-				$this->content->text .= "No Panopto course selected.";
+				$this->content->text .= get_string('no_course_selected', 'block_panopto');
 			}
 	        else
 	        {
@@ -86,7 +86,7 @@ class block_panopto extends block_base
 		        // Panopto course was deleted, or an exception was thrown while retrieving course data.
 	        	if($course_info->Access == "Error")
 		        {
-		        	$this->content->text .= "<span class='error'>Error retrieving Panopto course.</span>";
+		        	$this->content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . "</span>";
 		        }
 				else
 				{
@@ -96,7 +96,7 @@ class block_panopto extends block_base
 							<input type='hidden' name='instance' value='$panopto_data->instancename' />
 						</form>";
 		        	
-		        	$this->content->text .= "<div><b>Live Sessions</b></div>";
+		        	$this->content->text .= '<div><b>' . get_string('live_sessions', 'block_panopto') . '</b></div>';
 					$live_sessions = $panopto_data->get_live_sessions();
 			        if(!empty($live_sessions))
 			        {
@@ -111,14 +111,10 @@ class block_panopto extends block_base
 														$live_session_display_name
 														 <span class='nowrap'>
 														 	[<a href='javascript:launchNotes(\"$live_session->LiveNotesURL\")'
-														 		>take notes</a
-													 	  	 >]";
+														 		>" . get_string('take_notes', 'block_panopto') . '</a>]';
 							if($live_session->BroadcastViewerURL)
 							{
-						        $this->content->text .= "
-	        											 	[<a href='$live_session->BroadcastViewerURL' onclick='return startSSO(this)'
-														 		>watch live</a
-													 	  	 >]";
+						        $this->content->text .= "[<a href='$live_session->BroadcastViewerURL' onclick='return startSSO(this)'>" . get_string('watch_live', 'block_panopto') . '</a>]';
 							}
 							$this->content->text .= "
 												 	  	 </span>
@@ -128,10 +124,10 @@ class block_panopto extends block_base
 			        }
 			        else
 			        {
-			        	$this->content->text .= "<div class='listItem'>No live sessions.</div>";
+			        	$this->content->text .= '<div class="listItem">' . get_string('no_live_sessions', 'block_panopto') . '</div>';
 			        }
 			        
-		        	$this->content->text .= "<div class='sectionHeader'><b>Completed Recordings</b></div>";
+		        	$this->content->text .= "<div class='sectionHeader'><b>" . get_string('completed_recordings', 'block_panopto') . '</b></div>';
 			        $completed_deliveries = $panopto_data->get_completed_deliveries();
 			        if(!empty($completed_deliveries))
 			        {
@@ -161,21 +157,21 @@ class block_panopto extends block_base
 			        	{
 			        		$this->content->text .= "</div>";
 			        		$this->content->text .= "<div id='showAllDiv'>";
-			        		$this->content->text .= "[<a id='showAllToggle' href='javascript:toggleHiddenLectures()'>show all</a>]";
+			        		$this->content->text .= "[<a id='showAllToggle' href='javascript:toggleHiddenLectures()'>" . get_string('show_all', 'block_panopto') . '</a>]';
 			        		$this->content->text .= "</div>";
 			        	}
 			        }
 			        else
 			        {
-			        	$this->content->text .= "<div class='listItem'>No completed recordings.</div>";
+			        	$this->content->text .= "<div class='listItem'>" . get_string('no_completed_recordings', 'block_panopto') . '</div>';
 			        }
 			        
 			        if($course_info->AudioPodcastURL)
 			        {
-				        $this->content->text .= "<div class='sectionHeader'><b>Podcast Feeds</b></div>
+				        $this->content->text .= "<div class='sectionHeader'><b>" . get_string('podcast_feeds', 'block_panopto') . "</b></div>
 				        						 <div class='listItem'>
 				        						 	<img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />
-				        							<a href='$course_info->AudioPodcastURL'>Audio Podcast</a>
+				        							<a href='$course_info->AudioPodcastURL'>" . get_string('podcast_audio', 'block_panopto') . "</a>
 				        							<span class='rssParen'>(</span
 				        								><a href='$course_info->AudioRssURL' target='_blank' class='rssLink'>RSS</a
 			        								><span class='rssParen'>)</span>
@@ -185,7 +181,7 @@ class block_panopto extends block_base
 				        	$this->content->text .= "
 				        						 <div class='listItem'>
 			        								<img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />	
-				        						 	<a href='$course_info->VideoPodcastURL'>Video Podcast</a>
+				        						 	<a href='$course_info->VideoPodcastURL'>" . get_string('podcast_video', 'block_panopto') . "</a>
 				        							<span class='rssParen'>(</span
 				        								><a href='$course_info->VideoRssURL' target='_blank' class='rssLink'>RSS</a
 			        								><span class='rssParen'>)</span>
@@ -195,14 +191,14 @@ class block_panopto extends block_base
 			        $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
 			        if(has_capability('moodle/course:update', $context))
 			        {
-				        $this->content->text .= "<div class='sectionHeader'><b>Links</b></div>
+				        $this->content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') . "</b></div>
 				        						 <div class='listItem'>
 				        							<a href='$course_info->CourseSettingsURL' onclick='return startSSO(this)'
-				        								>Course Settings</a>
+				        								>" . get_string('course_settings', 'block_panopto') . "</a>
 			        							 </div>\n";
 				        $system_info = $panopto_data->get_system_info();
 				        $this->content->text .= "<div class='listItem'>
-				        							Download Recorder
+				        							" . get_string('download_recorder', 'block_panopto') . "
 					        							<span class='nowrap'>
 					        								(<a href='$system_info->RecorderDownloadUrl'>Windows</a>
 								   							| <a href='$system_info->MacRecorderDownloadUrl'>Mac</a>)</span>
@@ -242,12 +238,12 @@ class block_panopto extends block_base
 					  			if(hiddenLecturesDiv.style.display == "block")
 					  			{
 					  				hiddenLecturesDiv.style.display = "none";
-					  				showAllToggle.innerHTML = "show all";
+					  				showAllToggle.innerHTML = "' . get_string('show_all', 'block_panopto') . '";
 					  			}
 					  			else
 								{
 					  				hiddenLecturesDiv.style.display = "block";
-					  				showAllToggle.innerHTML = "show less";
+					  				showAllToggle.innerHTML = "' . get_string('show_less', 'block_panopto') . '";
 					  			}
 					  		}
 				    	</script>';
@@ -255,7 +251,7 @@ class block_panopto extends block_base
 	        }
         }
         catch(Exception $e){
-        	$this->content->text .= "<br><br><span class='error'>Error getting Panopto course content.</span>";
+        	$this->content->text .= "<br><br><span class='error'>" . get_string('error_retrieving', 'block_panopto') . "</span>";
 		}
         
 		$this->content->footer = '';
