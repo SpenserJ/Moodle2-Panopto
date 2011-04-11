@@ -19,3 +19,6 @@ Fork the block, fix a bug or add a new feature, and send us a pull-request. Or, 
 * Hook saving the block_config form, to auto-provision the course
 * Convert role_(un)assigned event to only adjust single user in the course
 * Move language-specific strings into lang/en/block_panopto.php
+* * lib/panopto_data.php
+* * SSO.php
+* * views/provisioned_course.html.php
