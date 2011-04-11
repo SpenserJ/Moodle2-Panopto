@@ -21,8 +21,7 @@ if($relogin || (isset($USER->username) && ($USER->username == "guest")))
 	require_logout();
 
 	// Return to this page, minus the "action=relogin" parameter.
-	redirect($CFG->wwwroot .
-				$_SERVER['SCRIPT_NAME'] . 
+	redirect($CFG->wwwroot . "/blocks/panopto/SSO.php" . 
 				"?authCode=$request_auth_code" .
 				"&serverName=$server_name" .
 				"&expiration=$expiration" .
@@ -49,7 +48,7 @@ if(validate_auth_code($request_auth_payload, $request_auth_code))
 	$separator = (strpos($callback_url, "?") ? "&" : "?");
 	$redirect_url = $callback_url . $separator . $response_params . "&authCode=" . $response_auth_code;  
 	
-	// Redirect to Panopto CourseCast login page.
+	// Redirect to Panopto Focus login page.
 	redirect($redirect_url);
 }
 else

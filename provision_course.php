@@ -1,155 +1,86 @@
 <?php
-require_once("lib/panopto_data.php");
 
-// parses query string vars into PHP vars of the same name
-parse_str($_SERVER['QUERY_STRING']);
+require_once(dirname(__FILE__) . '/../../config.php');
+require_once($CFG->libdir . '/formslib.php');
+require_once('lib/panopto_data.php');
 
-if(empty($course_ids))
-{
-	print_header("Provision Courses", "Provision Courses");
-	?>
-	<div id="provisionContents">
-		<form onsubmit="return joinCourseIDs(this)">
-			<input type="hidden" name="return_url" value="<?php echo $return_url ?>" />
-			<input type="hidden" name="course_ids" />
-	
-			<div id="provisionInstructions">
-				Select courses to add to Panopto CourseCast.<br />
-				Multiple selections are possible by Ctrl-clicking (Windows) or Cmd-clicking (Mac).
-			</div>
-			<select id="courseMultiSelect" multiple="multiple">
-				<?php 
-					echo panopto_data::get_moodle_course_options_html();
-				?>
-			</select>
-	
-			<div>		
-				<input type="submit" value="Submit" />
-			</div>	
-		</form>
-	</div>
-	<script type="text/javascript">
-		function joinCourseIDs(form)
-		{
-			var options = form.courseMultiSelect.options;
+class panopto_provision_form extends moodleform {
+  protected $title = '';
+  protected $description = '';
 
-			var selectedOptions = Array();
-			for(var i=0; i<options.length; i++)
-			{
-				var option = options[i];
-				if(option.selected)
-				{
-					selectedOptions.push(option.value);
+  function definition() {
+    global $DB;
+    $mform =& $this->_form;
+    $courses_raw = $DB->get_records('course', null, '', 'id, shortname, fullname');
+    $courses = array();
+		if ($courses_raw) {
+			foreach ($courses_raw as $course) {
+			  $courses[$course->id] = $course->shortname . ': ' . $course->fullname;
 				}
 			}
+		asort($courses);
 
-			form.course_ids.value = selectedOptions.join(",");
+    $select = $mform->addElement('select', 'courses', get_string('provisioncourseselect', 'block_panopto'), $courses);
+    $select->setMultiple(true);
+    $select->setSize(32);
+    $mform->addHelpButton('courses', 'provisioncourseselect', 'block_panopto');
 
-			return form.course_ids.value;
+    $this->add_action_buttons(true, 'Provision');
 		}
-	</script>
-<?php
 }
-else
-{
-	print_header("Provisioning Results", "Provisioning Results");
-	?>
-	<div id="provisionContents">
-	<?php 
-	// Use one panopto_data object for all provisioning calls to avoid instantiating multiple soap clients.
-	// Construct without $moodle_course_id, will be set per course later.
-	$panopto_data = new panopto_data(null);
 
-	$provision_courses = split(",", $course_ids);
-	foreach($provision_courses as $provision_course_id)
-	{
-		if(empty($provision_course_id)) continue;
+require_login();
 		
-		// Set the current Moodle course to retrieve info for / provision.
-		$panopto_data->moodle_course_id = $provision_course_id;
-		$provisioning_data = $panopto_data->get_provisioning_info();
-		?>
-		<div class='courseProvisionResult'>
-			<div class='attribute'>Course Name</div>
-			<div class='value'><?php echo $provisioning_data->ShortName . ": " . $provisioning_data->LongName ?></div>
+$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 							  
-			<div class='attribute'>Instructors</div>
-			<div class='value'>
-				<?php
-				if(!empty($provisioning_data->Instructors))
-				{
-					$instructors = $provisioning_data->Instructors;
-					// Single-element return set comes back as scalar, not array (?)
-					if(!is_array($instructors))
-					{
-						$instructors = array($instructors);
-					}	
-					$instructor_info = array();
-					foreach($instructors as $instructor)
-					{
-						array_push($instructor_info, "$instructor->UserKey ($instructor->FirstName $instructor->LastName &lt;$instructor->Email&gt;)");
-					}
-					
-					echo join("<br />", $instructor_info);
-				}
-				else
-				{
-					?><div class='errorMessage'>No instructors.</div><?php
-				}
-				?>
-			</div>
-			<div class='attribute'>Students</div>
-			<div class='value'>
-				<?php
-				if(!empty($provisioning_data->Students))
-				{
-					$students = $provisioning_data->Students;
-					// Single-element return set comes back as scalar, not array (?)
-					if(!is_array($students))
-					{
-						$students = array($students);
-					}
-					$student_info = array();
-					foreach($students as $student)
-					{
-						array_push($student_info, $student->UserKey);
-					}
-					
-					echo join(", ", $student_info);
-				}
-				else
-				{
-					?><div class='errorMessage'>No students.</div><?php
-				}
-				?>
-			</div>
-			<?php $provisioned_data = $panopto_data->provision_course($provisioning_data); ?>
-			<div class='attribute'>Result</div>
-			<div class='value'>
-			<?php 
-			if(!empty($provisioned_data))
-			{
-			?>
-				<div class='successMessage'>Successfully provisioned course {<?php echo $provisioned_data->PublicID ?>}</div>
-			<?php 
+$context = get_context_instance(CONTEXT_SYSTEM);
+$PAGE->set_context($context);
+
+require_capability('block/panopto:provision_multiple', $context);
+
+$urlparams = array();
+$extraparams = '';
+
+if ($returnurl) {
+    $urlparams['returnurl'] = $returnurl;
+    $extraparams = '&returnurl=' . $returnurl;
 			}
-			else
-			{
-			?>
-				<div class='errorMessage'>Error provisioning course.</div>
-			<?php 
+$PAGE->set_url('/blocks/panopto/provision_course.php', $urlparams);
+$PAGE->set_pagelayout('base');
+
+$mform = new panopto_provision_form($PAGE->url);
+
+if ($mform->is_cancelled()) {
+    redirect(new moodle_url('/admin/settings.php?section=blocksettingpanopto'));
+} else {
+  $provision_title = 'Provision Courses';
+  $PAGE->set_pagelayout('base');
+  $PAGE->set_title($provision_title);
+  $PAGE->set_heading($provision_title);
+  $manage_blocks     = new moodle_url('/admin/blocks.php');
+  $panopto_settings  = new moodle_url('/admin/settings.php?section=blocksettingpanopto');
+  $panopto_provision = new moodle_url('/blocks/panopto/provision_course.php');
+  $PAGE->navbar->add(get_string('blocks'), $manage_blocks);
+  $PAGE->navbar->add('Panopto', $panopto_settings);
+  $PAGE->navbar->add($provision_title, $panopto_provision);
+  echo $OUTPUT->header();
+  
+  if ($data = $mform->get_data()) {
+    $provisioned = array();
+    if ($data) {
+      $panopto_data = new panopto_data(null);
+    	foreach ($data->courses as $course_id) {
+    	  if(empty($course_id)) continue;
+    		// Set the current Moodle course to retrieve info for / provision.
+    		$panopto_data->moodle_course_id = $course_id;
+    		$provisioning_data = $panopto_data->get_provisioning_info();
+    		$provisioned_data  = $panopto_data->provision_course($provisioning_data);
+    		include 'views/provisioned_course.html.php';
 			}
-			?>
-			</div>
-	</div>
-	<?php
 	}
+  } else {
+    $mform->display();
 }
-?>
-</div>
 
-<div id="provisionBackLink">
-	<a href="<?php echo urldecode($return_url) ?>">Back to config</a>
-</div>
-
-<?php print_footer() ?>
+  echo $OUTPUT->footer();
+}

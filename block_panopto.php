@@ -8,8 +8,7 @@ class block_panopto extends block_base
 	// Set system properties of plugin.
 	function init()
 	{
-        $this->title = "Panopto CourseCast";
-        $this->version = 2010012730;
+        $this->title = "Panopto Focus";
     }
 
     // Block has global config (display "Settings" link on blocks admin page)
@@ -77,17 +76,17 @@ class block_panopto extends block_base
         {
 			if(!$panopto_data->sessiongroup_id)
 			{
-				$this->content->text .= "No CourseCast course selected.";
+				$this->content->text .= "No Panopto course selected.";
 			}
 	        else
 	        {
         		// Get course info from SOAP service.
 	        	$course_info = $panopto_data->get_course();
 	        	
-		        // CourseCast course was deleted, or an exception was thrown while retrieving course data.
+		        // Panopto course was deleted, or an exception was thrown while retrieving course data.
 	        	if($course_info->Access == "Error")
 		        {
-		        	$this->content->text .= "<span class='error'>Error retrieving CourseCast course.</span>";
+		        	$this->content->text .= "<span class='error'>Error retrieving Panopto course.</span>";
 		        }
 				else
 				{
@@ -193,7 +192,8 @@ class block_panopto extends block_base
 		                        				 </div>";
 				        }
 			        }
-			        if(isteacheredit($COURSE->id))
+			        $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+			        if(has_capability('moodle/course:update', $context))
 			        {
 				        $this->content->text .= "<div class='sectionHeader'><b>Links</b></div>
 				        						 <div class='listItem'>
@@ -211,13 +211,13 @@ class block_panopto extends block_base
 			        
 					$this->content->text .= '
 						<script type="text/javascript">
-			                // Function to pop up CourseCast live note taker.
+			                // Function to pop up Panopto live note taker.
 			                function launchNotes(url)
 			        		{
 								// Open empty notes window, then POST SSO form to it.
-								var notesWindow = window.open("", "CourseCastNotes", "width=500,height=800,resizable=1,scrollbars=0,status=0,location=0");
+								var notesWindow = window.open("", "PanoptoNotes", "width=500,height=800,resizable=1,scrollbars=0,status=0,location=0");
 								document.SSO.action = url;
-								document.SSO.target = "CourseCastNotes";
+								document.SSO.target = "PanoptoNotes";
 								document.SSO.submit();
 			
 								// Ensure the new window is brought to the front of the z-order.
@@ -255,18 +255,7 @@ class block_panopto extends block_base
 	        }
         }
         catch(Exception $e){
-        	$this->content->text .= "<br><br><span class='error'>Error getting CourseCast course content.</span>";
-        }
-        		        
-        // Block instance configuration convenience link.
-        // Duplicates "edit" icon for discoverability. 
-        if(isteacheredit($COURSE->id))
-		{
-	        $this->content->text .= "<div id='instanceConfigLink'>
-	        							<a href='$CFG->wwwroot/course/view.php?id=$COURSE->id&instanceid={$this->instance->id}&sesskey=$USER->sesskey&blockaction=config'>
-	        								Configure Block...
-        								</a>
-        							 </div>";
+        	$this->content->text .= "<br><br><span class='error'>Error getting Panopto course content.</span>";
 		}
         
 		$this->content->footer = '';

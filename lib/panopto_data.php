@@ -24,12 +24,12 @@ class panopto_data
 		
 	function __construct($moodle_course_id)
 	{
-		global $USER;
+    global $USER, $CFG;
 		
 		// Fetch global settings from DB
-		$this->instancename = get_instancename_setting();
-		$this->servername = get_servername_setting();
-		$this->applicationkey = get_application_key_setting();
+    $this->instancename = $CFG->block_panopto_instance_name;
+    $this->servername = $CFG->block_panopto_server_name;
+    $this->applicationkey = $CFG->block_panopto_application_key;
 		
 		if(!empty($this->servername))
 		{
@@ -81,8 +81,9 @@ class panopto_data
 	// Fetch course name and membership info from DB in preparation for provisioning operation.
 	function get_provisioning_info()
 	{
-		$provisioning_info->ShortName = get_field('course', 'shortname', 'id', $this->moodle_course_id);
-		$provisioning_info->LongName = get_field('course', 'fullname', 'id', $this->moodle_course_id);
+    global $DB;
+    $provisioning_info->ShortName = $DB->get_field('course', 'shortname', array('id' => $this->moodle_course_id));
+    $provisioning_info->LongName = $DB->get_field('course', 'fullname', array('id' => $this->moodle_course_id));
 		$provisioning_info->ExternalCourseID = $this->instancename . ":" . $this->moodle_course_id;
 
 	    $course_context = get_context_instance(CONTEXT_COURSE, $this->moodle_course_id);
@@ -204,10 +205,27 @@ class panopto_data
 	// We need to retrieve the current course mapping in the constructor, so this must be static.
 	static function get_panopto_course_id($moodle_course_id)
 	{
-		return get_field('block_panopto_foldermap', 'panopto_id', 'moodleid', $moodle_course_id);
+    global $DB;
+    return $DB->get_field('block_panopto_foldermap', 'panopto_id', array('moodleid' => $moodle_course_id));
 	}
 	
-	function get_course_options_html($provision_url)
+  // Called by Moodle block instance config save method, so must be static.
+  static function set_panopto_course_id($moodle_course_id, $sessiongroup_id)
+  {
+    global $DB;
+    if($DB->get_records('block_panopto_foldermap', array('moodleid' => $moodle_course_id)))
+    {
+      return $DB->set_field('block_panopto_foldermap', 'panopto_id', $sessiongroup_id, array('moodleid' => $moodle_course_id));
+    }
+    else
+    {
+      $row = (object) array('moodleid' => $moodle_course_id, 'panopto_id' => $sessiongroup_id);
+      
+      return insert_record('block_panopto_foldermap', $row);
+    }
+  }
+  
+  function get_course_options($provision_url)
 	{
 		$is_provisioned = false;
 		$has_selection = false;
@@ -223,23 +241,19 @@ class panopto_data
 				array_push($courses_by_access_level[$course_info->Access], $course_info);
 			}
 			
-			$options = "";
+      $options = array();
+      $selected = $this->sessiongroup_id;
 			foreach(array_keys($courses_by_access_level) as $access_level)
 			{
 				$courses = $courses_by_access_level[$access_level];
-				$options .= "<optgroup label='$access_level'>\n";
+        $group = array();
 				foreach($courses as $course_info)
 				{
-					$selectedText = ($course_info->PublicID == $this->sessiongroup_id) ? " SELECTED" : "";
-					
-					if($selectedText)
-					{
-						$has_selection = true;
-					}
+          if ($course_info->PublicID == $this->sessiongroup_id) { $has_selection = true; }
 					$display_name = s($course_info->DisplayName);
-					$options .= "<option value='$course_info->PublicID' $selectedText>$display_name</option>\n";
+          $group[$course_info->PublicID] = $display_name;
 					
-					if($course_info->ExternalCourseID == decorate_course_id($this->moodle_course_id))
+/*          if($course_info->ExternalCourseID == decorate_course_id($this->moodle_course_id))
 					{
 			 			// Don't display provision link.
 						$is_provisioned = true;
@@ -249,26 +263,26 @@ class panopto_data
 						{
 							$can_sync = true;
 					}
+          }*/
 				}
-				}
-				$options .= "</optgroup>\n";
+        $options[$access_level] = $group;
 			}
 					
-			if(!$has_selection)
+      /*if(!$has_selection)
 			{
 				$options = "<option value=''>-- Select an Existing Course --</option>" . $options;
-			}
+      }*/
 		}
 		else if(isset($panopto_courses))
 		{
-			$options = "<option value=''>-- No Courses Available --</option>";
+      $options = array('Error' => array('-- No Courses Available --'));
 		}
 		else
 		{
-			$options = "<option value=''>!! Unable to retrieve course list !!</option>";
+      $options = array('Error' => array('!! Unable to retrieve course list !!'));
 		}
 		
-		$disabled = (($has_selection || empty($panopto_courses)) ? "disabled='true'" : "");
+/*    $disabled = (($has_selection || empty($panopto_courses)) ? "disabled='true'" : "");
 		$result = "<select id='sessionGroupSelect' name='panopto_course_publicid' $disabled>$options</select>";
 		
 		if(!empty($panopto_courses))
@@ -280,54 +294,20 @@ class panopto_data
 			
 			if(!$is_provisioned)
 			{
-				$result .= "<br><br>- OR -<br><br><a href='$provision_url'>Add Course to Panopto CourseCast</a>";
+        $result .= "<br><br>- OR -<br><br><a href='$provision_url'>Add Course to Panopto Focus</a>";
 			}
 			else if($can_sync)
 			{
 				$result .= "<div id='syncSection'>";
 				$result .= "<br>";
-				$result .= "Adding a course to CourseCast copies the list of instructors and students.<br>";
-				$result .= "To update CourseCast after a change in course enrollment, click the link below:<br><br>";
+        $result .= "Adding a course to Panopto copies the list of instructors and students.<br>";
+        $result .= "To update Panopto after a change in course enrollment, click the link below:<br><br>";
 				$result .= "<a href='$provision_url'><b>Sync User List</b></a>";
 				$result .= "</div>";
 			}
-		}
+    }*/
 		
-		return $result;
-	}
-	
-	// Called by Moodle block instance config save method, so must be static.
-	static function set_panopto_course_id($moodle_course_id, $sessiongroup_id)
-	{
-		if(get_records('block_panopto_foldermap', 'moodleid', $moodle_course_id))
-		{
-			return set_field('block_panopto_foldermap', 'panopto_id', $sessiongroup_id, 'moodleid', $moodle_course_id);
-		}
-		else
-		{
-			$row = (object) array('moodleid' => $moodle_course_id, 'panopto_id' => $sessiongroup_id);
-			
-			return insert_record('block_panopto_foldermap', $row);
-		}
-	}
-	
-	// Gets a list of Moodle courses from the DB and generates drop-down options HTML.
-	static function get_moodle_course_options_html()
-	{
-		$output = "";
-		
-		$courses = get_records('course','','','shortname');
-		if($courses)
-		{
-			foreach($courses as $course)
-			{
-				// HTML-escape course display name
-				$display_name = s("$course->shortname: $course->fullname");
-				$output .= "<option value='$course->id'>$display_name</option>\n";
-			}
-		}
-		
-		return $output;
+    return array('courses' => $options, 'selected' => $this->sessiongroup_id);
 	}
 }
 ?>
