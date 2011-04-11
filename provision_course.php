@@ -53,7 +53,7 @@ $mform = new panopto_provision_form($PAGE->url);
 if ($mform->is_cancelled()) {
     redirect(new moodle_url('/admin/settings.php?section=blocksettingpanopto'));
 } else {
-  $provision_title = 'Provision Courses';
+  $provision_title = get_string('provision_courses', 'block_panopto');
   $PAGE->set_pagelayout('base');
   $PAGE->set_title($provision_title);
   $PAGE->set_heading($provision_title);
@@ -61,7 +61,7 @@ if ($mform->is_cancelled()) {
   $panopto_settings  = new moodle_url('/admin/settings.php?section=blocksettingpanopto');
   $panopto_provision = new moodle_url('/blocks/panopto/provision_course.php');
   $PAGE->navbar->add(get_string('blocks'), $manage_blocks);
-  $PAGE->navbar->add('Panopto', $panopto_settings);
+  $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panopto_settings);
   $PAGE->navbar->add($provision_title, $panopto_provision);
   echo $OUTPUT->header();
   

@@ -10,17 +10,17 @@ class block_panopto_edit_form extends block_edit_form {
     
     if(!empty($panopto_data->servername) && !empty($panopto_data->instancename) && !empty($panopto_data->applicationkey))
     {
-      $mform->addElement('header', 'configheader', 'Select the Panopto CourseCast course to display in this block.');
+      $mform->addElement('header', 'configheader', get_string('block_edit_header', 'block_panopto'));
   
       $params->course_ids = $COURSE->id;
 			$params->return_url = urlencode($_SERVER['REQUEST_URI']);
 			$query_string = http_build_query($params);
 			$provision_url = "$CFG->wwwroot/blocks/panopto/provision_course.php?" . $query_string;
 			$course_list = $panopto_data->get_course_options($provision_url);
-      $mform->addElement('selectgroups', 'config_course', 'Course', $course_list['courses']);
+      $mform->addElement('selectgroups', 'config_course', get_string('course', 'block_panopto'), $course_list['courses']);
       $mform->setDefault('config_course', $course_list['selected']);
     } else {
-      $mform->addElement('static', 'error', '', 'Cannot configure block instance: Global configuration incomplete. Please contact your system administrator.');
+      $mform->addElement('static', 'error', '', get_string('block_edit_error', 'block_panopto'));
     }
   }
 }
