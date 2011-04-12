@@ -33,21 +33,22 @@ class block_panopto extends block_base
 		return true;
 	}
 	
-	// Save per-instance config in custom table instead of mdl_block_instance configdata column
-	function instance_config_save($data)
-	{
-		global $COURSE;
-
-		if(!empty($data->panopto_course_publicid))
-		{
-			return panopto_data::set_panopto_course_id($COURSE->id, $data->panopto_course_publicid);
-		}
-		else
-		{
-			// If server is not set globally, there will be no other form values to push into config.
-			return true;
-		}
-	}
+    // Save per-instance config in custom table instead of mdl_block_instance configdata column
+    function instance_config_save($data) {
+        global $COURSE;
+        
+        if(!empty($data->course)) {
+            $panopto_data = new panopto_data(null);
+            $course_info = panopto_data::set_panopto_course_id($COURSE->id, $data->course);
+            $panopto_data->moodle_course_id = $COURSE->id;
+            $provisioning_data = $panopto_data->get_provisioning_info();
+            $provisioned_data = $panopto_data->provision_course($provisioning_data);
+            return $course_info;
+        } else {
+            // If server is not set globally, there will be no other form values to push into config.
+            return true;
+        }
+    }
     
 	// Generate HTML for block contents
 	function get_content()
