@@ -221,7 +221,7 @@ class panopto_data
     {
       $row = (object) array('moodleid' => $moodle_course_id, 'panopto_id' => $sessiongroup_id);
       
-      return insert_record('block_panopto_foldermap', $row);
+      return $DB->insert_record('block_panopto_foldermap', $row);
     }
   }
   
