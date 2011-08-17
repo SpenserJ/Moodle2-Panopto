@@ -113,9 +113,9 @@ class panopto_data
 			}
 		}
 		
-		// moodle/course:view capability will include all users who can view the course.
-		// Could also use moodle/legacy:student if this turns out to be more appropriate. 
-		$students = get_users_by_capability($course_context, 'moodle/course:view');
+		// Give all enrolled users at least student-level access. Instructors will be filtered out below.
+		// Use get_enrolled_users because, as of Moodle 2.0, capability moodle/course:view no longer corresponds to a participant list.
+		$students = get_enrolled_users($course_context);
 		
 		if(!empty($students))
 		{
