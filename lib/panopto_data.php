@@ -225,12 +225,8 @@ class panopto_data
     }
   }
   
-  function get_course_options($provision_url)
+	function get_course_options()
 	{
-		$is_provisioned = false;
-		$has_selection = false;
-		$can_sync = false;
-		
 		$courses_by_access_level = array("Creator" => array(), "Viewer" => array(), "Public" => array());
 		
 		$panopto_courses = $this->get_courses();
@@ -240,74 +236,30 @@ class panopto_data
 			{
 				array_push($courses_by_access_level[$course_info->Access], $course_info);
 			}
-			
-      $options = array();
-      $selected = $this->sessiongroup_id;
+
+			$options = array();
 			foreach(array_keys($courses_by_access_level) as $access_level)
 			{
 				$courses = $courses_by_access_level[$access_level];
-        $group = array();
+				$group = array();
 				foreach($courses as $course_info)
 				{
-          if ($course_info->PublicID == $this->sessiongroup_id) { $has_selection = true; }
-					$display_name = s($course_info->DisplayName);
-          $group[$course_info->PublicID] = $display_name;
-					
-/*          if($course_info->ExternalCourseID == decorate_course_id($this->moodle_course_id))
-					{
-			 			// Don't display provision link.
-						$is_provisioned = true;
-						
-			 			// If provisioned course is currently selected, display "sync users" link.
-						if($course_info->PublicID == $this->sessiongroup_id)
-						{
-							$can_sync = true;
-					}
-          }*/
+ 					$display_name = s($course_info->DisplayName);
+					$group[$course_info->PublicID] = $display_name;
 				}
-        $options[$access_level] = $group;
+				$options[$access_level] = $group;
 			}
-					
-      /*if(!$has_selection)
-			{
-				$options = "<option value=''>-- Select an Existing Course --</option>" . $options;
-      }*/
 		}
 		else if(isset($panopto_courses))
 		{
-      $options = array('Error' => array('-- No Courses Available --'));
+			$options = array('Error' => array('-- No Courses Available --'));
 		}
 		else
 		{
-      $options = array('Error' => array('!! Unable to retrieve course list !!'));
+			$options = array('Error' => array('!! Unable to retrieve course list !!'));
 		}
-		
-/*    $disabled = (($has_selection || empty($panopto_courses)) ? "disabled='true'" : "");
-		$result = "<select id='sessionGroupSelect' name='panopto_course_publicid' $disabled>$options</select>";
-		
-		if(!empty($panopto_courses))
-		{
-			if($has_selection)
-			{
-				$result .= "<input id='editButton' type='button' value='Edit' onclick='return editCourse()' style='font-size: 0.6em'/>\n";
-			}
-			
-			if(!$is_provisioned)
-			{
-        $result .= "<br><br>- OR -<br><br><a href='$provision_url'>Add Course to Panopto Focus</a>";
-			}
-			else if($can_sync)
-			{
-				$result .= "<div id='syncSection'>";
-				$result .= "<br>";
-        $result .= "Adding a course to Panopto copies the list of instructors and students.<br>";
-        $result .= "To update Panopto after a change in course enrollment, click the link below:<br><br>";
-				$result .= "<a href='$provision_url'><b>Sync User List</b></a>";
-				$result .= "</div>";
-			}
-    }*/
-		
-    return array('courses' => $options, 'selected' => $this->sessiongroup_id);
+
+		return array('courses' => $options, 'selected' => $this->sessiongroup_id);
 	}
 }
 ?>
