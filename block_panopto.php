@@ -38,12 +38,7 @@ class block_panopto extends block_base
         global $COURSE;
         
         if(!empty($data->course)) {
-            $panopto_data = new panopto_data(null);
-            $course_info = panopto_data::set_panopto_course_id($COURSE->id, $data->course);
-            $panopto_data->moodle_course_id = $COURSE->id;
-            $provisioning_data = $panopto_data->get_provisioning_info();
-            $provisioned_data = $panopto_data->provision_course($provisioning_data);
-            return $course_info;
+            return panopto_data::set_panopto_course_id($COURSE->id, $data->course);
         } else {
             // If server is not set globally, there will be no other form values to push into config.
             return true;
