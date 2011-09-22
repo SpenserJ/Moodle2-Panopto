@@ -13,10 +13,6 @@ The original Panopto plugin was written by Panopto for Moodle 1.9 and earlier. I
 Fork the block, fix a bug or add a new feature, and send us a pull-request. Or, if you're not a developer, but you've found a bug, add it to our [issue tracker](https://github.com/Panopto/Moodle-2.0-Plugin-for-Panopto/issues).
 
 ## To do:
-* Rewrite SSO.php
-* Optimize lib/PanoptoSoapClient.php
-* Rewrite db/install.xml to support Moodle 2
-* Convert role_(un)assigned event to only adjust single user in the course
 * Move language-specific strings into lang/en/block_panopto.php
 * * lib/panopto_data.php
 * * SSO.php
