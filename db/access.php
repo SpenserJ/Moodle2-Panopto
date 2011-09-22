@@ -29,9 +29,7 @@
 
 
 $capabilities = array(
-
     'block/panopto:provision_course' => array(
-
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
@@ -40,16 +38,13 @@ $capabilities = array(
             'manager' => CAP_ALLOW
         )
     ),
-
     'block/panopto:provision_multiple' => array(
-
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
             'manager' => CAP_ALLOW
         )
     )
-
 );
 
 
