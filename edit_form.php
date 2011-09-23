@@ -1,4 +1,5 @@
-<?php
+<?php // Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu)
+
 require_once("lib/panopto_data.php");
 
 class block_panopto_edit_form extends block_edit_form

@@ -1,4 +1,4 @@
-<?php
+<?php // Copyright Panopto 2009 - 2011
 
 // Subclasses SoapClient and hand-crafts SOAP parameters to be compatible with ASP.NET web service in non-WSDL mode. 
 class PanoptoSoapClient extends SoapClient

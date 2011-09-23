@@ -17,3 +17,7 @@ Fork the block, fix a bug or add a new feature, and send us a pull-request. Or, 
 * * lib/panopto_data.php
 * * SSO.php
 * * views/provisioned_course.html.php
+
+## Copyright
+
+ Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu)

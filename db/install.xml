@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- Copyright Panopto 2009 - 2011 -->
 <XMLDB PATH="blocks/panopto/db" VERSION="20090610" COMMENT="XMLDB file for Panopto Focus block"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">

@@ -1,4 +1,5 @@
-<?php
+<?php // Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu)
+
 require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once('lib/panopto_data.php');

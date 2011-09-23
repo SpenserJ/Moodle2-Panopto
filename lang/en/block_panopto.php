@@ -1,4 +1,4 @@
-<?php
+<?php // Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu)
 $string['pluginname'] = 'Panopto Focus';
 $string['panopto:provision_course'] = 'Provision a course';
 $string['panopto:provision_multiple'] = 'Provision multiple courses at once';
