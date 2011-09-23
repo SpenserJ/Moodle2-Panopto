@@ -1,4 +1,5 @@
-<?php
+<?php // Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu)
+
 defined('MOODLE_INTERNAL') || die;
 
 if ($ADMIN->fulltree)

@@ -1,4 +1,5 @@
-<?php
+<?php // Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu)
+
 // Prepend the instance name to the Moodle course ID to create an external ID for Panopto Focus.
 function decorate_course_id($moodle_course_id)
 {

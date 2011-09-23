@@ -1,3 +1,5 @@
+<?php // Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu) ?>
+
 <div class='courseProvisionResult'>
     <div class='attribute'>Course Name</div>
     <div class='value'><?php echo $provisioning_data->ShortName . ": " . $provisioning_data->LongName ?></div>

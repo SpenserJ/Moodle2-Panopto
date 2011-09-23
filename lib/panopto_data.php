@@ -1,4 +1,4 @@
-<?php
+<?php // Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu)
 global $CFG;
 if(empty($CFG))
 {
