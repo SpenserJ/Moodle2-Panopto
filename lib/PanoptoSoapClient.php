@@ -29,7 +29,7 @@ class PanoptoSoapClient extends SoapClient
 	public function PanoptoSoapClient($server_name, $apiuser_userkey, $apiuser_authcode)
 	{
 		// Instantiate SoapClient in non-WSDL mode.
-		parent::__construct(null, array('location' => "http://$server_name/Panopto_deployed/Services/ClientData.svc",
+		parent::__construct(null, array('location' => "http://$server_name/Panopto/Services/ClientData.svc",
                                  	    'uri'      => "http://services.panopto.com"));
 		
 		// Cache web service credentials for all calls requiring authentication.
