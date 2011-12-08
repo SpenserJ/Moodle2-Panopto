@@ -55,11 +55,7 @@ require_login();
 $context = get_context_instance(CONTEXT_SYSTEM);
 $PAGE->set_context($context);
 
-$return_url = optional_param('return_url');
-if (!$return_url)
-{
-    $return_url = '/admin/settings.php?section=blocksettingpanopto';
-}
+$return_url = optional_param('return_url', '/admin/settings.php?section=blocksettingpanopto', PARAM_LOCALURL);
 $urlparams['return_url'] = $return_url;
 
 $PAGE->set_url('/blocks/panopto/provision_course.php', $urlparams);
@@ -78,8 +74,8 @@ else
     $PAGE->set_title($provision_title);
     $PAGE->set_heading($provision_title);
 
-    $course_id_param = optional_param('course_id');
-    if ($course_id_param)
+    $course_id_param = optional_param('course_id', 0, PARAM_INT);
+    if ($course_id_param != 0)
     {
         require_capability('block/panopto:provision_course', $context);
 
