@@ -26,11 +26,11 @@ if(empty($CFG))
 require_once ($CFG->libdir . '/weblib.php');
 require_once("lib/block_panopto_lib.php");
 
-$server_name = required_param("serverName");
-$callback_url = required_param("callbackURL");
-$expiration = required_param("expiration");
-$request_auth_code = required_param("authCode");
-$action = optional_param("action");
+$server_name = required_param("serverName", PARAM_HOST);
+$callback_url = required_param("callbackURL", PARAM_URL);
+$expiration = preg_replace('/[^0-9\.]/', '', required_param("expiration", PARAM_RAW)); // A float doesn't have the required precision
+$request_auth_code = required_param("authCode", PARAM_ALPHANUM);
+$action = optional_param("action", "", PARAM_ALPHA);
 
 $relogin = ($action == "relogin");
 
