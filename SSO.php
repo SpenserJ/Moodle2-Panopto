@@ -63,8 +63,12 @@ if(validate_auth_code($request_auth_payload, $request_auth_code))
     // Sign payload with shared key and hash.
     $response_auth_code = generate_auth_code($response_params);
 
+    // Encode user key in case the backslash causes a sequence to be interpreted as an escape sequence (e.g. in the case of usernames that begin with digits)
+    // Maintain the original canonical string to avoid signature mismatch.
+    $response_params_encoded = "serverName=" . $server_name . "&externalUserKey=" . urlencode($user_key) . "&expiration=" . $expiration;
+
     $separator = (strpos($callback_url, "?") ? "&" : "?");
-    $redirect_url = $callback_url . $separator . $response_params . "&authCode=" . $response_auth_code;
+    $redirect_url = $callback_url . $separator . $response_params_encoded . "&authCode=" . $response_auth_code;  
 
     // Redirect to Panopto Focus login page.
     redirect($redirect_url);
