@@ -52,7 +52,12 @@ class panopto_provision_form extends moodleform
 
 require_login();
 
-$context = get_context_instance(CONTEXT_SYSTEM);
+$course_id_param = optional_param('course_id', 0, PARAM_INT);
+if ($course_id_param != 0) {
+  $context = get_context_instance(CONTEXT_COURSE, $course_id_param);
+} else {
+  $context = get_context_instance(CONTEXT_SYSTEM);
+}
 $PAGE->set_context($context);
 
 $return_url = optional_param('return_url', '/admin/settings.php?section=blocksettingpanopto', PARAM_LOCALURL);
