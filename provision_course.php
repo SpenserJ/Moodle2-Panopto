@@ -52,12 +52,17 @@ class panopto_provision_form extends moodleform
 
 require_login();
 
+// Set course context if we are in a course, otherwise use system context.
 $course_id_param = optional_param('course_id', 0, PARAM_INT);
-if ($course_id_param != 0) {
-  $context = get_context_instance(CONTEXT_COURSE, $course_id_param);
-} else {
-  $context = get_context_instance(CONTEXT_SYSTEM);
+if ($course_id_param != 0)
+{
+    $context = get_context_instance(CONTEXT_COURSE, $course_id_param);
 }
+else
+{
+    $context = get_context_instance(CONTEXT_SYSTEM);
+}
+
 $PAGE->set_context($context);
 
 $return_url = optional_param('return_url', '/admin/settings.php?section=blocksettingpanopto', PARAM_LOCALURL);
@@ -80,9 +85,9 @@ else
     $PAGE->set_title($provision_title);
     $PAGE->set_heading($provision_title);
 
-    $course_id_param = optional_param('course_id', 0, PARAM_INT);
     if ($course_id_param != 0)
     {
+        // Course context
         require_capability('block/panopto:provision_course', $context);
 
         $courses = array($course_id_param);
@@ -91,6 +96,7 @@ else
     }
     else
     {
+        // System context
         require_capability('block/panopto:provision_multiple', $context);
 
         $data = $mform->get_data();
