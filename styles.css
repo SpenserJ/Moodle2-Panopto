@@ -16,150 +16,88 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#configPage
-{
-    text-align: center;
-}
 
-#configTable
-{
-    margin-left: auto;
-    margin-right: auto;
-}
+/* Provisioning pages */
 
-.globalConfigSettingName
-{
-    text-align: right;
-}
-
-#provisionContents
-{
-    margin-top: 30px;
-    margin-left: 30px;
-}
-
-#provisionInstructions
-{
-    margin-top: 15px;
-    margin-bottom: 15px;
-}
-
-#courseMultiSelect
-{
-    height: 500px;
-    min-width: 250px;
-}
-
-#batchProvisionResultsHeader
-{
-    font-weight: bold;
-    font-size: 1.2em;
-    margin: 15px;
-}
-
-.courseProvisionResult
+.block_panopto .courseProvisionResult
 {
     border: solid 1px #C0C0C0;
     padding: 5px;
     margin-bottom: 20px;
 }
 
-.courseProvisionResult .attribute
+.block_panopto .courseProvisionResult .attribute
 {
     font-weight: bold;
 }
 
-.courseProvisionResult .value
+.block_panopto .courseProvisionResult .value
 {
     margin-left: 15px;
     margin-bottom: 5px;
 }
 
-.courseProvisionResult .successMessage
+.block_panopto .courseProvisionResult .successMessage
 {
     color: green;
 }
 
-.courseProvisionResult .errorMessage
+.block_panopto .courseProvisionResult .errorMessage
 {
     color: red;
 }
 
-#provisionBackLink
-{
-    margin: 30px;
-}
 
-#instanceConfigLink
-{
-    margin-top: 10px;
-    margin-bottom: 10px;
-    margin-left: 15px;
-}
+/* Block sidebar */
 
-#instanceConfigForm
-{
-    text-align: left;
-}
-
-#instanceConfigHeader
-{
-    margin-bottom: 15px;
-}
-
-.sectionHeader
+.block_panopto .sectionHeader
 {
     margin-top: 10px;
 }
 
-#liveSessionsHeader
-{
-    margin-top: 5px;
-}
-
-#hiddenLecturesDiv
+.block_panopto #hiddenLecturesDiv
 {
     display: none;
 }
 
-#showAllDiv
+.block_panopto #showAllDiv
 {
     margin-top: 5px;
 }
 
-#showAllToggle
+.block_panopto #showAllToggle
 {
     font-weight: bold;
     font-size: 0.8em;
 }
 
-.listItem
+.block_panopto .listItem
 {
     margin-top: 3px;
     font-size: 0.8em;
 }
 
-.listItemAlt
+.block_panopto .listItemAlt
 {
     background: #F0F0F0;
 }
 
-.rssLink
+.block_panopto .rssLink
 {
     font-size: 0.8em;
 }
 
-.rssParen
+.block_panopto .rssParen
 {
     font-size: 0.7em;
 }
 
-.nowrap
+.block_panopto .nowrap
 {
     white-space: nowrap;
 }
 
-.error
+.block_panopto .error
 {
     color: red;
 }
