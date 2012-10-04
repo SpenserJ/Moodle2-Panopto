@@ -54,17 +54,21 @@ require_login(0, false);
 $request_auth_payload = "serverName=" . $server_name . "&expiration=" . $expiration;
 
 // Verify passed in parameters are properly signed.
-if(validate_auth_code($request_auth_payload, $request_auth_code))
+if(panopto_validate_auth_code($request_auth_payload, $request_auth_code))
 {
-    $user_key = decorate_username($USER->username);
+    $user_key = panopto_decorate_username($USER->username);
 
     // Generate canonically-ordered auth payload string
     $response_params = "serverName=" . $server_name . "&externalUserKey=" . $user_key . "&expiration=" . $expiration;
     // Sign payload with shared key and hash.
-    $response_auth_code = generate_auth_code($response_params);
+    $response_auth_code = panopto_generate_auth_code($response_params);
+
+    // Encode user key in case the backslash causes a sequence to be interpreted as an escape sequence (e.g. in the case of usernames that begin with digits)
+    // Maintain the original canonical string to avoid signature mismatch.
+    $response_params_encoded = "serverName=" . $server_name . "&externalUserKey=" . urlencode($user_key) . "&expiration=" . $expiration;
 
     $separator = (strpos($callback_url, "?") ? "&" : "?");
-    $redirect_url = $callback_url . $separator . $response_params . "&authCode=" . $response_auth_code;
+    $redirect_url = $callback_url . $separator . $response_params_encoded . "&authCode=" . $response_auth_code;
 
     // Redirect to Panopto Focus login page.
     redirect($redirect_url);
