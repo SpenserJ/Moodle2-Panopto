@@ -18,6 +18,7 @@
  */
 ?>
 
+<div class='block_panopto'>
 <div class='courseProvisionResult'>
     <div class='attribute'>Course Name</div>
     <div class='value'><?php echo $provisioning_data->ShortName . ": " . $provisioning_data->LongName ?></div>
@@ -89,4 +90,5 @@
     }
     ?>
     </div>
+</div>
 </div>

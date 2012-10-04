@@ -61,8 +61,8 @@ class panopto_data
             }
 
             // Compute web service credentials for current user.
-            $apiuser_userkey = decorate_username($username);
-            $apiuser_authcode = generate_auth_code($apiuser_userkey . "@" . $this->servername);
+            $apiuser_userkey = panopto_decorate_username($username);
+            $apiuser_authcode = panopto_generate_auth_code($apiuser_userkey . "@" . $this->servername);
 
             // Instantiate our SOAP client.
             $this->soap_client = new PanoptoSoapClient($this->servername, $apiuser_userkey, $apiuser_authcode);
@@ -119,7 +119,7 @@ class panopto_data
             foreach($instructors as $instructor)
             {
                 $instructor_info = new stdClass;
-                $instructor_info->UserKey = $this->decorate_username($instructor->username);
+                $instructor_info->UserKey = $this->panopto_decorate_username($instructor->username);
                 $instructor_info->FirstName = $instructor->firstname;
                 $instructor_info->LastName = $instructor->lastname;
                 $instructor_info->Email = $instructor->email;
@@ -143,7 +143,7 @@ class panopto_data
                 if(array_key_exists($student->username, $instructor_hash)) continue;
 
                 $student_info = new stdClass;
-                $student_info->UserKey = $this->decorate_username($student->username);
+                $student_info->UserKey = $this->panopto_decorate_username($student->username);
 
                 array_push($provisioning_info->Students, $student_info);
             }
@@ -215,7 +215,7 @@ class panopto_data
     }
 
     // Instance method caches Moodle instance name from DB (vs. block_panopto_lib version).
-    function decorate_username($moodle_username)
+    function panopto_decorate_username($moodle_username)
     {
         return ($this->instancename . "\\" . $moodle_username);
     }
