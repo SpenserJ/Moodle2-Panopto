@@ -18,6 +18,16 @@
  */
 
 $capabilities = array(
+	'block/panopto:addinstance' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+        'archetypes' => array(
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        )
+    ),
+    'clonepermissionsfrom' => 'moodle/site:manageblocks',
     'block/panopto:provision_course' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
