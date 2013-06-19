@@ -1,5 +1,5 @@
 <?php
-/* Copyright Panopto 2009 - 2011
+/* Copyright Panopto 2009 - 2013
  * 
  * This file is part of the Panopto plugin for Moodle.
  * 
@@ -17,4 +17,7 @@
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-$plugin->version = 2013061400;
+$plugin->version = 2013061900;
+
+
+/* End of file version.php */

@@ -1,5 +1,5 @@
 <?php
-/* Copyright Panopto 2009 - 2011
+/* Copyright Panopto 2009 - 2013
  * 
  * This file is part of the Panopto plugin for Moodle.
  * 
@@ -84,8 +84,7 @@ class PanoptoSoapClient extends SoapClient
 		$soap_vars = $this->GetPanoptoSoapVars($named_params);
 
 		// Include API user and auth code params unless $auth is set to false.
-		if($auth)
-		{
+		if($auth)	{
 			$auth_vars = $this->GetPanoptoSoapVars($this->auth_params);
 			$merged_vars = array_merge($soap_vars, $auth_vars);
 			$soap_vars = $merged_vars;
@@ -110,12 +109,9 @@ class PanoptoSoapClient extends SoapClient
 	// Construct a scalar-valued SOAP param.
 	private function GetPanoptoSoapVar($name, $value)
 	{
-		if($name == "ProvisioningInfo")
-		{
+		if($name == "ProvisioningInfo") {
 			$soap_var = $this->GetProvisioningSoapVar($value);
-		}
-		else
-		{
+		} else {
 			$data_element = $this->GetXMLDataElement($name, $value);
 			$soap_var = new SoapVar($data_element, XSD_ANYXML);
 		}
@@ -136,11 +132,9 @@ class PanoptoSoapClient extends SoapClient
 		$soap_struct = "<ns1:ProvisioningInfo>";
 		$soap_struct .= $this->GetXMLDataElement("ExternalCourseID", $provisioning_info->ExternalCourseID);
 
-		if(!empty($provisioning_info->Instructors))
-		{
+		if(!empty($provisioning_info->Instructors))	{
 			$soap_struct .= "<ns1:Instructors>";
-			foreach($provisioning_info->Instructors as $instructor)
-			{
+			foreach($provisioning_info->Instructors as $instructor) {
 				$mail_lecture_notifications = $instructor->MailLectureNotifications ? "true" : "false";
 				
 				$soap_struct .= "<ns1:UserProvisioningInfo>";
@@ -152,28 +146,22 @@ class PanoptoSoapClient extends SoapClient
 				$soap_struct .= "</ns1:UserProvisioningInfo>";
 			}
 			$soap_struct .= "</ns1:Instructors>";
-		}
-		else
-		{
+		}	else {
 			$soap_struct .= "<ns1:Instructors />";
 		}
 		
 		$soap_struct .= $this->GetXMLDataElement("LongName", $provisioning_info->LongName);
 		$soap_struct .= $this->GetXMLDataElement("ShortName", $provisioning_info->ShortName);
 		
-		if(!empty($provisioning_info->Students))
-		{
+		if(!empty($provisioning_info->Students)) {
 			$soap_struct .= "<ns1:Students>";
-			foreach($provisioning_info->Students as $student)
-			{
+			foreach($provisioning_info->Students as $student)	{
 				$soap_struct .= "<ns1:UserProvisioningInfo>";
 				$soap_struct .= $this->GetXMLDataElement("UserKey", $student->UserKey);
 				$soap_struct .= "</ns1:UserProvisioningInfo>";
 			}
 			$soap_struct .= "</ns1:Students>";
-		}
-		else
-		{
+		} else {
 			$soap_struct .= "<ns1:Students />";
 		}
 		
@@ -183,4 +171,4 @@ class PanoptoSoapClient extends SoapClient
 	}
 }
 
-?>
+/* End of file PanoptoSoapClient.php */

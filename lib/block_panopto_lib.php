@@ -1,5 +1,5 @@
 <?php
-/* Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu)
+/* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * 
  * This file is part of the Panopto plugin for Moodle.
  * 
@@ -50,4 +50,4 @@ function panopto_validate_auth_code($payload, $auth_code)
 {
     return (panopto_generate_auth_code($payload) == $auth_code);
 }
-?>
+/* End of file block_panopto_lib.php */

@@ -1,5 +1,5 @@
 <?php
-/* Copyright Panopto 2009 - 2011 / With contributions from Spenser Jones (sjones@ambrose.edu)
+/* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * 
  * This file is part of the Panopto plugin for Moodle.
  * 
@@ -53,3 +53,4 @@ $string['course_settings'] = 'Course Settings';
 $string['download_recorder'] = 'Download Recorder';
 $string['show_all'] = 'Show All';
 $string['show_less'] = 'Show Less';
+/* End of file block_panopto.php */
