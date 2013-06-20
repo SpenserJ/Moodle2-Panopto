@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * 
  * This file is part of the Panopto plugin for Moodle.
@@ -70,10 +70,10 @@ if(panopto_validate_auth_code($request_auth_payload, $request_auth_code)) {
     // Redirect to Panopto Focus login page.
     redirect($redirect_url);
 } else {
-    print_header();
+    echo $OUTPUT->header();
 
     echo "Invalid auth code.";
 
-    print_footer();
+    echo $OUTPUT->footer();
 }
 /* End of file SSO.php */

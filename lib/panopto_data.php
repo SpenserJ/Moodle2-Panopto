@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * 
  * This file is part of the Panopto plugin for Moodle.
@@ -97,7 +97,7 @@ class panopto_data
         $provisioning_info->LongName = $DB->get_field('course', 'fullname', array('id' => $this->moodle_course_id));
         $provisioning_info->ExternalCourseID = $this->instancename . ":" . $this->moodle_course_id;
 
-        $course_context = get_context_instance(CONTEXT_COURSE, $this->moodle_course_id);
+        $course_context = context_course::instance($this->moodle_course_id, MUST_EXIST);
 
         // Lookup table to avoid adding instructors as Viewers as well as Creators.
         $instructor_hash = array();

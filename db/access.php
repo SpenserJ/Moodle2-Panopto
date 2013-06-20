@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * 
  * This file is part of the Panopto plugin for Moodle.
@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with the Panopto plugin for Moodle.  If not, see <http://www.gnu.org/licenses/>.
  */
+defined('MOODLE_INTERNAL') || die();
 
 $capabilities = array(
     'block/panopto:provision_course' => array(
@@ -47,7 +48,13 @@ $capabilities = array(
 
         'clonepermissionsfrom' => 'moodle/site:manageblocks'
     ),
-
+   'block/panopto:myaddinstance' => array( 'captype' => 'write',
+       'contextlevel' => CONTEXT_SYSTEM, 
+       'archetypes' => array(
+           'user' => CAP_ALLOW
+         ), 
+        'clonepermissionsfrom' => 'moodle/my:manageblocks'
+   ) 
 );
 
 /* End of file access.php */

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /* Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  * 
  * This file is part of the Panopto plugin for Moodle.
@@ -55,9 +55,9 @@ require_login();
 // Set course context if we are in a course, otherwise use system context.
 $course_id_param = optional_param('course_id', 0, PARAM_INT);
 if ($course_id_param != 0) {
-    $context = get_context_instance(CONTEXT_COURSE, $course_id_param);
+    $context = context_course::instance($course_id_param, MUST_EXIST);
 } else {
-    $context = get_context_instance(CONTEXT_SYSTEM);
+    $context = context_system::instance();
 }
 
 $PAGE->set_context($context);

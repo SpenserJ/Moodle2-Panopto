@@ -128,11 +128,11 @@ class block_panopto extends block_base
                             $this->content->text .= "<div class='listItem $altClass'>
                             $live_session_display_name
 														 <span class='nowrap'>
-														 	[<a href='javascript:launchNotes(\"$live_session->LiveNotesURL\")'
+														 	[<a href='javascript:panopto_launchNotes(\"$live_session->LiveNotesURL\")'
 														 		>" . get_string('take_notes', 'block_panopto') . '</a>]';
                             if($live_session->BroadcastViewerURL)
                             {
-                                $this->content->text .= "[<a href='$live_session->BroadcastViewerURL' onclick='return startSSO(this)'>" . get_string('watch_live', 'block_panopto') . '</a>]';
+                                $this->content->text .= "[<a href='$live_session->BroadcastViewerURL' onclick='return panopto_startSSO(this)'>" . get_string('watch_live', 'block_panopto') . '</a>]';
                             }
                             $this->content->text .= "
 												 	  	 </span>
@@ -163,7 +163,7 @@ class block_panopto extends block_base
                              
                             $completed_delivery_display_name = s($completed_delivery->DisplayName);
                             $this->content->text .= "<div class='listItem $altClass'>
-					        							<a href='$completed_delivery->ViewerURL' onclick='return startSSO(this)'>
+					        							<a href='$completed_delivery->ViewerURL' onclick='return panopto_startSSO(this)'>
 					        							$completed_delivery_display_name
 					        							</a>
 				        							</div>";
@@ -175,7 +175,7 @@ class block_panopto extends block_base
                         {
                             $this->content->text .= "</div>";
                             $this->content->text .= "<div id='showAllDiv'>";
-                            $this->content->text .= "[<a id='showAllToggle' href='javascript:toggleHiddenLectures()'>" . get_string('show_all', 'block_panopto') . '</a>]';
+                            $this->content->text .= "[<a id='showAllToggle' href='javascript:panopto_toggleHiddenLectures()'>" . get_string('show_all', 'block_panopto') . '</a>]';
                             $this->content->text .= "</div>";
                         }
                     }
@@ -206,12 +206,12 @@ class block_panopto extends block_base
 		                        				 </div>";
                         }
                     }
-                    $context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+                    $context = context_course::instance($course->id, MUST_EXIST);
                     if(has_capability('moodle/course:update', $context))
                     {
                         $this->content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') . "</b></div>
 				        						 <div class='listItem'>
-				        							<a href='$course_info->CourseSettingsURL' onclick='return startSSO(this)'
+				        							<a href='$course_info->CourseSettingsURL' onclick='return panopto_startSSO(this)'
 				        								>" . get_string('course_settings', 'block_panopto') . "</a>
 			        							 </div>\n";
                         $system_info = $panopto_data->get_system_info();
@@ -225,9 +225,9 @@ class block_panopto extends block_base
                      
                     $this->content->text .= '
 						<script type="text/javascript">
-			                // Function to pop up Panopto live note taker.
-			                function launchNotes(url)
-			        		{
+			        // Function to pop up Panopto live note taker.
+			        function panopto_launchNotes(url)
+			        {
 								// Open empty notes window, then POST SSO form to it.
 								var notesWindow = window.open("", "PanoptoNotes", "width=500,height=800,resizable=1,scrollbars=0,status=0,location=0");
 								document.SSO.action = url;
@@ -238,7 +238,7 @@ class block_panopto extends block_base
 								notesWindow.focus();
 							}
 							
-							function startSSO(linkElem)
+							function panopto_startSSO(linkElem)
 							{
 								document.SSO.action = linkElem.href;
 								document.SSO.target = "_blank";
@@ -248,7 +248,7 @@ class block_panopto extends block_base
 					  			return false;
 					  		}
 					  		
-					  		function toggleHiddenLectures()
+					  		function panopto_toggleHiddenLectures()
 					  		{
 					  			var showAllToggle = document.getElementById("showAllToggle");
 					  			var hiddenLecturesDiv = document.getElementById("hiddenLecturesDiv");
@@ -260,13 +260,13 @@ class block_panopto extends block_base
 					  			}
 					  			else
 								{
-					  				hiddenLecturesDiv.style.display = "block";
-					  				showAllToggle.innerHTML = "' . get_string('show_less', 'block_panopto') . '";
-					  			}
-					  		}
+					  		  hiddenLecturesDiv.style.display = "block";
+					  		  showAllToggle.innerHTML = "' . get_string('show_less', 'block_panopto') . '";
+					  	  }
+					    }
 				    	</script>';
-                }
-            }
+              }
+           }
         }
         catch(Exception $e)
         {
