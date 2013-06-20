@@ -21,21 +21,17 @@ require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once('lib/panopto_data.php');
 
-class panopto_provision_form extends moodleform
-{
+class panopto_provision_form extends moodleform {
     protected $title = '';
     protected $description = '';
 
-    function definition()
-    {
+    function definition() {
         global $DB;
         $mform =& $this->_form;
         $courses_raw = $DB->get_records('course', null, '', 'id, shortname, fullname');
         $courses = array();
-        if ($courses_raw)
-        {
-            foreach ($courses_raw as $course)
-            {
+        if ($courses_raw) {
+            foreach ($courses_raw as $course) {
                 $courses[$course->id] = $course->shortname . ': ' . $course->fullname;
             }
         }

@@ -19,10 +19,8 @@
 
 require_once("lib/panopto_data.php");
 
-class block_panopto_edit_form extends block_edit_form
-{
-    protected function specific_definition($mform)
-    {
+class block_panopto_edit_form extends block_edit_form {
+    protected function specific_definition($mform) {
         global $COURSE, $CFG;
 
         // Construct the Panopto data proxy object

@@ -26,8 +26,7 @@ require_once ($CFG->libdir . '/dmllib.php');
 require_once("block_panopto_lib.php");
 require_once("PanoptoSoapClient.php");
 
-class panopto_data
-{
+class panopto_data {
     var $instancename;
 
     var $moodle_course_id;
@@ -39,8 +38,7 @@ class panopto_data
 
     var $sessiongroup_id;
 
-    function __construct($moodle_course_id)
-    {
+    function __construct($moodle_course_id) {
         global $USER, $CFG;
 
         // Fetch global settings from DB
@@ -72,14 +70,12 @@ class panopto_data
     }
 
     // returns SystemInfo
-    function get_system_info()
-    {
+    function get_system_info() {
         return $this->soap_client->GetSystemInfo();
     }
 
     // Create the Panopto course and populate its ACLs.
-    function provision_course($provisioning_info)
-    {
+    function provision_course($provisioning_info) {
         $course_info = $this->soap_client->ProvisionCourse($provisioning_info);
 
         if(!empty($course_info) && !empty($course_info->PublicID)) {
@@ -90,8 +86,7 @@ class panopto_data
     }
 
     // Fetch course name and membership info from DB in preparation for provisioning operation.
-    function get_provisioning_info()
-    {
+    function get_provisioning_info() {
         global $DB;
         $provisioning_info->ShortName = $DB->get_field('course', 'shortname', array('id' => $this->moodle_course_id));
         $provisioning_info->LongName = $DB->get_field('course', 'fullname', array('id' => $this->moodle_course_id));
@@ -142,8 +137,7 @@ class panopto_data
     }
 
     // Get courses visible to the current user.
-    function get_courses()
-    {
+    function get_courses() {
         $courses_result = $this->soap_client->GetCourses();
         $courses = array();
         if(!empty($courses_result->CourseInfo)) {
@@ -158,14 +152,12 @@ class panopto_data
     }
 
     // Get info about the currently mapped course.
-    function get_course()
-    {
+    function get_course() {
         return $this->soap_client->GetCourse($this->sessiongroup_id);
     }
 
     // Get ongoing Panopto sessions for the currently mapped course.
-    function get_live_sessions()
-    {
+    function get_live_sessions() {
         $live_sessions_result = $this->soap_client->GetLiveSessions($this->sessiongroup_id);
 
         $live_sessions = array();
@@ -181,8 +173,7 @@ class panopto_data
     }
 
     // Get recordings available to view for the currently mapped course.
-    function get_completed_deliveries()
-    {
+    function get_completed_deliveries() {
         $completed_deliveries_result = $this->soap_client->GetCompletedDeliveries($this->sessiongroup_id);
 
         $completed_deliveries = array();
@@ -198,21 +189,18 @@ class panopto_data
     }
 
     // Instance method caches Moodle instance name from DB (vs. block_panopto_lib version).
-    function panopto_decorate_username($moodle_username)
-    {
+    function panopto_decorate_username($moodle_username) {
         return ($this->instancename . "\\" . $moodle_username);
     }
 
     // We need to retrieve the current course mapping in the constructor, so this must be static.
-    static function get_panopto_course_id($moodle_course_id)
-    {
+    static function get_panopto_course_id($moodle_course_id) {
         global $DB;
         return $DB->get_field('block_panopto_foldermap', 'panopto_id', array('moodleid' => $moodle_course_id));
     }
 
     // Called by Moodle block instance config save method, so must be static.
-    static function set_panopto_course_id($moodle_course_id, $sessiongroup_id)
-    {
+    static function set_panopto_course_id($moodle_course_id, $sessiongroup_id) {
         global $DB;
         if($DB->get_records('block_panopto_foldermap', array('moodleid' => $moodle_course_id))) {
             return $DB->set_field('block_panopto_foldermap', 'panopto_id', $sessiongroup_id, array('moodleid' => $moodle_course_id));
@@ -222,8 +210,7 @@ class panopto_data
         }
     }
 
-    function get_course_options()
-    {
+    function get_course_options() {
         $courses_by_access_level = array("Creator" => array(), "Viewer" => array(), "Public" => array());
 
         $panopto_courses = $this->get_courses();
