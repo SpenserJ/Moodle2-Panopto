@@ -29,6 +29,7 @@ class block_panopto_edit_form extends block_edit_form {
         if(!empty($panopto_data->servername) && !empty($panopto_data->instancename) && !empty($panopto_data->applicationkey)) {
             $mform->addElement('header', 'configheader', get_string('block_edit_header', 'block_panopto'));
 
+            $params = new stdClass;
             $params->course_id = $COURSE->id;
             $params->return_url = $_SERVER['REQUEST_URI'];
             $query_string = http_build_query($params, '', '&');

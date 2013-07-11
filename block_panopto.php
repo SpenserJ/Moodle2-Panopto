@@ -173,7 +173,7 @@ class block_panopto extends block_base {
 		                        				 </div>";
                         }
                     }
-                    $context = context_course::instance($course->id, MUST_EXIST);
+                    $context = context_course::instance($COURSE->id, MUST_EXIST);
                     if(has_capability('moodle/course:update', $context)) {
                         $this->content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') . "</b></div>
 				        						 <div class='listItem'>
