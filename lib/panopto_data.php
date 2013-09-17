@@ -99,6 +99,8 @@ class panopto_data {
          
         // moodle/course:update capability will include admins along with teachers, course creators, etc.
         // Could also use moodle/legacy:teacher, moodle/legacy:editingteacher, etc. if those turn out to be more appropriate.
+        // File edited - new capability added to access.php to identify instructors without including all site admins etc.
+        // New capability used to identify instructors for provisioning.
         $instructors = get_users_by_capability($course_context, 'block/panopto:provision_asteacher');
 
         if(!empty($instructors)) {
