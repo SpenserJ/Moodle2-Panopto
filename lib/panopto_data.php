@@ -109,7 +109,6 @@ class panopto_data {
                 $instructor_info->FirstName = $instructor->firstname;
                 $instructor_info->LastName = $instructor->lastname;
                 $instructor_info->Email = $instructor->email;
-                $instructor_info->MailLectureNotifications = true;
 
                 array_push($provisioning_info->Instructors, $instructor_info);
 
