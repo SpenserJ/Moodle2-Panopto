@@ -58,7 +58,7 @@ if ($course_id_param != 0) {
 
 $PAGE->set_context($context);
 
-$return_url = optional_param('return_url', '/admin/settings.php?section=blocksettingpanopto', PARAM_LOCALURL);
+$return_url = optional_param('return_url', $CFG->wwwroot . '/admin/settings.php?section=blocksettingpanopto', PARAM_LOCALURL);
 
 $urlparams['return_url'] = $return_url;
 
