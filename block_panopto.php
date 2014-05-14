@@ -113,7 +113,7 @@ class block_panopto extends block_base {
 
         try {
             if(!$panopto_data->sessiongroup_id) {
-                $this->content->text .= get_string('no_course_selected', 'block_panopto');
+                $this->content->text = get_string('no_course_selected', 'block_panopto');
             } else {
                 // Get course info from SOAP service.
                 $course_info = $panopto_data->get_course();
