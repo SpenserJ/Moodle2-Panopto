@@ -1,8 +1,8 @@
 <?php
 /* Copyright Panopto 2009 - 2013
- * 
+ *
  * This file is part of the Panopto plugin for Moodle.
- * 
+ *
  * The Panopto plugin for Moodle is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -31,14 +31,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
- 
+
 defined('MOODLE_INTERNAL') || die();
- 
-$plugin->version   = 2014042502;
+
+$plugin->version   = 2014082201;
 $plugin->requires  = 2010112400; // Version 2.0
 $plugin->cron      = 0;
 $plugin->maturity  = MATURITY_STABLE;
- 
+
 $plugin->dependencies = array(
     'mod_forum' => ANY_VERSION
 );
