@@ -24,8 +24,8 @@ require_once('lib/panopto_data.php');
 global $courses;
 
 //Populate list of servernames to select from
-$aserverArray = [];
-$appKeyArray = [];
+$aserverArray = array();
+$appKeyArray = array();
 if(isset($_SESSION['numservers'])){
 	$maxval = $_SESSION['numservers'];
 }
