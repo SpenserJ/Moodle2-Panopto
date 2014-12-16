@@ -1,9 +1,9 @@
 <?php
-function xmldb_block_panopto_foldermap_upgrade($oldversion = 0) {
+function xmldb_block_panopto_upgrade($oldversion = 0) {
     global $CFG, $DB;
     $dbman = $DB->get_manager();
     /// Add a new column newcol to the mdl_myqtype_options
-    if ($oldversion < 2014082201) {
+    if ($oldversion < 2014121501) {
           // Define table block_panopto_foldermap to be created.
         $table = new xmldb_table('block_panopto_foldermap');
         // Adding fields to table block_panopto_foldermap.
@@ -19,7 +19,7 @@ function xmldb_block_panopto_foldermap_upgrade($oldversion = 0) {
             $dbman->create_table($table);
         }
         // Panopto savepoint reached.
-        upgrade_block_savepoint(true, 2014082201, 'panopto');
+        upgrade_block_savepoint(true, 2014121501, 'panopto');
     }
     return true;
 }
