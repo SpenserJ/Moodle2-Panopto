@@ -2,7 +2,7 @@
 function xmldb_block_panopto_upgrade($oldversion = 0) {
     global $CFG, $DB;
     $dbman = $DB->get_manager();
-    if ($oldversion < 2014121501) {
+    if ($oldversion < 2014121502) {
 
         // Define field panopto_server to be added to block_panopto_foldermap.
         $table = new xmldb_table('block_panopto_foldermap');
@@ -23,7 +23,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         }
 
         // Panopto savepoint reached.
-        upgrade_block_savepoint(true, 2014121501, 'panopto');
+        upgrade_block_savepoint(true, 2014121502, 'panopto');
     }
     return true;
 }
