@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /* Copyright Panopto 2009 - 2013
  * 
  * This file is part of the Panopto plugin for Moodle.
@@ -121,13 +121,10 @@ class PanoptoSoapClient extends SoapClient {
 		if(!empty($provisioning_info->Instructors))	{
 			$soap_struct .= "<ns1:Instructors>";
 			foreach($provisioning_info->Instructors as $instructor) {
-				$mail_lecture_notifications = $instructor->MailLectureNotifications ? "true" : "false";
-				
 				$soap_struct .= "<ns1:UserProvisioningInfo>";
 				$soap_struct .= $this->GetXMLDataElement("Email", $instructor->Email);
 				$soap_struct .= $this->GetXMLDataElement("FirstName", $instructor->FirstName);
 				$soap_struct .= $this->GetXMLDataElement("LastName", $instructor->LastName);
-				$soap_struct .= $this->GetXMLDataElement("MailLectureNotifications", $mail_lecture_notifications);
 				$soap_struct .= $this->GetXMLDataElement("UserKey", $instructor->UserKey);
 				$soap_struct .= "</ns1:UserProvisioningInfo>";
 			}
