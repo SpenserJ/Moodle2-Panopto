@@ -82,7 +82,7 @@ $PAGE->set_context($context);
 //Return URL is course page
 $return_url = optional_param('return_url', $CFG->wwwroot . '/course/view.php?id=' . $course_id , PARAM_LOCALURL);
 $urlparams['return_url'] = $return_url;
-$PAGE->set_url('/blocks/panopto/provision_course_internal.php?id' . $course_id, $urlparams);
+$PAGE->set_url('/blocks/panopto/provision_course_internal.php?id=' . $course_id, $urlparams);
 $PAGE->set_pagelayout('base');
 
 $mform = new panopto_provision_form($PAGE->url);
@@ -143,7 +143,7 @@ if ($mform->is_cancelled()) {
         
         include 'views/provisioned_course.html.php';        
         echo "<a href='$return_url'>Back to course</a>";
-        
+
     } else {
         $mform->display();
     }
