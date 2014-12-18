@@ -68,8 +68,7 @@ class panopto_provision_form extends moodleform {
         $mform =& $this->_form;
 
         $serverselect = $mform->addElement('select', 'servers', 'Select a Panopto server', $aserverArray);
-        echo(sizeof($aserverArray));
-
+        
         $this->add_action_buttons(true, 'Provision');
 
     }
@@ -130,7 +129,7 @@ if ($mform->is_cancelled()) {
         <br/>
         <a href='$return_url'>Back to course</a>";
     }
-    
+
     //If a $selected server is set, it means that a server has been chosen and that the provisioning should be done instead of
     //loading the selection form
     else if (isset($selectedserver)) {
