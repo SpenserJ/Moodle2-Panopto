@@ -33,7 +33,6 @@ else{
     $maxval = 1;
 }
 
-
 for($x = 0; $x < $maxval; $x++){
     //generate strings corresponding to potential servernames in $CFG
     $thisServerName = 'block_panopto_server_name'.($x+1);
@@ -43,10 +42,7 @@ for($x = 0; $x < $maxval; $x++){
         $aserverArray[$x] = $CFG->$thisServerName;
         $appKeyArray[$x] = $CFG->$thisAppKey;
     }
-
 }
-
-
 
 //If only one server, simply provision with that server. Setting these values will circumvent loading the selection form prior to provisioning.
 if(sizeof($aserverArray) == 1){
@@ -55,7 +51,6 @@ if(sizeof($aserverArray) == 1){
     $selectedserver = $aserverArray[$key[0]];
     $selectedkey = $appKeyArray[$key[0]];
 }
-
 
 //Create form for server selection
 class panopto_provision_form extends moodleform {
