@@ -27,6 +27,7 @@ $string['provision_courses'] = 'Provision Courses';
 $string['provisioncourseselect'] = 'Select Courses to Provision.';
 $string['provisioncourseselect_help'] = 'Multiple selections are possible by Ctrl-clicking (Windows) or Cmd-clicking (Mac).';
 $string['unconfigured'] = 'Global configuration incomplete. Please contact your system administrator.';
+$string['unprovisioned'] = 'This course has not yet been provisioned.';
 $string['block_edit_error'] = 'Cannot configure block instance: ' . $string['unconfigured'];
 $string['block_edit_header'] = 'Select the Panopto course to display in this block.';
 $string['add_to_panopto'] = 'Add this course to Panopto (re-add to sync user lists)';
