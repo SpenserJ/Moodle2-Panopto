@@ -105,7 +105,9 @@ class block_panopto extends block_base {
         $panopto_data = new panopto_data($COURSE->id);
 
         if(empty($panopto_data->servername) || empty($panopto_data->instancename) || empty($panopto_data->applicationkey)) {
-            $this->content->text = get_string('unconfigured', 'block_panopto');
+            $this->content->text =get_string('unprovisioned', 'block_panopto') . "
+            <br/><br/>
+            <a href='$CFG->wwwroot/blocks/panopto/provision_course_internal.php?id=$COURSE->id'>Provision Course</a>";
             $this->content->footer = "";
             	
             return $this->content;
