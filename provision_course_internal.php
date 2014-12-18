@@ -36,24 +36,29 @@ else{
 
 for($x = 0; $x < $maxval; $x++){
     //generate strings corresponding to potential servernames in $CFG
-    $thisName = 'block_panopto_server_name'.($x+1);
-    $thisKey = 'block_panopto_application_key'.($x+1);
-    if((isset($CFG->$thisName) && !IsNullOrEmptyString($CFG->$thisName)) && (!IsNullOrEmptyString($CFG->$thisKey)) )
+    $thisServerName = 'block_panopto_server_name'.($x+1);
+    $thisAppKey = 'block_panopto_application_key'.($x+1);
+    if((isset($CFG->$thisServerName) && !IsNullOrEmptyString($CFG->$thisServerName)) && (!IsNullOrEmptyString($CFG->$thisAppKey)) )
     {
-        $aserverArray[$x] = $CFG->$thisName;
-        $appKeyArray[$x] = $CFG->$thisKey;
+        $aserverArray[$x] = $CFG->$thisServerName;
+        $appKeyArray[$x] = $CFG->$thisAppKey;
     }
+
 }
+
+
 
 //If only one server, simply provision with that server. Setting these values will circumvent loading the selection form prior to provisioning.
-if($maxval == 1){
-    $selectedserver = $aserverArray[0];
-    $selectedkey = $appKeyArray[0];
+if(sizeof($aserverArray) == 1){
+    //get first element from associative array. aServerArray and appKeyArray will have same key values.
+    $key = array_keys($aserverArray);
+    $selectedserver = $aserverArray[$key[0]];
+    $selectedkey = $appKeyArray[$key[0]];
 }
 
+
+//Create form for server selection
 class panopto_provision_form extends moodleform {
-    protected $title = '';
-    protected $description = '';
 
     function definition() {
 
@@ -61,10 +66,9 @@ class panopto_provision_form extends moodleform {
         global $aserverArray;
 
         $mform =& $this->_form;
-        
 
         $serverselect = $mform->addElement('select', 'servers', 'Select a Panopto server', $aserverArray);
-        //$mform->addHelpButton('courses', 'provisioncourseselect', 'block_panopto');
+        echo(sizeof($aserverArray));
 
         $this->add_action_buttons(true, 'Provision');
 
@@ -74,22 +78,27 @@ class panopto_provision_form extends moodleform {
 require_login();
 
 
-
+//This page requires a course ID to be passed in as a param. If accessed directly without clicking on a link for the course,
+//no id is passed and the script fails. Similarly if no ID is passed with via a link (should never happen) the script will fail
 $course_id = required_param('id', PARAM_INT);
+
 //course context
 $context = context_course::instance($course_id, MUST_EXIST);
 $PAGE->set_context($context);
+
 //Return URL is course page
 $return_url = optional_param('return_url', $CFG->wwwroot . '/course/view.php?id=' . $course_id , PARAM_LOCALURL);
 $urlparams['return_url'] = $return_url;
 $PAGE->set_url('/blocks/panopto/provision_course_internal.php?id=' . $course_id, $urlparams);
 $PAGE->set_pagelayout('base');
 
+
 $mform = new panopto_provision_form($PAGE->url);
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url($return_url));
 } else {
+    //set Moodle page info
     $provision_title = get_string('provision_courses', 'block_panopto');
     $PAGE->set_pagelayout('base');
     $PAGE->set_title($provision_title);
@@ -100,22 +109,31 @@ if ($mform->is_cancelled()) {
     $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $edit_course_url);
     $data = $mform->get_data();
     
+    //If there is form data, use it to determine the server and app key to provision to
     if ($data) {
         $selectedserver = $aserverArray[$data->servers];
         $selectedkey = $appKeyArray[$data->servers];
         $CFG->servername = $selectedserver;
         $CFG->appkey = $selectedkey;
         }
-    
+
     $manage_blocks = new moodle_url('/admin/blocks.php');
     $panopto_settings = new moodle_url('/admin/settings.php?section=blocksettingpanopto');
     $PAGE->navbar->add(get_string('blocks'), $manage_blocks);
     $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panopto_settings);    
     $PAGE->navbar->add($provision_title, new moodle_url($PAGE->url));
-
     echo $OUTPUT->header();
-
-    if (isset($selectedserver)) {
+    
+    //If there are no servers specified for provisioning, give a failure notice and allow user to return to course page
+    if(sizeof($aserverArray ) < 1){
+        echo "There are no servers set up for provisioning. Please contact system administrator. 
+        <br/>
+        <a href='$return_url'>Back to course</a>";
+    }
+    
+    //If a $selected server is set, it means that a server has been chosen and that the provisioning should be done instead of
+    //loading the selection form
+    else if (isset($selectedserver)) {
         $provisioned = array();
         $panopto_data = new panopto_data(null);
 

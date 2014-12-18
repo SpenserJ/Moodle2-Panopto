@@ -34,12 +34,12 @@ else{
 }
 for($x = 0; $x < $maxval; $x++){
 	//generate strings corresponding to potential servernames in $CFG
-	$thisName = 'block_panopto_server_name'.($x+1);
-	$thisKey = 'block_panopto_application_key'.($x+1);
-	if((isset($CFG->$thisName) && !IsNullOrEmptyString($CFG->$thisName)) && (!IsNullOrEmptyString($CFG->$thisKey)) )
+	$thisServerName = 'block_panopto_server_name'.($x+1);
+	$thisAppKey = 'block_panopto_application_key'.($x+1);
+	if((isset($CFG->$thisServerName) && !IsNullOrEmptyString($CFG->$thisServerName)) && (!IsNullOrEmptyString($CFG->$thisAppKey)) )
 	{
-		$aserverArray[$x] = $CFG->$thisName;
-		$appKeyArray[$x] = $CFG->$thisKey;
+		$aserverArray[$x] = $CFG->$thisServerName;
+		$appKeyArray[$x] = $CFG->$thisAppKey;
 
 	}
 }
