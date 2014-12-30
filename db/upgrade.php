@@ -19,7 +19,9 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         // Conditionally launch add field panopto_server.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
-            $DB->set_field('block_panopto_foldermap', 'panopto_server', $oldServerName, null);
+            if(isset($oldServerName)){
+                $DB->set_field('block_panopto_foldermap', 'panopto_server', $oldServerName, null);
+            }
         }
                   
 
@@ -30,7 +32,9 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         // Conditionally launch add field panopto_app_key.
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
-            $DB->set_field('block_panopto_foldermap', 'panopto_app_key', $oldAppKey, null);
+            if(isset($oldAppKey)){
+                $DB->set_field('block_panopto_foldermap', 'panopto_app_key', $oldAppKey, null);
+            }
         }
        
         // Panopto savepoint reached.
