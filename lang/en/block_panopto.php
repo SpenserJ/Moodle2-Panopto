@@ -61,7 +61,7 @@ $string['rolling_sync_header'] = 'Rolling Enrollment Sync';
 $string['rolling_sync_info'] = "By default, a task is enabled via the Panopto block which automatically syncs user enrollment information with a course's corresponding Panopto folder.
  The task can be enabled or disabled, and its schedule for running modified in <b>Site Administration -> Server -> Scheduled Tasks</b>. The task is set to run every five minutes by default.
  The task requires the cron service to be installed and running on the Moodle server in order to operate. To install this service, follow the instructions provided 
- <a href='https://docs.moodle.org/24/en/Cron'>here</a>. <br/>
+ <a href='https://docs.moodle.org/28/en/Cron'>here</a>. <br/>
  (Note that no matter how the task is scheduled in the admin settings, it may only run as often as the cron service is set to execute on the Moodle server. Keep this in mind when setting up the service.)";
 
 /* End of file block_panopto.php */

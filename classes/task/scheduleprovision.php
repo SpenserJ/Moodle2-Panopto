@@ -7,9 +7,13 @@ defined('MOODLE_INTERNAL') || die();
 
 class scheduleprovision extends \core\task\scheduled_task {
 
+    $provisioned_success = "Provisioned Course: ";
+    $provisioned_failure = "Failed to provision course: "
+    $taskname = get_string('rolling_sync_task', 'block_panopto');
+
     public function get_name() {
         // Task's title in admin screen
-        return get_string('rolling_sync_task', 'block_panopto');
+        return $taskname;
     }
         
 	public function execute(){
@@ -41,30 +45,21 @@ class scheduleprovision extends \core\task\scheduled_task {
 		            $provisioned_data  = $panopto_data_instance->provision_course($provisioning_data);
 		                
 		            if(!empty($provisioned_data)){
-		                error_log("Provisioned Course " . $course_id);
+		                error_log($provisioned_success . $course_id);
 
 		                //Remove course from queue in DB
 		                $DB->delete_records('course_ids_for_provision', array('course_id' => $record->course_id)); 
 		            }
 		            else{
-		                error_log("Failed to provision course" . $course_id);
+		                error_log($provisioned_failure . $course_id);
 		            }
         		}
         		catch(Exception $e){
             		error_log($e->getMessage());
         		}
-
-
-
 			}
-		}
-
-
-		
+		}		
 	}
-
-
-
 }
 
 

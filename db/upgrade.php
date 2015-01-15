@@ -8,7 +8,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
         if(isset($CFG->block_panopto_server_name)){
             $oldServerName = $CFG->block_panopto_server_name;
-        }
+        }        
         if(isset($CFG->block_panopto_application_key)){
             $oldAppKey = $CFG->block_panopto_application_key;
         }
@@ -42,7 +42,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2014121502, 'panopto');
     }
     
- if ($oldversion < 2015011501) {
+    if ($oldversion < 2015011501) {
         //Add table to store course ids for rolling sync
         
         // Define table course_ids_for_provision to be created.
@@ -66,4 +66,5 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
     
     return true;
 }
+
 ?>
