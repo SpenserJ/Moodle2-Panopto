@@ -253,6 +253,14 @@ class panopto_data {
     	}
     }
 
+    static function set_course_id_to_provision($course_id) {
+        global $DB;
+        if(!$DB->record_exists('course_ids_for_provision', array('course_id' => $course_id))) {
+            $row = (object) array('course_id' => $course_id);
+            return $DB->insert_record('course_ids_for_provision', $row);
+        }
+    }
+
     function get_course_options() {
         $courses_by_access_level = array("Creator" => array(), "Viewer" => array(), "Public" => array());
 
