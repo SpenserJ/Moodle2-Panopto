@@ -100,6 +100,7 @@ class panopto_data {
         // Lookup table to avoid adding instructors as Viewers as well as Creators.
         $instructor_hash = array();
 
+
         // moodle/course:update capability will include admins along with teachers, course creators, etc.
         // Could also use moodle/legacy:teacher, moodle/legacy:editingteacher, etc. if those turn out to be more appropriate.
         // File edited - new capability added to access.php to identify instructors without including all site admins etc.
@@ -129,7 +130,6 @@ class panopto_data {
             $provisioning_info->Students = array();
             foreach($students as $student) {
                 if(array_key_exists($student->username, $instructor_hash)) continue;
-
                 $student_info = new stdClass;
                 $student_info->UserKey = $this->panopto_decorate_username($student->username);
 
@@ -256,10 +256,19 @@ class panopto_data {
     //Called by enrollment event to add course id of course with changed enrollment to db
     static function set_course_id_to_provision($course_id) {
         global $DB;
-        //If courseid is not already in db, add it
-        if(!$DB->record_exists('course_ids_for_provision', array('course_id' => $course_id))) {
-            $row = (object) array('course_id' => $course_id);
-            return $DB->insert_record('course_ids_for_provision', $row);
+        
+        try{           
+            //If courseid is not already in db, add it
+            if(!$DB->record_exists('course_ids_for_provision', array('course_id' => $course_id))) {
+                $transaction = $DB->start_delegated_transaction();
+                $row = (object) array('course_id' => $course_id);
+                $inserted = $DB->insert_record('course_ids_for_provision', $row);
+                $transaction->allow_commit();
+                return $inserted;
+            }            
+        }catch(Exception $e){            
+            $transaction->rollback($e);
+            error_log($e->getMessage());
         }
     }
 
@@ -295,6 +304,7 @@ class panopto_data {
 
     //Used to instantiate a soap client for a given instance of panopto_data. Should be called only the first time a soap client is needed for an instance
     function instantiate_soap_client($username, $servername, $applicationkey){
+        global $USER;
     	if(!empty($this->servername)) {
     		if(isset($USER->username)) {
     			$username = $USER->username;
