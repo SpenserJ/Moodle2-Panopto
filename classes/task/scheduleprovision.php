@@ -7,11 +7,9 @@ defined('MOODLE_INTERNAL') || die();
 
 class scheduleprovision extends \core\task\scheduled_task {
 
-    $provisioned_success = "Provisioned Course: ";
-    $provisioned_failure = "Failed to provision course: "
-    $taskname = get_string('rolling_sync_task', 'block_panopto');
 
     public function get_name() {
+        $taskname = get_string('rolling_sync_task', 'block_panopto');
         // Task's title in admin screen
         return $taskname;
     }
@@ -19,7 +17,11 @@ class scheduleprovision extends \core\task\scheduled_task {
 	public function execute(){
         global $DB, $CFG;
 
-		$panopto_data_instance = new \panopto_data(null);
+        $provisioned_success = "Provisioned Course: ";
+        $provisioned_failure = "Failed to provision course: ";
+
+		
+        $panopto_data_instance = new \panopto_data(null);
 		
 		//Get all current records in 'course_ids_to_provision'
 		$ids_raw = $DB->get_recordset('course_ids_for_provision', null, null, 'course_id');
@@ -46,9 +48,16 @@ class scheduleprovision extends \core\task\scheduled_task {
 		                
 		            if(!empty($provisioned_data)){
 		                error_log($provisioned_success . $course_id);
-
-		                //Remove course from queue in DB
-		                $DB->delete_records('course_ids_for_provision', array('course_id' => $record->course_id)); 
+                        try{
+                            $transaction = $DB->start_delegated_transaction();
+                            //Remove course from queue in DB
+                            $DB->delete_records('course_ids_for_provision', array('course_id' => $record->course_id));
+                            $transaction->allow_commit(); 
+                        }catch(Exception $e){
+                            $transaction->rollback($e);
+                            error_log($e->getMessage());
+                        }
+		                
 		            }
 		            else{
 		                error_log($provisioned_failure . $course_id);
