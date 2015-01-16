@@ -56,9 +56,9 @@ class scheduleprovision extends \core\task\scheduled_task {
 		            else{
 		                error_log($provisioned_failure . $course_id);
 		            }
-		        }
-                $transaction->allow_commit(); 
+		        }      
 		    }
+            $transaction->allow_commit();
         }catch(Exception $e){
             $transaction->rollback($e);
             error_log($e->getMessage());
