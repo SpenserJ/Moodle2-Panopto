@@ -257,10 +257,10 @@ class panopto_data {
     static function set_course_id_to_provision($course_id) {
         global $DB;
         
-        try{           
+        try{
+            $transaction = $DB->start_delegated_transaction();     
             //If courseid is not already in db, add it
             if(!$DB->record_exists('course_ids_for_provision', array('course_id' => $course_id))) {
-                $transaction = $DB->start_delegated_transaction();
                 $row = (object) array('course_id' => $course_id);
                 $inserted = $DB->insert_record('course_ids_for_provision', $row);
                 $transaction->allow_commit();
