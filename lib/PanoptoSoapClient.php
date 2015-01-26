@@ -67,7 +67,40 @@ class PanoptoSoapClient extends SoapClient {
 		return $this->CallWebMethod("GetSystemInfo", array(), false);
 	}
 	
-	
+	function AddUserToCourse($sessiongroup_id, $role, $userkey){
+        try{
+            return $this->CallWebMethod("AddUserToCourse", array("CoursePublicID" => $sessiongroup_id, "Role" =>  $role, "UserKey" => $userkey));
+        }catch(Exception $e){
+            error_log("Error:" . $e->getMessage());
+            error_log("File: " . $e->getFile());
+            error_log("Line: " . $e->getLine());
+            error_log("Trace: " . $e->getTraceAsString());   
+        }   
+	}
+
+	function RemoveUserFromCourse($sessiongroup_id, $role, $userkey){
+		try{
+			return $this->CallWebMethod("RemoveUserFromCourse", array("CoursePublicID" => $sessiongroup_id, "Role" =>  $role, "UserKey" => $userkey));
+		}catch(Exception $e){
+            error_log("Error:" . $e->getMessage());
+            error_log("File: " . $e->getFile());
+            error_log("Line: " . $e->getLine());
+            error_log("Trace: " . $e->getTraceAsString());   
+        }   
+	}
+
+    
+	function ChangeUserRole($sessiongroup_id, $role, $userkey){
+        try{
+            $ads =  $this->CallWebMethod("ChangeUserRole", array("CoursePublicID" => $sessiongroup_id, "Role" => $role, "UserKey" => $userkey));
+         }catch(Exception $e){
+            error_log("Error:" . $e->getMessage());
+            error_log("File: " . $e->getFile());
+            error_log("Line: " . $e->getLine());
+            error_log("Trace: " . $e->getTraceAsString());   
+        }   
+        
+    }
 	/// Helper functions for calling Panopto ClientData web methods in non-WSDL mode.
 	
 	private function CallWebMethod($method_name, $named_params = array(), $auth = true) {
@@ -93,13 +126,14 @@ class PanoptoSoapClient extends SoapClient {
 		return array_map(array("PanoptoSoapClient", "GetPanoptoSoapVar"),
 						 array_keys($params),
 						 array_values($params));
+             
 	}
 	
 	// Construct a scalar-valued SOAP param.
 	private function GetPanoptoSoapVar($name, $value) {
 		if($name == "ProvisioningInfo") {
 			$soap_var = $this->GetProvisioningSoapVar($value);
-		} else {
+        }else {
 			$data_element = $this->GetXMLDataElement($name, $value);
 			$soap_var = new SoapVar($data_element, XSD_ANYXML);
 		}
@@ -117,6 +151,22 @@ class PanoptoSoapClient extends SoapClient {
 	private function GetProvisioningSoapVar($provisioning_info) {
 		$soap_struct = "<ns1:ProvisioningInfo>";
 		$soap_struct .= $this->GetXMLDataElement("ExternalCourseID", $provisioning_info->ExternalCourseID);
+
+		if(!empty($provisioning_info->Publishers))	{
+			$soap_struct .= "<ns1:Publishers>";
+			foreach($provisioning_info->Publishers as $publisher) {
+				$soap_struct .= "<ns1:UserProvisioningInfo>";
+				$soap_struct .= $this->GetXMLDataElement("Email", $publisher->Email);
+				$soap_struct .= $this->GetXMLDataElement("FirstName", $publisher->FirstName);
+				$soap_struct .= $this->GetXMLDataElement("LastName", $publisher->LastName);
+				$soap_struct .= $this->GetXMLDataElement("UserKey", $publisher->UserKey);
+				$soap_struct .= "</ns1:UserProvisioningInfo>";
+			}
+			$soap_struct .= "</ns1:Publishers>";
+		}	else {
+			$soap_struct .= "<ns1:Publishers />";
+		}
+		
 
 		if(!empty($provisioning_info->Instructors))	{
 			$soap_struct .= "<ns1:Instructors>";
@@ -152,6 +202,8 @@ class PanoptoSoapClient extends SoapClient {
 				
 		return new SoapVar($soap_struct, XSD_ANYXML);
 	}
+   
+   
 }
 
 /* End of file PanoptoSoapClient.php */

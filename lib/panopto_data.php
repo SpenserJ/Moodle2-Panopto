@@ -75,9 +75,12 @@ class panopto_data {
     function provision_course($provisioning_info) {
     	//If no soap client for this instance, instantiate one
     	if(!isset($this->soap_client)){
+
     		$this->soap_client = panopto_data::instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
     	}
         $course_info = $this->soap_client->ProvisionCourse($provisioning_info);
+        
+        
         if(!empty($course_info) && !empty($course_info->PublicID)) {
             panopto_data::set_panopto_course_id($this->moodle_course_id, $course_info->PublicID);
             panopto_data::set_panopto_server_name($this->moodle_course_id, $this->servername);
@@ -98,7 +101,29 @@ class panopto_data {
         $course_context = context_course::instance($this->moodle_course_id, MUST_EXIST);
 
         // Lookup table to avoid adding instructors as Viewers as well as Creators.
+        $publisher_hash = array();
         $instructor_hash = array();
+
+        $publishers = get_users_by_capability($course_context, 'block/panopto:provision_aspublisher');
+
+        if(!empty($publishers)) {
+            $provisioning_info->publishers = array();
+            foreach($publishers as $publisher) {
+                $publisher_info = new stdClass;
+                $publisher_info->UserKey = $this->panopto_decorate_username($publisher->username);
+                $publisher_info->FirstName = $publisher->firstname;
+                $publisher_info->LastName = $publisher->lastname;
+                $publisher_info->Email = $publisher->email;
+
+                array_push($provisioning_info->publishers, $publisher_info);
+
+                $publisher_hash[$publisher->username] = true;
+            }
+        }
+        else{
+            $provisioning_info->publishers = array();
+            
+        }
 
 
         // moodle/course:update capability will include admins along with teachers, course creators, etc.
@@ -110,6 +135,7 @@ class panopto_data {
         if(!empty($instructors)) {
             $provisioning_info->Instructors = array();
             foreach($instructors as $instructor) {
+                if(array_key_exists($instructor->username, $instructor_hash)) continue;
                 $instructor_info = new stdClass;
                 $instructor_info->UserKey = $this->panopto_decorate_username($instructor->username);
                 $instructor_info->FirstName = $instructor->firstname;
@@ -130,6 +156,7 @@ class panopto_data {
             $provisioning_info->Students = array();
             foreach($students as $student) {
                 if(array_key_exists($student->username, $instructor_hash)) continue;
+                if(array_key_exists($student->username, $publisher_hash)) continue;
                 $student_info = new stdClass;
                 $student_info->UserKey = $this->panopto_decorate_username($student->username);
 
@@ -257,10 +284,10 @@ class panopto_data {
     static function set_course_id_to_provision($course_id) {
         global $DB;
         
-        try{
-            $transaction = $DB->start_delegated_transaction();     
+        try{           
             //If courseid is not already in db, add it
             if(!$DB->record_exists('course_ids_for_provision', array('course_id' => $course_id))) {
+                $transaction = $DB->start_delegated_transaction();
                 $row = (object) array('course_id' => $course_id);
                 $inserted = $DB->insert_record('course_ids_for_provision', $row);
                 $transaction->allow_commit();
@@ -301,6 +328,70 @@ class panopto_data {
         return array('courses' => $options, 'selected' => $this->sessiongroup_id);
     }
 
+    function add_course_user($role, $userkey){
+        if(!isset($this->soap_client)){
+
+            $this->soap_client = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
+        }
+        
+        $result;
+        
+        try{
+            $result = $this->soap_client->AddUserToCourse($this->sessiongroup_id, $role, $userkey);
+           
+        }
+        catch(Exception $e)
+        {
+            error_log("Error: " . $e->getMessage());
+            error_log("Code: " . $e->getCode());
+            error_log("Line: ". $e->getLine());
+        }
+        return $result;
+    }
+
+    function remove_course_user($role, $userkey){
+        if(!isset($this->soap_client)){
+
+            $this->soap_client = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
+        }
+        
+        $result;
+        
+        try{
+            $result = $this->soap_client->RemoveuserFromCourse($this->sessiongroup_id, $role, $userkey);
+           
+        }
+        catch(Exception $e)
+        {
+            error_log("Error: " . $e->getMessage());
+            error_log("Code: " . $e->getCode());
+            error_log("Line: ". $e->getLine());
+        }
+        return $result;
+    }
+       
+    function change_user_role($role, $userkey){
+        
+        
+        if(!isset($this->soap_client)){
+            
+            $this->soap_client = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
+        }
+        
+        $result;
+        
+        try{
+            $result = $this->soap_client->ChangeUserRole($this->sessiongroup_id, $role, $userkey);
+           
+        }
+        catch(Exception $e)
+        {
+            error_log("Error: " . $e->getMessage());
+            error_log("Code: " . $e->getCode());
+            error_log("Line: ". $e->getLine());
+        }
+        return $result;
+    }
 
     //Used to instantiate a soap client for a given instance of panopto_data. Should be called only the first time a soap client is needed for an instance
     function instantiate_soap_client($username, $servername, $applicationkey){
