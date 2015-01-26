@@ -135,7 +135,7 @@ class panopto_data {
         if(!empty($instructors)) {
             $provisioning_info->Instructors = array();
             foreach($instructors as $instructor) {
-                if(array_key_exists($instructor->username, $instructor_hash)) continue;
+                if(array_key_exists($instructor->username, $publisher_hash)) continue;
                 $instructor_info = new stdClass;
                 $instructor_info->UserKey = $this->panopto_decorate_username($instructor->username);
                 $instructor_info->FirstName = $instructor->firstname;
@@ -289,7 +289,6 @@ class panopto_data {
             if(!$DB->record_exists('course_ids_for_provision', array('course_id' => $course_id))) {
                 $transaction = $DB->start_delegated_transaction();
                 $row = (object) array('course_id' => $course_id);
-                $inserted = $DB->insert_record('course_ids_for_provision', $row);
                 $transaction->allow_commit();
                 return $inserted;
             }            

@@ -66,11 +66,12 @@ class block_panopto_rollingsync{
         
         //Get user's moodleID and use that to find the corresponding Panopto course ID
         $moodleid = $event->courseid;
-    	$panopto_data_instance = new panopto_data($event->courseid);        
+        $panopto_data_instance = new panopto_data($event->courseid);        
         $panoptoid = $panopto_data_instance->get_panopto_course_id($moodleid);
 
         //relateduserid is moodle id of user whose enrollment is modified
         $moodleuserid = $event->relateduserid;
+        
         //db userkey is "[instancename]\\[username]". Get username and use it to create key
         $username = "";
         $user = get_complete_user_data('id', $moodleuserid);
