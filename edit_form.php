@@ -18,6 +18,8 @@
  */
 
 require_once("lib/panopto_data.php");
+require_once (dirname(__FILE__) . '/../../lib/accesslib.php');
+
 
 class block_panopto_edit_form extends block_edit_form {
     protected function specific_definition($mform) {
@@ -42,6 +44,36 @@ class block_panopto_edit_form extends block_edit_form {
             $course_list = $panopto_data->get_course_options();
             $mform->addElement('selectgroups', 'config_course', get_string('existing_course', 'block_panopto'), $course_list['courses']);
             $mform->setDefault('config_course', $course_list['selected']);
+           
+            //set course context to get roles
+            $context = context_course::instance($COURSE->id);
+           
+            //get current role mappings
+            $current_mappings = $panopto_data->get_course_role_mappings($COURSE->id);
+            
+            //get roles that current user may assign in this course
+            $current_course_roles = get_assignable_roles($context, $rolenamedisplay = ROLENAME_ALIAS, $withusercounts = false, $user = null);
+            while($role = current($current_course_roles)){
+                $rolearray[key($current_course_roles)] = $current_course_roles[key($current_course_roles)];
+                next($current_course_roles);
+            }
+
+            $mform->addElement('header', 'rolemapheader', get_string('role_map_header',  'block_panopto'));
+            $mform->addElement('html', get_string('role_map_info_text', 'block_panopto'));
+         
+            $createselect = $mform->addElement('select', 'config_creator', 'Creator', $rolearray, null);
+            $createselect->setMultiple(true);
+            //Set default selected to previous setting
+            if(!empty($current_mappings['creator'])){
+               $createselect->setSelected($current_mappings['creator']);
+            }
+            $pubselect = $mform->addElement('select', 'config_publisher', 'Publisher', $rolearray, null);
+            $pubselect->setMultiple(true);           
+            //Set default selected to previous setting
+            if(!empty($current_mappings['publisher'])){
+                $pubselect->setSelected($current_mappings['publisher']);
+            }
+                    
         } else {
             $mform->addElement('static', 'error', '', get_string('block_edit_error', 'block_panopto'));
         }

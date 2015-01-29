@@ -113,7 +113,6 @@ class PanoptoSoapClient extends SoapClient {
             $merged_vars = array_merge($soap_vars, $auth_vars);
             $soap_vars = $merged_vars;
         }
-
         // Store action for use in overridden __doRequest.
         $this->current_action = "http://services.panopto.com/IClientDataService/$method_name";
         
@@ -138,7 +137,6 @@ class PanoptoSoapClient extends SoapClient {
             $data_element = $this->GetXMLDataElement($name, $value);
             $soap_var = new SoapVar($data_element, XSD_ANYXML);
         }
-        
         return $soap_var;
     }
     
@@ -150,8 +148,30 @@ class PanoptoSoapClient extends SoapClient {
     }
     
     private function GetProvisioningSoapVar($provisioning_info) {
+        //DO NOT CHANGE THE ORDERING HERE
+        //The order should be: External course ID, Instructors, Longname, Publishers, Shortname, Students
+        //If you change the order, things will break.
+
         $soap_struct = "<ns1:ProvisioningInfo>";
-        $soap_struct .= $this->GetXMLDataElement("ExternalCourseID", $provisioning_info->ExternalCourseID);
+        
+        $soap_struct .= $this->GetXMLDataElement("ExternalCourseID", $provisioning_info->ExternalCourseID);                
+                
+        if(!empty($provisioning_info->Instructors)) {
+            $soap_struct .= "<ns1:Instructors>";
+            foreach($provisioning_info->Instructors as $instructor) {
+                $soap_struct .= "<ns1:UserProvisioningInfo>";
+                $soap_struct .= $this->GetXMLDataElement("Email", $instructor->Email);
+                $soap_struct .= $this->GetXMLDataElement("FirstName", $instructor->FirstName);
+                $soap_struct .= $this->GetXMLDataElement("LastName", $instructor->LastName);
+                $soap_struct .= $this->GetXMLDataElement("UserKey", $instructor->UserKey);
+                $soap_struct .= "</ns1:UserProvisioningInfo>";
+            }
+            $soap_struct .= "</ns1:Instructors>";
+        }   else {
+            $soap_struct .= "<ns1:Instructors />";
+        }
+                
+        $soap_struct .= $this->GetXMLDataElement("LongName", $provisioning_info->LongName);
 
         if(!empty($provisioning_info->Publishers))  {
             $soap_struct .= "<ns1:Publishers>";
@@ -167,30 +187,16 @@ class PanoptoSoapClient extends SoapClient {
         }   else {
             $soap_struct .= "<ns1:Publishers />";
         }
-        
-
-        if(!empty($provisioning_info->Instructors)) {
-            $soap_struct .= "<ns1:Instructors>";
-            foreach($provisioning_info->Instructors as $instructor) {
-                $soap_struct .= "<ns1:UserProvisioningInfo>";
-                $soap_struct .= $this->GetXMLDataElement("Email", $instructor->Email);
-                $soap_struct .= $this->GetXMLDataElement("FirstName", $instructor->FirstName);
-                $soap_struct .= $this->GetXMLDataElement("LastName", $instructor->LastName);
-                $soap_struct .= $this->GetXMLDataElement("UserKey", $instructor->UserKey);
-                $soap_struct .= "</ns1:UserProvisioningInfo>";
-            }
-            $soap_struct .= "</ns1:Instructors>";
-        }   else {
-            $soap_struct .= "<ns1:Instructors />";
-        }
-        
-        $soap_struct .= $this->GetXMLDataElement("LongName", $provisioning_info->LongName);
+                
         $soap_struct .= $this->GetXMLDataElement("ShortName", $provisioning_info->ShortName);
-        
+       
         if(!empty($provisioning_info->Students)) {
             $soap_struct .= "<ns1:Students>";
             foreach($provisioning_info->Students as $student)   {
                 $soap_struct .= "<ns1:UserProvisioningInfo>";
+                $soap_struct .= $this->GetXMLDataElement("Email", $student->Email);
+                $soap_struct .= $this->GetXMLDataElement("FirstName", $student->FirstName);
+                $soap_struct .= $this->GetXMLDataElement("LastName", $student->LastName);
                 $soap_struct .= $this->GetXMLDataElement("UserKey", $student->UserKey);
                 $soap_struct .= "</ns1:UserProvisioningInfo>";
             }
@@ -198,9 +204,11 @@ class PanoptoSoapClient extends SoapClient {
         } else {
             $soap_struct .= "<ns1:Students />";
         }
+                 
         
         $soap_struct .= "</ns1:ProvisioningInfo>";
-                
+        
+        
         return new SoapVar($soap_struct, XSD_ANYXML);
     }
    
