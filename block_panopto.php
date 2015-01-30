@@ -56,7 +56,7 @@ class block_panopto extends block_base {
             panopto_data::set_panopto_course_id($COURSE->id, $data->course);
             
             //If role mapping info is given, map roles
-            if(!empty($data->creator) && !empty($data->publisher)){
+            if(!empty($data->creator) || !empty($data->publisher)){
                 block_panopto::set_course_role_permissions($COURSE->id, $data->publisher, $data->creator);  
                 
                 //get course context
