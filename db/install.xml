@@ -11,9 +11,9 @@
             <FIELD NAME="panopto_id" TYPE="char" LENGTH="36" NOTNULL="true" SEQUENCE="false" COMMENT="Public ID of Panopto folder."/>
             <FIELD NAME="panopto_server" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Panopto server name for course."/>
             <FIELD NAME="panopto_app_key" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Panopto application key for server."/>
-            <FIELD NAME="publisher_mapping" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
-            <FIELD NAME="creator_mapping" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="3,4" SEQUENCE="false"/>
-            </FIELDS>
+            <FIELD NAME="publisher_mapping" TYPE="char" LENGTH="20" NOTNULL="false" DEFAULT="1" SEQUENCE="false"/>
+            <FIELD NAME="creator_mapping" TYPE="char" LENGTH="20" NOTNULL="false" DEFAULT="3,4" SEQUENCE="false"/>
+        </FIELDS>
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for test"/>
         </KEYS>
