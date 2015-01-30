@@ -75,9 +75,12 @@ class panopto_data {
     function provision_course($provisioning_info) {
     	//If no soap client for this instance, instantiate one
     	if(!isset($this->soap_client)){
+
     		$this->soap_client = panopto_data::instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
     	}
         $course_info = $this->soap_client->ProvisionCourse($provisioning_info);
+        
+        
         if(!empty($course_info) && !empty($course_info->PublicID)) {
             panopto_data::set_panopto_course_id($this->moodle_course_id, $course_info->PublicID);
             panopto_data::set_panopto_server_name($this->moodle_course_id, $this->servername);
@@ -98,7 +101,27 @@ class panopto_data {
         $course_context = context_course::instance($this->moodle_course_id, MUST_EXIST);
 
         // Lookup table to avoid adding instructors as Viewers as well as Creators.
+        $publisher_hash = array();
         $instructor_hash = array();
+
+        $publishers = get_users_by_capability($course_context, 'block/panopto:provision_aspublisher');
+
+        if(!empty($publishers)) {
+            $provisioning_info->Publishers = array();
+            foreach($publishers as $publisher) {
+                $publisher_info = new stdClass;
+                $publisher_info->UserKey = $this->panopto_decorate_username($publisher->username);
+                $publisher_info->FirstName = $publisher->firstname;
+                $publisher_info->LastName = $publisher->lastname;
+                $publisher_info->Email = $publisher->email;
+
+                array_push($provisioning_info->Publishers, $publisher_info);
+
+                $publisher_hash[$publisher->username] = true;
+            }
+            
+        }
+        
 
         // moodle/course:update capability will include admins along with teachers, course creators, etc.
         // Could also use moodle/legacy:teacher, moodle/legacy:editingteacher, etc. if those turn out to be more appropriate.
@@ -109,6 +132,7 @@ class panopto_data {
         if(!empty($instructors)) {
             $provisioning_info->Instructors = array();
             foreach($instructors as $instructor) {
+                if(array_key_exists($instructor->username, $publisher_hash)) continue;
                 $instructor_info = new stdClass;
                 $instructor_info->UserKey = $this->panopto_decorate_username($instructor->username);
                 $instructor_info->FirstName = $instructor->firstname;
@@ -116,9 +140,10 @@ class panopto_data {
                 $instructor_info->Email = $instructor->email;
 
                 array_push($provisioning_info->Instructors, $instructor_info);
-
+                
                 $instructor_hash[$instructor->username] = true;
             }
+            
         }
 
         // Give all enrolled users at least student-level access. Instructors will be filtered out below.
@@ -129,12 +154,16 @@ class panopto_data {
             $provisioning_info->Students = array();
             foreach($students as $student) {
                 if(array_key_exists($student->username, $instructor_hash)) continue;
-
+                if(array_key_exists($student->username, $publisher_hash)) continue;
                 $student_info = new stdClass;
                 $student_info->UserKey = $this->panopto_decorate_username($student->username);
+                $student_info->FirstName = $student->firstname;
+                $student_info->LastName = $student->lastname;
+                $student_info->Email = $student->email;
 
                 array_push($provisioning_info->Students, $student_info);
             }
+
         }
 
         return $provisioning_info;
@@ -221,7 +250,19 @@ class panopto_data {
     	global $DB;
     	return $DB->get_field('block_panopto_foldermap', 'panopto_app_key', array('moodleid' => $moodle_course_id));
     }
-
+    
+    static function get_course_role_mappings($moodle_course_id) {
+    	global $DB;
+        //get publisher roles as string and explode to array
+        $pubrolesraw =  $DB->get_field('block_panopto_foldermap', 'publisher_mapping', array('moodleid' => $moodle_course_id));
+        $pubroles = explode("," , $pubrolesraw);
+       
+        //get creator roles as string, then explode to array       
+        $createrolesraw =  $DB->get_field('block_panopto_foldermap', 'creator_mapping', array('moodleid' => $moodle_course_id));
+        $creatorroles = explode(",", $createrolesraw);
+        return array("publisher" => $pubroles, "creator" => $creatorroles);
+    }
+  
     // Called by Moodle block instance config save method, so must be static.
     static function set_panopto_course_id($moodle_course_id, $sessiongroup_id) {
         global $DB;
@@ -253,6 +294,34 @@ class panopto_data {
     	}
     }
 
+        static function set_course_role_mappings($moodle_course_id, $publisherroles, $creatorroles) {
+    	global $DB;
+    	
+                  //implode roles to string
+                   $publisher_role_string = implode(',', $publisherroles);
+
+                  if($DB->get_records('block_panopto_foldermap', array('moodleid' => $moodle_course_id))) {
+                    $pubsuccess = $DB->set_field('block_panopto_foldermap', 'publisher_mapping', $publisher_role_string, array('moodleid' => $moodle_course_id));
+                } else {
+                $row = (object) array('moodleid' => $moodle_course_id, 'publisher_mapping' => $publisher_role_string);
+                $pubsuccess = $DB->insert_record('block_panopto_foldermap', $row);
+                
+                }
+
+                  //implode roles to string
+                   $creator_role_string = implode(',', $creatorroles);
+
+                  if($DB->get_records('block_panopto_foldermap', array('moodleid' => $moodle_course_id))) {
+                   $csuccess = $DB->set_field('block_panopto_foldermap', 'creator_mapping', $creator_role_string, array('moodleid' => $moodle_course_id));
+                    } else {
+                    $row = (object) array('moodleid' => $moodle_course_id, 'creator_mapping' => $creator_role_string);
+    		 $csuccess = $DB->insert_record('block_panopto_foldermap', $row);
+    	}
+
+        
+                 
+    }
+
     function get_course_options() {
         $courses_by_access_level = array("Creator" => array(), "Viewer" => array(), "Public" => array());
 
@@ -282,9 +351,74 @@ class panopto_data {
         return array('courses' => $options, 'selected' => $this->sessiongroup_id);
     }
 
+    function add_course_user($role, $userkey){
+        if(!isset($this->soap_client)){
+
+            $this->soap_client = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
+        }
+        
+        $result;
+        
+        try{
+            $result = $this->soap_client->AddUserToCourse($this->sessiongroup_id, $role, $userkey);
+           
+        }
+        catch(Exception $e)
+        {
+            error_log("Error: " . $e->getMessage());
+            error_log("Code: " . $e->getCode());
+            error_log("Line: ". $e->getLine());
+        }
+        return $result;
+    }
+
+    function remove_course_user($role, $userkey){
+        if(!isset($this->soap_client)){
+
+            $this->soap_client = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
+        }
+        
+        $result;
+        
+        try{
+            $result = $this->soap_client->RemoveuserFromCourse($this->sessiongroup_id, $role, $userkey);
+           
+        }
+        catch(Exception $e)
+        {
+            error_log("Error: " . $e->getMessage());
+            error_log("Code: " . $e->getCode());
+            error_log("Line: ". $e->getLine());
+        }
+        return $result;
+    }
+       
+    function change_user_role($role, $userkey){
+        
+        
+        if(!isset($this->soap_client)){
+            
+            $this->soap_client = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
+        }
+        
+        $result;
+        
+        try{
+            $result = $this->soap_client->ChangeUserRole($this->sessiongroup_id, $role, $userkey);
+           
+        }
+        catch(Exception $e)
+        {
+            error_log("Error: " . $e->getMessage());
+            error_log("Code: " . $e->getCode());
+            error_log("Line: ". $e->getLine());
+        }
+        return $result;
+    }
 
     //Used to instantiate a soap client for a given instance of panopto_data. Should be called only the first time a soap client is needed for an instance
     function instantiate_soap_client($username, $servername, $applicationkey){
+        global $USER;
     	if(!empty($this->servername)) {
     		if(isset($USER->username)) {
     			$username = $USER->username;

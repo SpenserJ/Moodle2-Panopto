@@ -39,12 +39,14 @@ $capabilities = array(
 	'block/panopto:provision_asteacher' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_BLOCK,
-        'archetypes' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-        )
+        'archetypes' => array()
     ),
-
+    
+    'block/panopto:provision_aspublisher' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+        'archetypes' => array()
+    ),
 
     'block/panopto:addinstance' => array(
         'riskbitmask' => RISK_SPAM | RISK_XSS,
