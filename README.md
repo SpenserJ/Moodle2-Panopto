@@ -12,12 +12,15 @@ The original Panopto plugin was written by Panopto for Moodle 1.9 and earlier. I
 
 Fork the block, fix a bug or add a new feature, and send us a pull-request. Or, if you're not a developer, but you've found a bug, add it to our [issue tracker](https://github.com/Panopto/Moodle-2.0-Plugin-for-Panopto/issues).
 
-## New Features
-
+## To do:
+* Move language-specific strings into lang/en/block_panopto.php
+* * lib/panopto_data.php
+* * SSO.php
+* * views/provisioned_course.html.php
 
 ## Copyright
 
- Copyright Panopto 2009 - 2015/ With contributions from Spenser Jones (sjones@ambrose.edu)
+ Copyright Panopto 2009 - 2013 / With contributions from Spenser Jones (sjones@ambrose.edu)
  
 ## License
 

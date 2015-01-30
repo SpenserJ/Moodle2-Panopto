@@ -56,8 +56,11 @@ class block_panopto extends block_base {
             panopto_data::set_panopto_course_id($COURSE->id, $data->course);
             
             //If role mapping info is given, map roles
-            if(!empty($data->creator) || !empty($data->publisher)){
-                block_panopto::set_course_role_permissions($COURSE->id, $data->publisher, $data->creator);            
+            if(!empty($data->creator) && !empty($data->publisher)){
+                block_panopto::set_course_role_permissions($COURSE->id, $data->publisher, $data->creator);  
+                
+                //get course context
+                $context = context_course::instance($COURSE->id);
             }            
         } else {
             // If server is not set globally, there will be no other form values to push into config.
@@ -302,7 +305,7 @@ class block_panopto extends block_base {
         block_panopto::clear_capabilities_for_course($courseid);
 
         foreach($publisher_roles as $role){
-            assign_capability('block/panopto:provision_aspublisher', CAP_ALLOW, $role, $course_context, $overwrite = false);
+         assign_capability('block/panopto:provision_aspublisher', CAP_ALLOW, $role, $course_context, $overwrite = false);
         }      
          foreach($creator_roles as $role){
             assign_capability('block/panopto:provision_asteacher', CAP_ALLOW, $role, $course_context, $overwrite = false);
