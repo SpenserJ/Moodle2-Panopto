@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Panopto
- *
- * @package    block_panopto
- * @copyright  2014 Skylar Kelty <S.Kelty@kent.ac.uk>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace block_panopto\task;
 
 require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
