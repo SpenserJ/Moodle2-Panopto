@@ -14,6 +14,8 @@ class block_panopto_rollingsync
      * Called when an enrolment has been created.
      */
     public static function enrolmentcreated(\core\event\user_enrolment_created $event) {
+        global $CFG;
+
         $task = new \block_panopto\task\update_user();
         $task->set_custom_data(array(
             'courseid' => $event->courseid,
@@ -21,13 +23,20 @@ class block_panopto_rollingsync
             'contextid' => $event->contextid,
             'eventtype' => "enrol_add"
         ));
-        \core\task\manager::queue_adhoc_task($task);
+
+        if ($CFG->block_panopto_async_tasks) {
+            \core\task\manager::queue_adhoc_task($task);
+        } else {
+            $task->execute();
+        }
     }
 
     /**
      * Called when an enrolment has been deleted.
      */
     public static function enrolmentdeleted(\core\event\user_enrolment_deleted $event) {
+        global $CFG;
+
         $task = new \block_panopto\task\update_user();
         $task->set_custom_data(array(
             'courseid' => $event->courseid,
@@ -35,13 +44,20 @@ class block_panopto_rollingsync
             'contextid' => $event->contextid,
             'eventtype' => "enrol_remove"
         ));
-        \core\task\manager::queue_adhoc_task($task);
+
+        if ($CFG->block_panopto_async_tasks) {
+            \core\task\manager::queue_adhoc_task($task);
+        } else {
+            $task->execute();
+        }
     }
 
     /**
      * Called when an role has been added.
      */
     public static function roleadded(\core\event\role_assigned $event) {
+        global $CFG;
+
         $task = new \block_panopto\task\update_user();
         $task->set_custom_data(array(
             'courseid' => $event->courseid,
@@ -49,13 +65,20 @@ class block_panopto_rollingsync
             'contextid' => $event->contextid,
             'eventtype' => "role"
         ));
-        \core\task\manager::queue_adhoc_task($task);
+
+        if ($CFG->block_panopto_async_tasks) {
+            \core\task\manager::queue_adhoc_task($task);
+        } else {
+            $task->execute();
+        }
     }
 
     /**
      * Called when an role has been removed.
      */
     public static function roledeleted(\core\event\role_unassigned $event) {
+        global $CFG;
+
         $task = new \block_panopto\task\update_user();
         $task->set_custom_data(array(
             'courseid' => $event->courseid,
@@ -63,8 +86,11 @@ class block_panopto_rollingsync
             'contextid' => $event->contextid,
             'eventtype' => "role"
         ));
-        \core\task\manager::queue_adhoc_task($task);
+
+        if ($CFG->block_panopto_async_tasks) {
+            \core\task\manager::queue_adhoc_task($task);
+        } else {
+            $task->execute();
+        }
     }
 }
-
-?>
