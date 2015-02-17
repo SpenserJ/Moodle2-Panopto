@@ -16,6 +16,10 @@ class block_panopto_rollingsync
     public static function enrolmentcreated(\core\event\user_enrolment_created $event) {
         global $CFG;
 
+        if (\panopto_data::get_panopto_course_id($event->courseid) === false) {
+            return;
+        }
+
         $task = new \block_panopto\task\update_user();
         $task->set_custom_data(array(
             'courseid' => $event->courseid,
@@ -36,6 +40,10 @@ class block_panopto_rollingsync
      */
     public static function enrolmentdeleted(\core\event\user_enrolment_deleted $event) {
         global $CFG;
+
+        if (\panopto_data::get_panopto_course_id($event->courseid) === false) {
+            return;
+        }
 
         $task = new \block_panopto\task\update_user();
         $task->set_custom_data(array(
@@ -58,6 +66,10 @@ class block_panopto_rollingsync
     public static function roleadded(\core\event\role_assigned $event) {
         global $CFG;
 
+        if (\panopto_data::get_panopto_course_id($event->courseid) === false) {
+            return;
+        }
+
         $task = new \block_panopto\task\update_user();
         $task->set_custom_data(array(
             'courseid' => $event->courseid,
@@ -78,6 +90,10 @@ class block_panopto_rollingsync
      */
     public static function roledeleted(\core\event\role_unassigned $event) {
         global $CFG;
+
+        if (\panopto_data::get_panopto_course_id($event->courseid) === false) {
+            return;
+        }
 
         $task = new \block_panopto\task\update_user();
         $task->set_custom_data(array(
