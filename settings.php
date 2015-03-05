@@ -62,6 +62,15 @@ if ($ADMIN->fulltree) {
         				PARAM_TEXT));
     }
 
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto_async_tasks',
+            get_string('block_panopto_async_tasks', 'block_panopto'),
+            '',
+            0
+        )
+    );
+
     $link ='<a href="'.$CFG->wwwroot.'/blocks/panopto/provision_course.php">' . get_string('block_global_add_courses', 'block_panopto') . '</a>';
     $settings->add(new admin_setting_heading('block_panopto_add_courses', '', $link));
 
