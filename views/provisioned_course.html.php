@@ -23,7 +23,28 @@
     <div class='attribute'>Course Name</div>
     <div class='value'><?php echo $provisioning_data->ShortName . ": " . $provisioning_data->LongName ?></div>
 
-    <div class='attribute'>Instructors</div>
+    <div class='attribute'>Publishers</div>
+    <div class='value'>
+        <?php
+        if(!empty($provisioning_data->Publishers)) {
+            $publishers = $provisioning_data->Publishers;
+            // Single-element return set comes back as scalar, not array (?)
+            if(!is_array($publishers)) {
+                $publishers = array($publishers);
+            }    
+            $publisher_info = array();
+            foreach($publishers as $publisher) {
+                array_push($publisher_info, "$publisher->UserKey ($publisher->FirstName $publisher->LastName &lt;$publisher->Email&gt;)");
+            }
+
+            echo join("<br />", $publisher_info);
+        } else {
+            ?><div class='errorMessage'>No publishers.</div><?php
+        }
+        ?>
+    </div>
+
+    <div class='attribute'>Creators</div>
     <div class='value'>
         <?php
         if(!empty($provisioning_data->Instructors)) {
@@ -39,7 +60,7 @@
 
             echo join("<br />", $instructor_info);
         } else {
-            ?><div class='errorMessage'>No instructors.</div><?php
+            ?><div class='errorMessage'>No creators.</div><?php
         }
         ?>
     </div>
