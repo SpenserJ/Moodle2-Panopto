@@ -167,7 +167,7 @@ class panopto_soap_client extends SoapClient {
      */
     private function get_panopto_soap_vars($params) {
         // Screwy syntax to map an instance method taking two params over an associative array.
-        return array_map(array("PanoptoSoapClient", "GetPanoptoSoapVar"), array_keys($params), array_values($params));
+        return array_map(array("panopto_soap_client", "get_panopto_soap_var"), array_keys($params), array_values($params));
     }
 
     /**

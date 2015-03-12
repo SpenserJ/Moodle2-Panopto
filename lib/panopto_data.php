@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -19,7 +20,6 @@
  * @copyright  Panopto 2009 - 2015 /With contributions from Spenser Jones (sjones@ambrose.edu)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -141,8 +141,6 @@ class panopto_data {
         if (!empty($instructors)) {
             $provisioninginfo->Instructors = array();
             foreach ($instructors as $instructor) {
-                if (array_key_exists($instructor->username, $publisherhash))
-                    continue;
                 $instructorinfo = new stdClass;
                 $instructorinfo->UserKey = $this->panopto_decorate_username($instructor->username);
                 $instructorinfo->FirstName = $instructor->firstname;
@@ -254,7 +252,7 @@ class panopto_data {
     }
 
     /**
-     *Instance method caches Moodle instance name from DB (vs. block_panopto_lib version).
+     * Instance method caches Moodle instance name from DB (vs. block_panopto_lib version).
      */
     public function panopto_decorate_username($moodleusername) {
         return ($this->instancename . "\\" . $moodleusername);
@@ -263,7 +261,7 @@ class panopto_data {
     /**
      * We need to retrieve the current course mapping in the constructor, so this must be static.
      */
-   public  static function get_panopto_course_id($moodlecourseid) {
+    public static function get_panopto_course_id($moodlecourseid) {
         global $DB;
         return $DB->get_field('block_panopto_foldermap', 'panopto_id', array('moodleid' => $moodlecourseid));
     }
@@ -276,9 +274,9 @@ class panopto_data {
         return $DB->get_field('block_panopto_foldermap', 'panopto_server', array('moodleid' => $moodlecourseid));
     }
 
-     /**
-      *  Retrieve the app key for the current course
-      */
+    /**
+     *  Retrieve the app key for the current course
+     */
     public static function get_panopto_app_key($moodlecourseid) {
         global $DB;
         return $DB->get_field('block_panopto_foldermap', 'panopto_app_key', array('moodleid' => $moodlecourseid));
@@ -401,12 +399,24 @@ class panopto_data {
      * Add a user enrollment to the current course
      */
     public function add_course_user($role, $userkey) {
-        if (!isset($this->soapclient)) {
 
+        //If user has both publisher and creator roles, add both
+        if ($role == "Creator/Publisher") {
+            $this->add_course_user_soap_call("Publisher", $userkey);
+            $this->add_course_user_soap_call("Creator", $userkey);
+        } else {
+            $this->add_course_user_soap_call($role, $userkey);
+        }
+    }
+
+    /**
+     * Makes SOAP call for add_course_user function
+     */
+    private function add_course_user_soap_call($role, $userkey) {
+
+        if (!isset($this->soapclient)) {
             $this->soapclient = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
         }
-
-        $result;
 
         try {
             $result = $this->soapclient->add_user_to_course($this->sessiongroupid, $role, $userkey);
@@ -422,12 +432,18 @@ class panopto_data {
      * Remove a user's enrollment from the current course
      */
     public function remove_course_user($role, $userkey) {
-        if (!isset($this->soapclient)) {
+        {
+            $this->remove_course_user_soap_call($role, $userkey);
+        }
+    }
 
+    /**
+     * Makes SOAP call for remove_course_user function
+     */
+    private function remove_course_user_soap_call($role, $userkey) {
+        if (!isset($this->soapclient)) {
             $this->soapclient = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
         }
-
-        $result;
 
         try {
             $result = $this->soapclient->remove_user_from_course($this->sessiongroupid, $role, $userkey);
@@ -444,12 +460,22 @@ class panopto_data {
      */
     public function change_user_role($role, $userkey) {
 
-        if (!isset($this->soapclient)) {
+        //If user is to have both creator and publisher roles, change his current role to publisher, and add a creator role.
+        if ($role == "Creator/Publisher") {
+            $this->change_user_role_soap_call("Publisher", $userkey);
+            $this->add_course_user_soap_call("Creator", $userkey);
+        } else {
+            $this->change_user_role_soap_call($role, $userkey);
+        }
+    }
 
+    /**
+     * Makes SOAP call for remove_course_user function
+     */
+    private function change_user_role_soap_call($role, $userkey) {
+        if (!isset($this->soapclient)) {
             $this->soapclient = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
         }
-
-        $result;
 
         try {
             $result = $this->soapclient->change_user_role($this->sessiongroupid, $role, $userkey);
