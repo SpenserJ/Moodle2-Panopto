@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -61,18 +62,17 @@ class update_user extends \core\task\adhoc_task {
      */
     private function get_role_from_context($contextid, $userid) {
         $context = \context::instance_by_id($contextid);
-
-        if (has_capability('block/panopto:provision_aspublisher', $context, $userid)
-            && has_capability('block/panopto:provision_asteacher', $context, $userid)) {
-           return "Creator/Publisher";
-        }
-        else if (has_capability('block/panopto:provision_aspublisher', $context, $userid)) {
-            return "Publisher";
+        $role = "Viewer";
+        if (has_capability('block/panopto:provision_aspublisher', $context, $userid)) {
+            if (has_capability('block/panopto:provision_asteacher', $context, $userid)) {
+                $role = "Creator/Publisher";
+            } else {
+                $role = "Publisher";
+            }
         } else if (has_capability('block/panopto:provision_asteacher', $context, $userid)) {
-            return "Creator";
-        } else {
-            return "Viewer";
+            $role = "Creator";
         }
+        return $role;
     }
 
     /**
