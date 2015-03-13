@@ -20,8 +20,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 global $CFG, $USER;
 
 if (empty($CFG)) {
@@ -61,7 +59,7 @@ if (panopto_validate_auth_code($requestauthpayload, $requestauthcode)) {
     $userkey = panopto_decorate_username($USER->username);
 
     // Generate canonically-ordered auth payload string.
-    $responseparams = "serverName=" . $servername . "&externalUserKey=" . $userkey . "&expiration=" . $expiration;
+    $responseparams ="serverName=" . $servername . "&externalUserKey=" . $userkey . "&expiration=" . $expiration;
     // Sign payload with shared key and hash.
     $responseauthcode = panopto_generate_auth_code($responseparams);
 
