@@ -340,12 +340,13 @@ class block_panopto extends block_base {
         self::clear_capabilities_for_course($courseid);
 
         foreach ($publisherroles as $role) {
-            if (      isset($role) && trim($role)!=='' ){
+            if (isset($role) && trim($role)!=='' ){
                 assign_capability('block/panopto:provision_aspublisher', CAP_ALLOW, $role, $course_context, $overwrite = false);
             }
 
         }
-       if (      isset($role) && trim($role)!=='' ){
+        foreach ($creatorroles as $role) {
+            if (isset($role) && trim($role)!=='' ){
                 assign_capability('block/panopto:provision_asteacher', CAP_ALLOW, $role, $course_context, $overwrite = false);
                 }
         }
