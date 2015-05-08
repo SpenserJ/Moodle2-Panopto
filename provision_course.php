@@ -70,7 +70,7 @@ class panopto_provision_form extends moodleform {
         $courses = array();
         if ($coursesraw) {
             foreach ($coursesraw as $course) {
-                $courses[$course->id] = $course->shortname . ': ' . $course->fullname;
+                $courses[$course->id] = $course->fullname;
             }
         }
         asort($courses);
