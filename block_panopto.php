@@ -340,6 +340,7 @@ class block_panopto extends block_base {
         self::clear_capabilities_for_course($courseid);
 
         foreach ($publisherroles as $role) {
+<<<<<<< HEAD
             if (isset($role) && trim($role)!=='' ){
                 assign_capability('block/panopto:provision_aspublisher', CAP_ALLOW, $role, $course_context, $overwrite = false);
             }
@@ -349,6 +350,12 @@ class block_panopto extends block_base {
             if (isset($role) && trim($role)!=='' ){
                 assign_capability('block/panopto:provision_asteacher', CAP_ALLOW, $role, $course_context, $overwrite = false);
                 }
+=======
+            assign_capability('block/panopto:provision_aspublisher', CAP_ALLOW, $role, $coursecontext, $overwrite = false);
+        }
+        foreach ($creatorroles as $role) {
+            assign_capability('block/panopto:provision_asteacher', CAP_ALLOW, $role, $coursecontext, $overwrite = false);
+>>>>>>> parent of c0cea61... Fix provisioning from LTI links
         }
         // Mark dirty (moodle standard for capability changes at context level).
         $coursecontext->mark_dirty();
