@@ -83,8 +83,6 @@ class panopto_data {
      * Create the Panopto course and populate its ACLs.
      */
     public function provision_course($provisioninginfo) {
-        global $DB;
-
         // If no soap client for this instance, instantiate one.
         if (!isset($this->soapclient)) {
 
@@ -96,12 +94,6 @@ class panopto_data {
             self::set_panopto_course_id($this->moodlecourseid, $courseinfo->PublicID);
             self::set_panopto_server_name($this->moodlecourseid, $this->servername);
             self::set_panopto_app_key($this->moodlecourseid, $this->applicationkey);
-            
-            //If old role mappings exists, do not remap. Otherwise, set role mappings to defaults
-            $mappings = $DB->get_records('block_panopto_foldermap', array('moodleid' => $this->moodlecourseid));
-            if (empty($mappings['creator_mapping']) && empty($mappings['publisher_mapping'])) {
-                self::set_course_role_mappings($this->moodlecourseid, array('1'), array('3','4'));
-            }
         }
 
         return $courseinfo;
