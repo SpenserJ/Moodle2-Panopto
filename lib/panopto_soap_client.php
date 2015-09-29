@@ -45,6 +45,10 @@ class panopto_soap_client extends SoapClient {
         // Cache web service credentials for all calls requiring authentication.
         $this->authparams = array("ApiUserKey" => $apiuseruserkey,
             "AuthCode" => $apiuserauthcode);
+            
+            +            
++       //Set request timeout to 5 minutes.
++       ini_set("default_socket_timeout", 300);
     }
 
     /**
