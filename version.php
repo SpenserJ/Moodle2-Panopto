@@ -22,7 +22,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015100502;
+//Current internal version number.
+$internalversion = 2015102301;
+
+//Plugin version should normally be the same as the internal version. 
+//If an admin wants to install with an older version number, however, set that here. 
+$plugin->version = $internalversion;
 $plugin->requires = 2010112400;  // Version 2.0 .
 $plugin->cron = 0;
 $plugin->component = 'block_panopto';
@@ -31,4 +36,5 @@ $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = array(
     'mod_forum' => ANY_VERSION
 );
+
 /* End of file version.php */
