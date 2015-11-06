@@ -144,6 +144,9 @@ class block_panopto extends block_base {
         }
 
         $this->content = new stdClass;
+        //Initialize $this->content->text to an empty string here to avoid trying to append to it before
++        //it has been initialized and throwing a warning. Bug 33163
++        $this->content->text = "";
 
         // Construct the Panopto data proxy object.
         $panoptodata = new panopto_data($COURSE->id);
