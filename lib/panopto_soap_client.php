@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  Panopto 2009 - 2015
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-include ("/soap_client_with_timeout.php");
+include (dirname(__FILE__) ."/soap_client_with_timeout.php");
 class panopto_soap_client extends soap_client_with_timeout {
     public $authparams;
     // Older PHP SOAP clients fail to pass the SOAPAction header properly.
