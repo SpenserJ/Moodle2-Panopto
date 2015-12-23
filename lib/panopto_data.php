@@ -29,6 +29,7 @@ if (empty($CFG)) {
 require_once($CFG->libdir . '/dmllib.php');
 require_once("block_panopto_lib.php");
 require_once("panopto_soap_client.php");
+require_once("panopto_auth_soap_client.php");
 
 /**
  * Panopto data object. Contains info required for provisioning a course with Panopto.
@@ -44,8 +45,10 @@ class panopto_data {
     public $servername;
     public $applicationkey;
     public $soapclient;
+    public $authsoapclient;
     public $sessiongroupid;
     public $uname;
+    public $panoptoversion;
 
     //By default, the Moodle role "Manager" will map to publisher in Panopto.
     // It's Moodle ID is '1'.
@@ -80,10 +83,10 @@ class panopto_data {
      * Returns SystemInfo.
      */
     public function get_system_info() {
-
+        
         // If no soap client for this instance, instantiate one.
         if (!isset($this->soapclient)) {
-            $this->soapclient = self::instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
+            $this->soapclient = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
         }
 
         return $this->soapclient->get_system_info();
@@ -94,21 +97,43 @@ class panopto_data {
      */
     public function provision_course($provisioninginfo) {
         global $DB;
+        
+        $courseinfo = new stdClass();
 
         // If no soap client for this instance, instantiate one.
         if (!isset($this->soapclient)) {
-            $this->soapclient = self::instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
+            $this->soapclient = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
         }
 
-        $courseinfo = $this->soapclient->provision_course($provisioninginfo);
+        // If no soap client for this instance, instantiate one.
+        if (!isset($this->authsoapclient)) {
+            $this->authsoapclient = $this->instantiate_auth_soap_client($this->servername);
+        }
 
-        if (!empty($courseinfo) && !empty($courseinfo->PublicID)) {
-            self::set_panopto_course_id($this->moodlecourseid, $courseinfo->PublicID);
-            self::set_panopto_server_name($this->moodlecourseid, $this->servername);
-            self::set_panopto_app_key($this->moodlecourseid, $this->applicationkey);
+
+        //Get Panopto version from server if we don't already have it.
+        if (!isset($this->panoptoversion))
+        {
+            $this->panoptoversion = $this->authsoapclient->get_panopto_server_version();
+        }
+
+        if(!empty($this->panoptoversion)) {
+            if(version_compare($this->panoptoversion, 5) >= 0)
+            {
+                $courseinfo = $this->soapclient->provision_course_with_options($provisioninginfo);
             }
-
-
+            else
+            {
+                $courseinfo = $this->soapclient->provision_course($provisioninginfo);
+            }
+            if (    !empty($courseinfo) 
+                &&  !empty($courseinfo->PublicID)) 
+            {
+                self::set_panopto_course_id($this->moodlecourseid, $courseinfo->PublicID);
+                self::set_panopto_server_name($this->moodlecourseid, $this->servername);
+                self::set_panopto_app_key($this->moodlecourseid, $this->applicationkey);            
+            }
+        }
         return $courseinfo;
     }
 
@@ -118,12 +143,12 @@ class panopto_data {
     public function get_provisioning_info() {
 
         global $DB, $COURSE;
-
+        
          //If old role mappings exists, do not remap. Otherwise, set role mappings to defaults
         $mappings = self::get_course_role_mappings($this->moodlecourseid);
-
+        
         if (empty($mappings['creator'][0]) && empty($mappings['publisher'][0])) {
-
+            
             //Set the role mappings for the course to the defaults.
             self::set_course_role_mappings(
                 $this->moodlecourseid,
@@ -139,7 +164,7 @@ class panopto_data {
                 self::$creatordefaultrolemapping
                 );
         }
-
+        
         $provisioninginfo->ShortName = $DB->get_field('course', 'shortname', array('id' => $this->moodlecourseid));
         $provisioninginfo->LongName = $DB->get_field('course', 'fullname', array('id' => $this->moodlecourseid));
         $provisioninginfo->ExternalCourseID = $this->instancename . ":" . $this->moodlecourseid;
@@ -259,7 +284,7 @@ class panopto_data {
         $livesessions = array();
         if (!empty($livesessionsresult->SessionInfo)) {
             $livesessions = $livesessionsresult->SessionInfo;
-
+            
             // Single-element return set comes back as scalar, not array (?).
             if (!is_array($livesessions)) {
                 $livesessions = array($livesessions);
@@ -278,8 +303,8 @@ class panopto_data {
         $completeddeliveries = array();
         if (!empty($completeddeliveriesresult->DeliveryInfo)) {
             $completeddeliveries = $completeddeliveriesresult->DeliveryInfo;
-
-
+            
+            
             // Single-element return set comes back as scalar, not array (?)
             if (!is_array($completeddeliveries)) {
                 $completeddeliveries = array($completeddeliveries);
@@ -325,7 +350,7 @@ class panopto_data {
      */
     public static function get_course_role_mappings($moodlecourseid) {
         global $DB;
-
+        
         // Get publisher roles as string and explode to array.
         $pubrolesraw = $DB->get_field('block_panopto_foldermap', 'publisher_mapping', array('moodleid' => $moodlecourseid));
         $pubroles = explode(",", $pubrolesraw);
@@ -333,7 +358,7 @@ class panopto_data {
         // Get creator roles as string, then explode to array.
         $createrolesraw = $DB->get_field('block_panopto_foldermap', 'creator_mapping', array('moodleid' => $moodlecourseid));
         $creatorroles = explode(",", $createrolesraw);
-
+        
         return array("publisher" => $pubroles, "creator" => $creatorroles);
     }
 
@@ -541,7 +566,7 @@ class panopto_data {
             }
             $this->uname = $username;
         }
-
+       
         // Compute web service credentials for current user.
         $apiuseruserkey = panopto_decorate_username($username);
         $apiuserauthcode = panopto_generate_auth_code($apiuseruserkey . "@" . $this->servername, $this->applicationkey);
@@ -551,8 +576,17 @@ class panopto_data {
     }
 
      /**
-     * Gives selected capabilities to specified roles.
+     * Used to instantiate a soap client for calling Panopto's iAuth service.
+     * Should be called only the first time an  auth soap client is needed for an instance.
      */
+    public function instantiate_auth_soap_client() {
+        // Instantiate our SOAP client.
+        return new panopto_auth_soap_client($this->servername);
+    }
+
+    /**
+    * Gives selected capabilities to specified roles.
+    */
     public static function set_course_role_permissions($courseid, $publisherroles, $creatorroles) {
         $coursecontext = context_course::instance($courseid);
 

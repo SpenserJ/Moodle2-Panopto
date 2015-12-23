@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  Panopto 2009 - 2015
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-include (dirname(__FILE__) ."/soap_client_with_timeout.php");
+include ("/soap_client_with_timeout.php");
 class panopto_soap_client extends soap_client_with_timeout {
     public $authparams;
     // Older PHP SOAP clients fail to pass the SOAPAction header properly.
@@ -61,6 +61,16 @@ class panopto_soap_client extends soap_client_with_timeout {
     public function provision_course($provisioninginfo) {
         return $this->call_web_method("ProvisionCourse", array("ProvisioningInfo" => $provisioninginfo));
     }
+
+
+    // Wrapper functions for Panopto ClientData web methods.
+    /**
+     * Call API function to provision a course with Panopto
+     */
+    public function provision_course_with_options($provisioninginfo) {
+        return $this->call_web_method("ProvisionCourseWithOptions", array("ProvisioningInfoWithOptions" => $provisioninginfo));
+    }
+
 /**
  * Call API funtion to get list of  Panopto courses
  */
@@ -161,7 +171,12 @@ class panopto_soap_client extends soap_client_with_timeout {
     private function get_panopto_soap_var($name, $value) {
         if ($name == "ProvisioningInfo") {
             $soapvar = $this->get_provisioning_soap_var($value);
-        } else {
+        }
+        else if ($name == "ProvisioningInfoWithOptions")
+        {
+           $soapvar = $this->get_provisioning_soap_var_with_options($value); 
+        }
+         else {
             $dataelement = $this->get_xml_data_element($name, $value);
             $soapvar = new SoapVar($dataelement, XSD_ANYXML);
         }
@@ -178,6 +193,25 @@ class panopto_soap_client extends soap_client_with_timeout {
      * Creates a SOAP var formatted correctly to use in the provision_course call
      */
     private function get_provisioning_soap_var($provisioninginfo) {
+        $soapstruct = $this->get_formatted_provisioning_info($provisioninginfo);
+        return new SoapVar($soapstruct, XSD_ANYXML);
+    }
+
+        /**
+     * Creates a SOAP var formatted correctly to use in the provision_course call
+     */
+    private function get_provisioning_soap_var_with_options($provisioninginfo) {
+        $soapstruct = $this->get_formatted_provisioning_info($provisioninginfo);
+        $soapstruct .= "<ns1:UserOptions>";
+        $soapstruct .= $this->get_xml_data_element("HasMailLectureNotifications", "false");
+        $soapstruct .= "</ns1:UserOptions>";
+
+        return new SoapVar($soapstruct, XSD_ANYXML);
+    }
+
+    private function get_formatted_provisioning_info($provisioninginfo)
+    {
+
         // DO NOT CHANGE THE ORDERING HERE!
         // The order should be: External course ID, Instructors, Longname, Publishers, Shortname, Students.
         // If you change the order, things will break.
@@ -228,7 +262,10 @@ class panopto_soap_client extends soap_client_with_timeout {
             $soapstruct .= "<ns1:Students />";
         }
         $soapstruct .= "</ns1:ProvisioningInfo>";
-        return new SoapVar($soapstruct, XSD_ANYXML);
+
+        return $soapstruct;
     }
+
+
 }
 /* End of file PanoptoSoapClient.php */

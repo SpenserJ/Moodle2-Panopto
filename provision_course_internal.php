@@ -153,7 +153,7 @@ if ($mform->is_cancelled()) {
         } else {
             $panoptodata->servername = $panoptodata->get_panopto_servername($panoptodata->moodlecourseid);
         }
-
+        
         if (isset($selectedkey)) {
             $panoptodata->applicationkey = $selectedkey;
         } else {
