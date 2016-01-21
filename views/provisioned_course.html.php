@@ -23,10 +23,10 @@
 
 <div class='block_panopto'>
     <div class='courseProvisionResult'>
-        <div class='attribute'>Course Name</div>
+        <div class='attribute'><?php echo get_string('course_name', 'block_panopto') ?></div>
         <div class='value'><?php echo $provisioningdata->ShortName . ": " . $provisioningdata->LongName ?></div>
 
-        <div class='attribute'>Publishers</div>
+        <div class='attribute'><?php echo get_string('publishers', 'block_panopto') ?></div>
         <div class='value'>
             <?php
                 if (!empty($provisioningdata->Publishers)) {
@@ -43,12 +43,12 @@
 
                 echo join("<br />", $publisherinfo);
                 } else {
-                ?><div class='errorMessage'>No publishers.</div><?php
+                ?><div class='errorMessage'><?php echo get_string('no_publishers', 'block_panopto') ?></div><?php
                 }
                 ?>
         </div>
 
-        <div class='attribute'>Creators</div>
+        <div class='attribute'><?php echo get_string('creators', 'block_panopto') ?></div>
         <div class='value'>
             <?php
             if (!empty($provisioningdata->Instructors)) {
@@ -65,11 +65,11 @@
 
                 echo join("<br />", $instructorinfo);
             } else {
-                ?><div class='errorMessage'>No creators.</div><?php
+                ?><div class='errorMessage'><?php echo get_string('no_creators', 'block_panopto') ?></div><?php
             }
             ?>
         </div>
-        <div class='attribute'>Students</div>
+        <div class='attribute'><?php echo get_string('students', 'block_panopto') ?></div>
         <div class='value'>
             <?php
             if (!empty($provisioningdata->Students)) {
@@ -86,20 +86,20 @@
 
                 echo join(", ", $studentinfo);
             } else {
-                ?><div class='errorMessage'>No students.</div><?php
+                ?><div class='errorMessage'><?php echo get_string('no_students', 'block_panopto') ?></div><?php
             }
             ?>
         </div>
-        <div class='attribute'>Result</div>
+        <div class='attribute'><?php echo get_string('result', 'block_panopto') ?></div>
         <div class='value'>
             <?php
             if (!empty($provisioneddata)) {
                 ?>
-                <div class='successMessage'>Successfully provisioned course {<?php echo $provisioneddata->PublicID ?>}</div>
+                <div class='successMessage'><?php echo get_string('provision_successful', 'block_panopto') ?> {<?php echo $provisioneddata->PublicID ?>}</div>
                 <?php
             } else {
                 ?>
-                <div class='errorMessage'>Error provisioning course.</div>
+                <div class='errorMessage'><?php echo get_string('provision_error', 'block_panopto') ?></div>
                 <?php
             }
             ?>

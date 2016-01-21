@@ -76,14 +76,14 @@ class block_panopto_edit_form extends block_edit_form {
             $mform->addElement('header', 'rolemapheader', get_string('role_map_header', 'block_panopto'));
             $mform->addElement('html', get_string('role_map_info_text', 'block_panopto'));
 
-            $createselect = $mform->addElement('select', 'config_creator', 'Creator', $rolearray, null);
+            $createselect = $mform->addElement('select', 'config_creator', get_string('creator', 'block_panopto'), $rolearray, null);
             $createselect->setMultiple(true);
 
             // Set default selected to previous setting.
             if (!empty($currentmappings['creator'])) {
                 $createselect->setSelected($currentmappings['creator']);
             }
-            $pubselect = $mform->addElement('select', 'config_publisher', 'Publisher', $rolearray, null);
+            $pubselect = $mform->addElement('select', 'config_publisher', get_string('publisher', 'block_panopto'), $rolearray, null);
             $pubselect->setMultiple(true);
 
             // Set default selected to previous setting.

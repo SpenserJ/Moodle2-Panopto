@@ -72,9 +72,9 @@ class panopto_provision_form extends moodleform {
 
         $mform = & $this->_form;
 
-        $serverselect = $mform->addElement('select', 'servers', 'Select a Panopto server', $aserverarray);
+        $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
 
-        $this->add_action_buttons(true, 'Provision');
+        $this->add_action_buttons(true, get_string('provision', 'block_panopto'));
     }
 
 }
@@ -132,9 +132,9 @@ if ($mform->is_cancelled()) {
 
     // If there are no servers specified for provisioning, give a failure notice and allow user to return to course page.
     if (count($aserverarray) < 1) {
-        echo "There are no servers set up for provisioning. Please contact system administrator. 
+        echo get_string('no_server', 'block_panopto') . "
         <br/>
-        <a href='$returnurl'>Back to course</a>";
+        <a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . "</a>";
 
     } else if (isset($selectedserver)) {
 
@@ -164,7 +164,7 @@ if ($mform->is_cancelled()) {
         $provisioneddata = $panoptodata->provision_course($provisioningdata);
 
         include('views/provisioned_course.html.php');
-        echo "<a href='$returnurl'>Back to course</a>";
+        echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . "</a>";
     } else {
         $mform->display();
     }

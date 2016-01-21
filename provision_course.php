@@ -75,13 +75,13 @@ class panopto_provision_form extends moodleform {
         }
         asort($courses);
 
-        $serverselect = $mform->addElement('select', 'servers', 'Select a Panopto server', $aserverarray);
+        $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
         $select = $mform->addElement('select', 'courses', get_string('provisioncourseselect', 'block_panopto'), $courses);
         $select->setMultiple(true);
         $select->setSize(32);
         $mform->addHelpButton('courses', 'provisioncourseselect', 'block_panopto');
 
-        $this->add_action_buttons(true, 'Provision');
+        $this->add_action_buttons(true, get_string('provision', 'block_panopto'));
     }
 
 }
@@ -173,7 +173,7 @@ if ($mform->is_cancelled()) {
             $provisioneddata = $panoptodata->provision_course($provisioningdata);
             include('views/provisioned_course.html.php');
         }
-        echo "<a href='$returnurl'>Back to config</a>";
+        echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . "</a>";
     } else {
         $mform->display();
     }
