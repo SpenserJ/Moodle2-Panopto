@@ -23,7 +23,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 //Current internal version number.
-$internalversion =2016012501;
+$internalversion =2016012701;
 
 //Plugin version should normally be the same as the internal version. 
 //If an admin wants to install with an older version number, however, set that here. 

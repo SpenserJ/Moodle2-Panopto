@@ -50,6 +50,8 @@ class panopto_data {
     public $uname;
     public $panoptoversion;
 
+    const PAGE_SIZE = 50;
+
     //By default, the Moodle role "Manager" will map to publisher in Panopto.
     // It's Moodle ID is '1'.
     public static $publisherdefaultrolemapping = array('1');
@@ -92,6 +94,25 @@ class panopto_data {
         return $this->soapclient->get_system_info();
     }
 
+    //Gets the toal count of users from all roles given a provisioning info object.
+    private function get_user_count($provisioninginfo)
+    {
+        $usercount = 0;
+        if(isset($provisioninginfo->Publishers))
+        {
+            $usercount += count($provisioninginfo->Publishers);
+        }
+        if(isset($provisioninginfo->Instructors))
+        {
+            $usercount += count($provisioninginfo->Instructors);
+        }
+        if(isset($provisioninginfo->Students))
+        {
+            $usercount += count($provisioninginfo->Students);
+        }
+        return $usercount;
+    }
+
     /**
      * Create the Panopto course and populate its ACLs.
      */
@@ -116,11 +137,22 @@ class panopto_data {
         {
             $this->panoptoversion = $this->authsoapclient->get_panopto_server_version();
         }
-
+        
         if(!empty($this->panoptoversion)) {
             if(version_compare($this->panoptoversion, 5) >= 0)
             {
-                $courseinfo = $this->soapclient->provision_course_with_options($provisioninginfo);
+                //Get total number of users to be provisioned
+                $usercount = $this->get_user_count($provisioninginfo);
+
+                //If there are more than 50 users, do the paged form of provisioning
+                if ($usercount > self::PAGE_SIZE)
+                {
+                    $courseinfo = $this->provision_course_with_paging($provisioninginfo);
+                }
+                else
+                {
+                    $courseinfo = $this->soapclient->provision_course_with_options($provisioninginfo);
+                }          
             }
             else
             {
@@ -136,6 +168,8 @@ class panopto_data {
         }
         return $courseinfo;
     }
+
+
 
     /**
      *  Fetch course name and membership info from DB in preparation for provisioning operation.
@@ -627,6 +661,62 @@ class panopto_data {
             $coursecontext->mark_dirty();
         }
     }
+
+    private function perform_provisioning_operations($userarray, $provisioninginfo, $courseoptions)
+    {
+        $courseinfo = $this->soapclient->provision_course_with_course_options($provisioninginfo, $courseoptions);
+        $this->soapclient->make_paged_call_provision_users($userarray);
+
+        return $courseinfo;
+    }
+
+    private function paged_provision_by_role($roleName, $provisioninginfo, &$userarray, &$courseoptions, &$courseinfo)
+    {
+
+        if(isset($provisioninginfo->$roleName))
+        {
+            $courseoptions["Clear" . $roleName] = "true";
+            $userarray = array_merge($userarray, $provisioninginfo->$roleName);
+            if(count($userarray) > self::PAGE_SIZE)
+            {
+                $courseinfo = $this->perform_provisioning_operations($userarray, $provisioninginfo, $courseoptions);
+                $userarray = [];
+                $courseoptions = array("ProvisionUsers" => "false");
+            }
+        }
+    }
+
+    //Function used to provision when the number of users to be provisioned in a single role is over the threshold value.
+    //Each role is considered one at a time. If there are more users in a particular role than the threshold for paging, the
+    //Course data is synced for that role, and that role's users are provisioned in a paged manner. If there are not more users than the threshold,
+    //the users are combined with the users from the next role, and if the total number is higher than the threshold they are synced and provisioned together.
+    //If the total users after all stages are not over the threshold, all roles (or remaining roles) are synced and provisioned together.   
+    public function provision_course_with_paging($provisioninginfo)
+    {
+        //Instantiate soap client if it hasn't been already
+         if (!isset($this->soapclient)) {
+            $this->soapclient = $this->instantiate_soap_client($this->uname, $this->servername, $this->applicationkey);
+        }
+        
+        $courseinfo = new stdClass;
+        $courseoptions = array("ProvisionUsers" => "false");
+        $userarray = [];
+        
+        $this->paged_provision_by_role("Publishers", $provisioninginfo, $userarray, $courseoptions, $courseinfo);
+        $this->paged_provision_by_role("Instructors", $provisioninginfo, $userarray, $courseoptions, $courseinfo);
+        $this->paged_provision_by_role("Students", $provisioninginfo, $userarray, $courseoptions, $courseinfo);
+
+
+        //If any users have yet to be provisioned, do it now.
+        if(!empty($userarray))
+        {
+            $courseinfo = $this->perform_provisioning_operations($userarray, $provisioninginfo, $courseoptions);
+        }
+              
+        //Return course info to be displayed.
+        return $courseinfo;
+    }
+
 }
 
 /* End of file panopto_data.php */
