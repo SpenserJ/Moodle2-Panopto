@@ -123,7 +123,7 @@ class block_panopto_rollingsync {
         global $CFG;
 
         if (\panopto_data::get_panopto_course_id($event->courseid) === false
-            || $CFG->version < $requiredVersion) {
+            || $CFG->version < self::$requiredVersion) {
             return;
         }
 
