@@ -78,38 +78,6 @@ try {
                     } else {
                         $content->text .= '<div class="listItem">'
                                 . get_string('no_live_sessions', 'block_panopto') . '</div>';
-
-        $this->content = new stdClass;
-        //Initialize $this->content->text to an empty string here to avoid trying to append to it before
-        //it has been initialized and throwing a warning. Bug 33163
-        $this->content->text = "";
-
-
-
-        $this->content->footer = '';
-
-        global $PAGE;
-        
-        $params = array('id' => self::CONTENTID, 'courseid' => $COURSE->id);
-        
-        $PAGE->requires->yui_module('moodle-block_panopto-asyncload',
-                                    'M.block_panopto.asyncload.init',
-                                    array($params),
-                                    null,
-                                    true);
-        
-        $this->content->text  = html_writer::tag('div', "<font id='loading_text'>" . get_string('fetching_content', 'block_panopto') . "</font>", $params);
-        $this->content->text .= '<script type="text/javascript">
-                    // Function to pop up Panopto live note taker.
-                    function panopto_launchNotes(url) {
-                        // Open empty notes window, then POST SSO form to it.
-                        var notesWindow = window.open("", "PanoptoNotes", "width=500,height=800,resizable=1,scrollbars=0,status=0,location=0");
-                        document.SSO.action = url;
-                        document.SSO.target = "PanoptoNotes";
-                        document.SSO.submit();
-
-                        // Ensure the new window is brought to the front of the z-order.
-                        notesWindow.focus();
                     }
 
                     $content->text .= "<div class='sectionHeader'><b>"
