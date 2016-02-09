@@ -42,6 +42,7 @@ $string['creators'] = 'Creators';
 $string['download_recorder'] = 'Download Recorder';
 $string['error_retrieving'] = 'Error retrieving Panopto course.';
 $string['existing_course'] = 'Select an existing course:';
+$string['fetching_content'] = 'Fetching Panopto Content...';
 $string['links'] = 'Links';
 $string['live_sessions'] = 'Live Sessions';
 $string['no_completed_recordings'] = 'No Completed Recordings';
