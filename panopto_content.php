@@ -78,7 +78,7 @@ try {
                     } else {
                         $content->text .= '<div class="listItem">'
                                 . get_string('no_live_sessions', 'block_panopto') . '</div>';
-=======
+
         $this->content = new stdClass;
         //Initialize $this->content->text to an empty string here to avoid trying to append to it before
         //it has been initialized and throwing a warning. Bug 33163
@@ -110,7 +110,6 @@ try {
 
                         // Ensure the new window is brought to the front of the z-order.
                         notesWindow.focus();
->>>>>>> origin/master
                     }
 
                     $content->text .= "<div class='sectionHeader'><b>"
