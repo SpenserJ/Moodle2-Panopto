@@ -66,7 +66,8 @@ class panopto_provision_form extends moodleform {
         global $aserverarray;
 
         $mform = & $this->_form;
-        $coursesraw = $DB->get_records('course', null, '', 'id, shortname, fullname');
+        $select_query = "id <> 1";
+        $coursesraw = $DB->get_records_select('course', $select_query, null, 'id, shortname, fullname');
         $courses = array();
         if ($coursesraw) {
             foreach ($coursesraw as $course) {
