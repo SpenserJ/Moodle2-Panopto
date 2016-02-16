@@ -176,7 +176,17 @@ class panopto_soap_client extends soap_client_with_timeout {
         // Store action for use in overridden __doRequest.
         $this->currentaction = "http://services.panopto.com/IClientDataService/$methodname";
         // Make the SOAP call via SoapClient::__soapCall.
-        return parent::__soapCall($methodname, $soapvars);
+        try{
+            return parent::__soapCall($methodname, $soapvars);
+        }
+        catch (Exception $e) {
+            echo "<div style='color:red;'> Error:" . $e->getMessage()."</div>";
+            error_log("Error:" . $e->getMessage());
+            error_log("File: " . $e->getFile());
+            error_log("Line: " . $e->getLine());
+            error_log("Trace: " . $e->getTraceAsString());
+        }
+
     }
     /**
      * Convert an associative array into an array of SoapVars with name $key and value $value.
