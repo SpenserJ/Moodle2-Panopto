@@ -680,7 +680,7 @@ class panopto_data {
             if(count($userarray) > self::PAGE_SIZE)
             {
                 $courseinfo = $this->perform_provisioning_operations($userarray, $provisioninginfo, $courseoptions);
-                $userarray = [];
+                $userarray = array();
                 $courseoptions = array("ProvisionUsers" => "false");
             }
         }
@@ -700,7 +700,7 @@ class panopto_data {
         
         $courseinfo = new stdClass;
         $courseoptions = array("ProvisionUsers" => "false");
-        $userarray = [];
+        $userarray = array();
         
         $this->paged_provision_by_role("Publishers", $provisioninginfo, $userarray, $courseoptions, $courseinfo);
         $this->paged_provision_by_role("Instructors", $provisioninginfo, $userarray, $courseoptions, $courseinfo);
