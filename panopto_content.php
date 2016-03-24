@@ -32,139 +32,139 @@ try {
             <a href='$CFG->wwwroot/blocks/panopto/provision_course_internal.php?id=$courseid'>" . get_string('provision_course_link_text', 'block_panopto'). "</a>";
             $content->footer = "";
 
-            return $content;
+            echo $content->text;
         }
-
-        try {
-            if (!$panoptodata->sessiongroupid) {
-                $content->text = get_string('no_course_selected', 'block_panopto');
-            } else {
-                // Get course info from SOAP service.
-                $courseinfo = $panoptodata->get_course();
-
-                // Panopto course was deleted, or an exception was thrown while retrieving course data.
-                if ($courseinfo->Access == "Error") {
-                    $content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . "</span>";
+        else{
+            try {
+                if (!$panoptodata->sessiongroupid) {
+                    $content->text = get_string('no_course_selected', 'block_panopto');
                 } else {
-                    // SSO form passes instance name in POST to keep URLs portable.
-                    $content->text .= "
-                        <form name='SSO' method='post'>
-                            <input type='hidden' name='instance' value='$panoptodata->instancename' />
-                        </form>";
+                    // Get course info from SOAP service.
+                    $courseinfo = $panoptodata->get_course();
 
-                    $content->text .= '<div><b>' . get_string('live_sessions', 'block_panopto') . '</b></div>';
-                    $livesessions = $panoptodata->get_live_sessions();
-                    if (!empty($livesessions)) {
-                        $i = 0;
-                        foreach ($livesessions as $livesession) {
-                            // Alternate gray background for readability.
-                            $altclass = ($i % 2) ? "listItemAlt" : "";
-
-                            $livesessiondisplayname = s($livesession->Name);
-                            $content->text .= "<div class='listItem $altclass'>
-                            $livesessiondisplayname
-                                                         <span class='nowrap'>
-                                                            [<a href='javascript:panopto_launchNotes(\"$livesession->LiveNotesURL\")'
-                                                                >" . get_string('take_notes', 'block_panopto') . '</a>]';
-                            if ($livesession->BroadcastViewerURL) {
-                                $content->text .= "[<a href='$livesession->BroadcastViewerURL' onclick='return panopto_startSSO(this)'>"
-                                        . get_string('watch_live', 'block_panopto') . '</a>]';
-                            }
-                            $content->text .= "
-                                                         </span>
-                                                    </div>";
-                            $i++;
-                        }
+                    // Panopto course was deleted, or an exception was thrown while retrieving course data.
+                    if ($courseinfo->Access == "Error") {
+                        $content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . "</span>";
                     } else {
-                        $content->text .= '<div class="listItem">'
-                                . get_string('no_live_sessions', 'block_panopto') . '</div>';
-                    }
+                        // SSO form passes instance name in POST to keep URLs portable.
+                        $content->text .= "
+                            <form name='SSO' method='post'>
+                                <input type='hidden' name='instance' value='$panoptodata->instancename' />
+                            </form>";
 
-                    $content->text .= "<div class='sectionHeader'><b>"
-                            . get_string('completed_recordings', 'block_panopto') . '</b></div>';
-                    $completeddeliveries = $panoptodata->get_completed_deliveries();
-                    if (!empty($completeddeliveries)) {
-                        $i = 0;
-                        foreach ($completeddeliveries as $completeddelivery) {
-                            // Collapse to 3 lectures by default.
-                            if ($i == 3) {
-                                $content->text .= "<div id='hiddenLecturesDiv'>";
+                        $content->text .= '<div><b>' . get_string('live_sessions', 'block_panopto') . '</b></div>';
+                        $livesessions = $panoptodata->get_live_sessions();
+                        if (!empty($livesessions)) {
+                            $i = 0;
+                            foreach ($livesessions as $livesession) {
+                                // Alternate gray background for readability.
+                                $altclass = ($i % 2) ? "listItemAlt" : "";
+
+                                $livesessiondisplayname = s($livesession->Name);
+                                $content->text .= "<div class='listItem $altclass'>
+                                $livesessiondisplayname
+                                                             <span class='nowrap'>
+                                                                [<a href='javascript:panopto_launchNotes(\"$livesession->LiveNotesURL\")'
+                                                                    >" . get_string('take_notes', 'block_panopto') . '</a>]';
+                                if ($livesession->BroadcastViewerURL) {
+                                    $content->text .= "[<a href='$livesession->BroadcastViewerURL' onclick='return panopto_startSSO(this)'>"
+                                            . get_string('watch_live', 'block_panopto') . '</a>]';
+                                }
+                                $content->text .= "
+                                                             </span>
+                                                        </div>";
+                                $i++;
+                            }
+                        } else {
+                            $content->text .= '<div class="listItem">'
+                                    . get_string('no_live_sessions', 'block_panopto') . '</div>';
+                        }
+
+                        $content->text .= "<div class='sectionHeader'><b>"
+                                . get_string('completed_recordings', 'block_panopto') . '</b></div>';
+                        $completeddeliveries = $panoptodata->get_completed_deliveries();
+                        if (!empty($completeddeliveries)) {
+                            $i = 0;
+                            foreach ($completeddeliveries as $completeddelivery) {
+                                // Collapse to 3 lectures by default.
+                                if ($i == 3) {
+                                    $content->text .= "<div id='hiddenLecturesDiv'>";
+                                }
+
+                                // Alternate gray background for readability.
+                                $altclass = ($i % 2) ? "listItemAlt" : "";
+
+                                $completeddeliverydisplayname = s($completeddelivery->DisplayName);
+                                $content->text .= "<div class='listItem $altclass'>
+                                                            <a href='$completeddelivery->ViewerURL' onclick='return panopto_startSSO(this)'>
+                                                            $completeddeliverydisplayname
+                                                            </a>
+                                                        </div>";
+                                $i++;
                             }
 
-                            // Alternate gray background for readability.
-                            $altclass = ($i % 2) ? "listItemAlt" : "";
+                            // If some lectures are hidden, display "Show all" link.
+                            if ($i > 3) {
+                                $content->text .= "</div>";
+                                $content->text .= "<div id='showAllDiv'>";
+                                $content->text .= "[<a id='showAllToggle' href='javascript:panopto_toggleHiddenLectures()'>"
+                                        . get_string('show_all', 'block_panopto') . '</a>]';
+                                $content->text .= "</div>";
+                            }
+                        } else {
+                            $content->text .= "<div class='listItem'>" . get_string('no_completed_recordings', 'block_panopto') . '</div>';
+                        }
 
-                            $completeddeliverydisplayname = s($completeddelivery->DisplayName);
-                            $content->text .= "<div class='listItem $altclass'>
-                                                        <a href='$completeddelivery->ViewerURL' onclick='return panopto_startSSO(this)'>
-                                                        $completeddeliverydisplayname
-                                                        </a>
+                        if ($courseinfo->AudioPodcastURL) {
+                            $content->text .= "<div class='sectionHeader'><b>" . get_string('podcast_feeds', 'block_panopto') . "</b></div>
+                                                     <div class='listItem'>
+                                                        <img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />
+                                                        <a href='$courseinfo->AudioPodcastURL'>" . get_string('podcast_audio', 'block_panopto') . "</a>
+                                                        <span class='rssParen'>(</span
+                                                            ><a href='$courseinfo->AudioRssURL' target='_blank' class='rssLink'>RSS</a
+                                                        ><span class='rssParen'>)</span>
+                                                     </div>";
+                            if ($courseinfo->VideoPodcastURL) {
+                                $content->text .= "
+                                                     <div class='listItem'>
+                                                        <img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' /> 
+                                                        <a href='$courseinfo->VideoPodcastURL'>" . get_string('podcast_video', 'block_panopto') . "</a>
+                                                        <span class='rssParen'>(</span
+                                                            ><a href='$courseinfo->VideoRssURL' target='_blank' class='rssLink'>RSS</a
+                                                        ><span class='rssParen'>)</span>
+                                                     </div>";
+                            }
+                        }
+                        $context = context_course::instance($courseid, MUST_EXIST);
+                        if (has_capability('moodle/course:update', $context)) {
+                            $content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') . "</b></div>
+                                                     <div class='listItem'>
+                                                        <a href='$courseinfo->CourseSettingsURL' onclick='return panopto_startSSO(this)'
+                                                            >" . get_string('course_settings', 'block_panopto') . "</a>
+                                                     </div>\n";
+                            $systeminfo = $panoptodata->get_system_info();
+                            $content->text .= "<div class='listItem'>
+                                                        " . get_string('download_recorder', 'block_panopto') . "
+                                                            <span class='nowrap'>
+                                                                (<a href='$systeminfo->RecorderDownloadUrl'>Windows</a>
+                                                                | <a href='$systeminfo->MacRecorderDownloadUrl'>Mac</a>)</span>
                                                     </div>";
-                            $i++;
-                        }
-
-                        // If some lectures are hidden, display "Show all" link.
-                        if ($i > 3) {
-                            $content->text .= "</div>";
-                            $content->text .= "<div id='showAllDiv'>";
-                            $content->text .= "[<a id='showAllToggle' href='javascript:panopto_toggleHiddenLectures()'>"
-                                    . get_string('show_all', 'block_panopto') . '</a>]';
-                            $content->text .= "</div>";
-                        }
-                    } else {
-                        $content->text .= "<div class='listItem'>" . get_string('no_completed_recordings', 'block_panopto') . '</div>';
+                        }                 
                     }
-
-                    if ($courseinfo->AudioPodcastURL) {
-                        $content->text .= "<div class='sectionHeader'><b>" . get_string('podcast_feeds', 'block_panopto') . "</b></div>
-                                                 <div class='listItem'>
-                                                    <img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />
-                                                    <a href='$courseinfo->AudioPodcastURL'>" . get_string('podcast_audio', 'block_panopto') . "</a>
-                                                    <span class='rssParen'>(</span
-                                                        ><a href='$courseinfo->AudioRssURL' target='_blank' class='rssLink'>RSS</a
-                                                    ><span class='rssParen'>)</span>
-                                                 </div>";
-                        if ($courseinfo->VideoPodcastURL) {
-                            $content->text .= "
-                                                 <div class='listItem'>
-                                                    <img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' /> 
-                                                    <a href='$courseinfo->VideoPodcastURL'>" . get_string('podcast_video', 'block_panopto') . "</a>
-                                                    <span class='rssParen'>(</span
-                                                        ><a href='$courseinfo->VideoRssURL' target='_blank' class='rssLink'>RSS</a
-                                                    ><span class='rssParen'>)</span>
-                                                 </div>";
-                        }
-                    }
-                    $context = context_course::instance($courseid, MUST_EXIST);
-                    if (has_capability('moodle/course:update', $context)) {
-                        $content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') . "</b></div>
-                                                 <div class='listItem'>
-                                                    <a href='$courseinfo->CourseSettingsURL' onclick='return panopto_startSSO(this)'
-                                                        >" . get_string('course_settings', 'block_panopto') . "</a>
-                                                 </div>\n";
-                        $systeminfo = $panoptodata->get_system_info();
-                        $content->text .= "<div class='listItem'>
-                                                    " . get_string('download_recorder', 'block_panopto') . "
-                                                        <span class='nowrap'>
-                                                            (<a href='$systeminfo->RecorderDownloadUrl'>Windows</a>
-                                                            | <a href='$systeminfo->MacRecorderDownloadUrl'>Mac</a>)</span>
-                                                </div>";
-                    }                 
                 }
+            } catch (Exception $e) {
+                $content->text .= "<br><br><span class='error'>" . get_string('error_retrieving', 'block_panopto') . "</span>";
             }
-        } catch (Exception $e) {
-            $content->text .= "<br><br><span class='error'>" . get_string('error_retrieving', 'block_panopto') . "</span>";
+
+            $content->footer = '';
+
+
+            echo $content->text;
         }
-
-        $content->footer = '';
-
-
-        echo $content->text;
-
-} catch (Exception $e) {
-    header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request', true, 400);
-    if (isloggedin()) {
-        header('Content-Type: text/plain; charset=utf-8');
-        echo $e->getMessage();
+    } catch (Exception $e) {
+        header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request', true, 400);
+        if (isloggedin()) {
+            header('Content-Type: text/plain; charset=utf-8');
+            echo $e->getMessage();
+        }
     }
-}
