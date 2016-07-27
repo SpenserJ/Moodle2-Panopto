@@ -43,4 +43,8 @@ $observers = array(
         'eventname' => '\core\event\role_unassigned',
         'callback' => 'block_panopto_rollingsync::roledeleted',
     ),
+    array(
+        'eventname' => '\core\event\course_created',
+        'callback' => 'block_panopto_rollingsync::coursecreated',
+        ),
 );
