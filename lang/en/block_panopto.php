@@ -33,6 +33,7 @@ $string['block_global_hostname'] = 'Panopto Server Hostname';
 $string['block_global_instance_description'] = 'This value is prefixed before usernames and course-names in Panopto.';
 $string['block_global_instance_name'] = 'Moodle Instance Name';
 $string['block_panopto_async_tasks'] = 'Asynchronous enrolment sync';
+$string['block_panopto_auto_provision'] = 'Automatically provision newly created courses';
 $string['completed_recordings'] = 'Completed Recordings';
 $string['course'] = 'Course';
 $string['course_name'] = 'Course Name';
