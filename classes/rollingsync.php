@@ -142,4 +142,21 @@ class block_panopto_rollingsync {
         }
     }
 
+    public static function coursecreated(\core\event\course_created $event) {
+        global $CFG;
+
+        if($CFG->block_panopto_auto_provision_new_courses){
+            $task = new \block_panopto\task\provision_course();
+            $task->set_custom_data(array(
+                'courseid' => $event->courseid,
+                'relateduserid' => $event->relateduserid,
+                'contextid' => $event->contextid,
+                'eventtype' => "role",
+                'servername'=> $CFG->block_panopto_server_name1,
+                'appkey' => $CFG->block_panopto_application_key1
+            ));
+            $task->execute();
+        }
+    }
+
 }
