@@ -32,7 +32,7 @@ class panopto_soap_client extends soap_client_with_timeout {
     // Older PHP SOAP clients fail to pass the SOAPAction header properly.
     // Store the current action so we can insert it in __doRequest.
     public $currentaction;
-    public function panopto_soap_client($servername, $apiuseruserkey, $apiuserauthcode) {
+    public function __construct($servername, $apiuseruserkey, $apiuserauthcode) {
         // Instantiate SoapClient in non-WSDL mode.
         //Set call timeout to 5 minutes.
         parent::__construct
@@ -47,6 +47,12 @@ class panopto_soap_client extends soap_client_with_timeout {
         // Cache web service credentials for all calls requiring authentication.
         $this->authparams = array("ApiUserKey" => $apiuseruserkey,
             "AuthCode" => $apiuserauthcode);
+    }
+    /**
+     * Keeping this constructor of backwards compatibility
+     */
+    public function panopto_soap_client($servername, $apiuseruserkey, $apiuserauthcode) {
+        self::__construct($servername, $apiuseruserkey, $apiuserauthcode);
     }
     /**
      * Override SOAP action to work around bug in older PHP SOAP versions.
@@ -71,7 +77,7 @@ class panopto_soap_client extends soap_client_with_timeout {
         return $this->call_web_method("ProvisionCourseWithOptions", array("ProvisioningInfoWithOptions" => $provisioninginfo));
     }
 
-    
+
     /**
     *Provisioning functions that clears members with a particular role from the acl of the course's folder.
     *These are used for paged provisioning when the user count for a course is over the threshold for a particular role.
@@ -81,7 +87,7 @@ class panopto_soap_client extends soap_client_with_timeout {
         return $this->call_web_method("ProvisionCourseWithOptions", array("ProvisioningInfoWithCourseOptions" => array("ProvisioningInfo" => $provisioninginfo, "CourseOptions" => $options)));
     }
 
-    
+
 
     //Function used to provision users to a course after the course itself has been provisioned. Used by
     //make_paged_call_provision_users.
@@ -166,7 +172,7 @@ class panopto_soap_client extends soap_client_with_timeout {
      */
     private function call_web_method($methodname, $namedparams = array(), $auth = true) {
         $soapvars = $this->get_panopto_soap_vars($namedparams);
-        
+
         // Include API user and auth code params unless $auth is set to false.
         if ($auth) {
             $authvars = $this->get_panopto_soap_vars($this->authparams);
@@ -194,11 +200,11 @@ class panopto_soap_client extends soap_client_with_timeout {
         }
         else if ($name == "ProvisioningInfoWithOptions")
         {
-           $soapvar = $this->get_provisioning_soap_var_with_options($value); 
+           $soapvar = $this->get_provisioning_soap_var_with_options($value);
         }
         else if ($name == "ProvisioningInfoWithCourseOptions")
         {
-            $soapvar = $this->get_provisioning_soap_var_with_course_options($value["ProvisioningInfo"], $value["CourseOptions"]);           
+            $soapvar = $this->get_provisioning_soap_var_with_course_options($value["ProvisioningInfo"], $value["CourseOptions"]);
         }
         else if ($name == "UserProvisioningInfo")
         {
@@ -335,7 +341,7 @@ class panopto_soap_client extends soap_client_with_timeout {
             }
             $soapstruct .= "</ns1:ProvisioningInfo>";
         }
-        else 
+        else
         {
             $soapstruct .= "<ns1:ProvisioningInfo />";
         }
@@ -358,8 +364,8 @@ class panopto_soap_client extends soap_client_with_timeout {
         while($pagenumber * $pagesize <= $arraysize)
         {
             $userpage = array_slice(
-                    $userArray, 
-                    ($pagenumber -1) * $pagesize, 
+                    $userArray,
+                    ($pagenumber -1) * $pagesize,
                     $pagesize
                 );
             $this->provision_users($userpage);
@@ -372,7 +378,7 @@ class panopto_soap_client extends soap_client_with_timeout {
         $finalpage = array_slice(
                 $userArray,
                 ($pagenumber -1) * $pagesize
-            );       
+            );
         $this->provision_users($finalpage);
     }
 
