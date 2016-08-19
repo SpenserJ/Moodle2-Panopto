@@ -24,7 +24,7 @@ defined('MOODLE_INTERNAL') || die();
 
 //Current internal version number.
 
-$internalversion = 2016072701;
+$internalversion = 2016081200;
 
 //Initialize $plugin object if it hasn't been already
 $plugin = (isset($plugin) ? $plugin : new stdClass());

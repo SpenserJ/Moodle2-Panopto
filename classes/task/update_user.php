@@ -40,19 +40,19 @@ class update_user extends \core\task\adhoc_task {
         $eventdata = (array) $this->get_custom_data();
 
         $panopto = new \panopto_data($eventdata['courseid']);
-        $enrolmentinfo = $this->get_info_for_enrolment_change($panopto, $eventdata['relateduserid'], $eventdata['contextid']);
+        $enrollmentinfo = $this->get_info_for_enrollment_change($panopto, $eventdata['relateduserid'], $eventdata['contextid']);
 
         switch ($eventdata['eventtype']) {
-            case 'enrol_add':
-                $panopto->add_course_user($enrolmentinfo['role'], $enrolmentinfo['userkey']);
+            case 'enroll_add':
+                $panopto->add_course_user($enrollmentinfo['role'], $enrollmentinfo['userkey']);
                 break;
 
-            case 'enrol_remove':
-                $panopto->remove_course_user($enrolmentinfo['role'], $enrolmentinfo['userkey']);
+            case 'enroll_remove':
+                $panopto->remove_course_user($enrollmentinfo['role'], $enrollmentinfo['userkey']);
                 break;
 
             case 'role':
-                $panopto->change_user_role($enrolmentinfo['role'], $enrolmentinfo['userkey']);
+                $panopto->change_user_role($enrollmentinfo['role'], $enrollmentinfo['userkey']);
                 break;
         }
     }
@@ -78,7 +78,7 @@ class update_user extends \core\task\adhoc_task {
     /**
      * Return user info for this event.
      */
-    private function get_info_for_enrolment_change($panopto, $relateduserid, $contextid) {
+    private function get_info_for_enrollment_change($panopto, $relateduserid, $contextid) {
         global $DB;
 
         // DB userkey is "[instancename]\\[username]". Get username and use it to create key.

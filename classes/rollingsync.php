@@ -38,9 +38,9 @@ class block_panopto_rollingsync {
     private static $requiredVersion = 2014051200; //Moodle version 2.7 or higher required for rolling sync tasks.
 
     /**
-     * Called when an enrolment has been created.
+     * Called when an enrollment has been created.
      */
-    public static function enrolmentcreated(\core\event\user_enrolment_created $event) {
+    public static function enrollmentcreated(\core\event\user_enrolment_created $event) {
         global $CFG;
 
         if (\panopto_data::get_panopto_course_id($event->courseid) === false
@@ -54,7 +54,7 @@ class block_panopto_rollingsync {
             'courseid' => $event->courseid,
             'relateduserid' => $event->relateduserid,
             'contextid' => $event->contextid,
-            'eventtype' => "enrol_add"
+            'eventtype' => "enroll_add"
         ));
 
         if ($CFG->block_panopto_async_tasks) {
@@ -65,9 +65,9 @@ class block_panopto_rollingsync {
     }
 
     /**
-     * Called when an enrolment has been deleted.
+     * Called when an enrollment has been deleted.
      */
-    public static function enrolmentdeleted(\core\event\user_enrolment_deleted $event) {
+    public static function enrollmentdeleted(\core\event\user_enrolment_deleted $event) {
         global $CFG;
 
         if (\panopto_data::get_panopto_course_id($event->courseid) === false
@@ -80,7 +80,7 @@ class block_panopto_rollingsync {
             'courseid' => $event->courseid,
             'relateduserid' => $event->relateduserid,
             'contextid' => $event->contextid,
-            'eventtype' => "enrol_remove"
+            'eventtype' => "enroll_remove"
         ));
 
         if ($CFG->block_panopto_async_tasks) {

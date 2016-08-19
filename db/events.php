@@ -26,12 +26,12 @@ $observers = array(
     // User enrolled event.
     array(
         'eventname' => '\core\event\user_enrolment_created',
-        'callback' => 'block_panopto_rollingsync::enrolmentcreated',
+        'callback' => 'block_panopto_rollingsync::enrollmentcreated',
     ),
     // User unenrolled event.
     array(
         'eventname' => '\core\event\user_enrolment_deleted',
-        'callback' => 'block_panopto_rollingsync::enrolmentdeleted',
+        'callback' => 'block_panopto_rollingsync::enrollmentdeleted',
     ),
     // Event when user has role added to enrollment.
     array(
