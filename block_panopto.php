@@ -13,20 +13,23 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
+ * This file contains the main logic for the block_panopto package.
+ *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2015 /With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once("lib/panopto_data.php");
+require_once('lib/panopto_data.php');
 require_once(dirname(__FILE__) . '/../../lib/accesslib.php');
 
 /**
  * Base class for the Panopto block for Moodle.
- * 
+ *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2015
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -34,38 +37,28 @@ require_once(dirname(__FILE__) . '/../../lib/accesslib.php');
 class block_panopto extends block_base {
 
     /**
-    *ID of the div element containing the contents of the Panopto block.
-    */
+     * ID of the div element containing the contents of the Panopto block.
+     */
     const CONTENTID = 'block_panopto_content';
 
     /**
-     *Name of the panopto block. Should match the block's directory name on the server.
+     * Name of the panopto block. Should match the block's directory name on the server.
+     *
+     * @var string $blockname the name of the current block.
      */
-    public $blockname = "panopto";
+    public $blockname = 'panopto';
 
     /**
      * Set system properties of plugin.
      */
     public function init() {
-        global $COURSE;
         $this->title = get_string('pluginname', 'block_panopto');
     }
 
     /**
-    * Block has global config (display "Settings" link on blocks admin page).
-    */
-    public function has_config() {
-        return true;
-    }
-
-    /**
-     * Save global block data in mdl_config_plugins table instead of global CFG variable.
+     * Block has global config (display "Settings" link on blocks admin page).
      */
-    public function config_save($data) {
-
-        foreach ($data as $name => $value) {
-            set_config($name, trim($value), $this->blockname);
-        }
+    public function has_config() {
         return true;
     }
 
@@ -78,22 +71,22 @@ class block_panopto extends block_base {
 
     /**
      * Save per-instance config in custom table instead of mdl_block_instance configdata column.
+     *
+     * @param array $data the data being set on panopto
+     * @param bool $nolongerused depcrecated variable
      */
     public function instance_config_save($data, $nolongerused = false) {
-        global $COURSE;
+
         if (!empty($data->course)) {
-            panopto_data::set_panopto_course_id($COURSE->id, $data->course);
-
-            // If role mapping info is given, map roles.
-            if (!empty($data->creator) || !empty($data->publisher)) {
-                panopto_data::set_course_role_permissions($COURSE->id, $data->publisher, $data->creator);
-
-                // Get course context.
-                $context = context_course::instance($COURSE->id);
-            }
-        } else {
-            // If server is not set globally, there will be no other form values to push into config.
-            return true;
+            panopto_data::set_panopto_course_id($this->page->course->id, $data->course);
+            // Add roles mapping.
+            $publisherroles = (isset($data->publisher)) ? $data->publisher : array();
+            $creatorroles = (isset($data->creator)) ? $data->creator : array();
+            self::set_course_role_permissions(
+                $this->page->course->id,
+                $publisherroles,
+                $creatorroles
+            );
         }
     }
 
@@ -102,7 +95,7 @@ class block_panopto extends block_base {
      * Hittesh Ahuja - University of Bath.
      */
     public function cron() {
-        global $CFG, $USER, $DB;
+        global $DB;
         $panoptodata = new panopto_data(null);
 
         // Check Panopto Focus API Settings exist.
@@ -137,81 +130,78 @@ class block_panopto extends block_base {
      * Generate HTML for block contents.
      */
     public function get_content() {
-    global $COURSE;
-
-
+        global $COURSE, $PAGE;
 
         if ($this->content !== null) {
             return $this->content;
         }
 
         $this->content = new stdClass;
-        //Initialize $this->content->text to an empty string here to avoid trying to append to it before
-+        //it has been initialized and throwing a warning. Bug 33163
-+        $this->content->text = "";
 
-
-
+        // Initialize $this->content->text to an empty string here to avoid trying to append to it before
+        // It has been initialized and throwing a warning. Bug 33163.
+        $this->content->text = '';
         $this->content->footer = '';
 
-        global $PAGE;
-        
         $params = array('id' => self::CONTENTID, 'courseid' => $COURSE->id);
-        
+
         $PAGE->requires->yui_module('moodle-block_panopto-asyncload',
                                     'M.block_panopto.asyncload.init',
                                     array($params),
                                     null,
                                     true);
-        
-        $this->content->text  = html_writer::tag('div', "<font id='loading_text'>" . get_string('fetching_content', 'block_panopto') . "</font>", $params);
-        $this->content->text .= '<script type="text/javascript">
-                    // Function to pop up Panopto live note taker.
-                    function panopto_launchNotes(url) {
-                        // Open empty notes window, then POST SSO form to it.
-                        var notesWindow = window.open("", "PanoptoNotes", "width=500,height=800,resizable=1,scrollbars=0,status=0,location=0");
-                        document.SSO.action = url;
-                        document.SSO.target = "PanoptoNotes";
-                        document.SSO.submit();
 
-                        // Ensure the new window is brought to the front of the z-order.
-                        notesWindow.focus();
-                    }
+        $this->content->text  = html_writer::tag('div', "<font id='loading_text'>" .
+            get_string('fetching_content', 'block_panopto') . '</font>', $params);
 
-                    function panopto_startSSO(linkElem) {
-                        document.SSO.action = linkElem.href;
-                        document.SSO.target = "_blank";
-                        document.SSO.submit();
+        $this->content->text .= '<script type="text/javascript">' .
+                    '// Function to pop up Panopto live note taker.' .
+                    'function panopto_launchNotes(url) {' .
+                        '// Open empty notes window, then POST SSO form to it.' .
+                        'var notesWindow = window.open("", "PanoptoNotes", ' .
+                            '"width=500,height=800,resizable=1,scrollbars=0,status=0,location=0");' .
+                        'document.SSO.action = url;' .
+                        'document.SSO.target = "PanoptoNotes";' .
+                        'document.SSO.submit();' .
 
-                        // Cancel default link navigation.
-                        return false;
-                    }
+                        '// Ensure the new window is brought to the front of the z-order.' .
+                        'notesWindow.focus();' .
+                    '}' .
 
-                    function panopto_toggleHiddenLectures() {
-                        var showAllToggle = document.getElementById("showAllToggle");
-                        var hiddenLecturesDiv = document.getElementById("hiddenLecturesDiv");
+                    'function panopto_startSSO(linkElem) {' .
+                        'document.SSO.action = linkElem.href;' .
+                        'document.SSO.target = "_blank";' .
+                        'document.SSO.submit();' .
 
-                        if(hiddenLecturesDiv.style.display == "block") {
-                            hiddenLecturesDiv.style.display = "none";
-                            showAllToggle.innerHTML = "' . get_string('show_all', 'block_panopto') . '";
-                        } else {
-                        hiddenLecturesDiv.style.display = "block";
-                        showAllToggle.innerHTML = "' . get_string('show_less', 'block_panopto') . '";
-                    }
-                }
-                </script>';
+                        '// Cancel default link navigation.' .
+                        'return false;' .
+                    '}' .
+
+                    'function panopto_toggleHiddenLectures() {' .
+                        'var showAllToggle = document.getElementById("showAllToggle");' .
+                        'var hiddenLecturesDiv = document.getElementById("hiddenLecturesDiv");' .
+
+                        'if(hiddenLecturesDiv.style.display == "block") {' .
+                            'hiddenLecturesDiv.style.display = "none";' .
+                            'showAllToggle.innerHTML = "' . get_string('show_all', 'block_panopto') . '";' .
+                        '} else {' .
+                        'hiddenLecturesDiv.style.display = "block";' .
+                        'showAllToggle.innerHTML = "' . get_string('show_less', 'block_panopto') . '";' .
+                    '}' .
+                '}' .
+            '</script>';
 
         return $this->content;
     }
 
     /**
-     * Return applicable formats
+     * Which page types this block may appear on
+     * @return array
      */
     public function applicable_formats() {
-        return array(
-            'my' => false,
-            'all' => true
-        );
+        // Since block is dealing with courses and enrolments the only possible.
+        // place where Panopto block can be used is the course.
+        return array('course-view' => true);
     }
 
 }

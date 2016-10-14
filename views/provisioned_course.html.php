@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * the provisioned course template
+ *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2015
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -24,12 +26,12 @@
 <div class='block_panopto'>
     <div class='courseProvisionResult'>
         <div class='attribute'><?php echo get_string('course_name', 'block_panopto') ?></div>
-        <div class='value'><?php echo $provisioningdata->ShortName . ": " . $provisioningdata->LongName ?></div>
+        <div class='value'><?php echo $provisioningdata->shortname . ': ' . $provisioningdata->longname ?></div>
 
         <div class='attribute'><?php echo get_string('publishers', 'block_panopto') ?></div>
         <div class='value'>
             <?php
-                if (!empty($provisioningdata->Publishers)) {
+            if (!empty($provisioningdata->Publishers)) {
                 $publishers = $provisioningdata->Publishers;
 
                 // Single-element return set comes back as scalar, not array (?).
@@ -38,14 +40,15 @@
                 }
                 $publisherinfo = array();
                 foreach ($publishers as $publisher) {
-                    array_push($publisherinfo, "$publisher->UserKey ($publisher->FirstName $publisher->LastName &lt;$publisher->Email&gt;)");
+                    array_push($publisherinfo,
+                        "$publisher->UserKey ($publisher->FirstName $publisher->LastName &lt;$publisher->Email&gt;)");
                 }
 
-                echo join("<br />", $publisherinfo);
-                } else {
+                echo join('<br />', $publisherinfo);
+            } else {
                 ?><div class='errorMessage'><?php echo get_string('no_publishers', 'block_panopto') ?></div><?php
-                }
-                ?>
+            }
+            ?>
         </div>
 
         <div class='attribute'><?php echo get_string('creators', 'block_panopto') ?></div>
@@ -60,10 +63,11 @@
                 }
                 $instructorinfo = array();
                 foreach ($instructors as $instructor) {
-                    array_push($instructorinfo, "$instructor->UserKey ($instructor->FirstName $instructor->LastName &lt;$instructor->Email&gt;)");
+                    array_push($instructorinfo,
+                        "$instructor->UserKey ($instructor->FirstName $instructor->LastName &lt;$instructor->Email&gt;)");
                 }
 
-                echo join("<br />", $instructorinfo);
+                echo join('<br />', $instructorinfo);
             } else {
                 ?><div class='errorMessage'><?php echo get_string('no_creators', 'block_panopto') ?></div><?php
             }
@@ -84,7 +88,7 @@
                     array_push($studentinfo, $student->UserKey);
                 }
 
-                echo join(", ", $studentinfo);
+                echo join(', ', $studentinfo);
             } else {
                 ?><div class='errorMessage'><?php echo get_string('no_students', 'block_panopto') ?></div><?php
             }
@@ -95,7 +99,9 @@
             <?php
             if (!empty($provisioneddata)) {
                 ?>
-                <div class='successMessage'><?php echo get_string('provision_successful', 'block_panopto') ?> {<?php echo $provisioneddata->PublicID ?>}</div>
+                <div class='successMessage'>
+                    <?php echo get_string('provision_successful', 'block_panopto') ?> {<?php echo $provisioneddata->PublicID ?>}
+                </div>
                 <?php
             } else {
                 ?>

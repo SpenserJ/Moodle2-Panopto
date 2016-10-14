@@ -1,40 +1,43 @@
-YUI.add('moodle-block_panopto-asyncload', function(Y) {
+YUI.add('moodle-block_panopto-asyncload',
+    function(Y) {
 
         M.block_panopto = M.block_panopto || {};
 
         M.block_panopto.asyncload = {
             init: function(params) {
-                
+
                 // Find the div containing the Panotpo block's content.
-                var mynode = Y.one('#'+params.id);
-                
+                var mynode = Y.one('#' + params.id);
+
                 if (mynode) {
-                    
-                    //Execute on DOM load
+
+                    // Execute on DOM load.
                     Y.on('domready', function() {
                         var ioconfig = {
-                            method: "POST",
+                            method: 'POST',
                             sync: false,
                             timeout: 10000,
-                            data : {'sesskey' : M.cfg.sesskey,
-                                    'courseid' : params.courseid},
+                            data: {
+                                'sesskey': M.cfg.sesskey,
+                                'courseid': params.courseid
+                            },
                             on: {
-                                success: function(id, o, arguments) {
+                                success: function(id, o) {
                                     try {
-                                        //Remove loading text
+                                        // Remove loading text.
                                         mynode.removeChild(Y.one('#loading_text'));
-                                        //Add Panopto content to block display
+                                        // Add Panopto content to block display.
                                         mynode.set('innerHTML', o.responseText);
                                     } catch (err) {
                                         Y.log(err.message);
                                     }
                                 },
-                                failure: function(id, o, arguments) {
+                                failure: function(id, o) {
                                     try {
-                                        //Remove loading text
+                                        // Remove loading text.
                                         mynode.removeChild(Y.one('#loading_text'));
-                                        //Display error in block.
-                                        mynode.set('innerHTML', o.responseText)
+                                        // Display error in block.
+                                        mynode.set('innerHTML', o.responseText);
                                     } catch(err) {
                                         Y.log(err.message);
                                     }

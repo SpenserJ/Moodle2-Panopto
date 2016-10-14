@@ -15,8 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * This file contains the logic for the provision classes form.
+ *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2015 /With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -36,16 +38,20 @@ if (isset($_SESSION['numservers'])) {
 }
 
 for ($x = 0; $x < $maxval; $x++) {
-    // Generate strings corresponding to potential servernames in $CFG.
-    $thisservername = 'block_panopto_server_name' . ($x + 1);
-    $thisappkey = 'block_panopto_application_key' . ($x + 1);
-    if ((isset($CFG->$thisservername) && !is_null_or_empty_string($CFG->$thisservername)) && (!is_null_or_empty_string($CFG->$thisappkey))) {
-        $aserverarray[$x] = $CFG->$thisservername;
-        $appkeyarray[$x] = $CFG->$thisappkey;
+
+    // Generate strings corresponding to potential servernames in the config.
+    $thisservername = get_config('block_panopto', 'server_name' . ($x + 1));
+    $thisappkey = get_config('block_panopto', 'application_key' . ($x + 1));
+
+    $hasservername = !is_null_or_empty_string($thisservername);
+    if ($hasservername && !is_null_or_empty_string($thisappkey)) {
+        $aserverarray[$x] = $thisservername;
+        $appkeyarray[$x] = $thisappkey;
     }
 }
 
-// If only one server, simply provision with that server. Setting these values will circumvent loading the selection form prior to provisioning.
+// If only one server, simply provision with that server. Setting these values will circumvent loading the selection form
+// prior to provisioning.
 if (count($aserverarray) == 1) {
     // Get first element from associative array. aServerArray and appKeyArray will have same key values.
     $key = array_keys($aserverarray);
@@ -119,6 +125,8 @@ if ($mform->is_cancelled()) {
     if ($data) {
         $selectedserver = $aserverarray[$data->servers];
         $selectedkey = $appkeyarray[$data->servers];
+
+        // Are these old? Need input on if we shoud store these in another way.
         $CFG->servername = $selectedserver;
         $CFG->appkey = $selectedkey;
     }
@@ -132,28 +140,27 @@ if ($mform->is_cancelled()) {
 
     // If there are no servers specified for provisioning, give a failure notice and allow user to return to course page.
     if (count($aserverarray) < 1) {
-        echo get_string('no_server', 'block_panopto') . "
-        <br/>
-        <a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . "</a>";
+        echo get_string('no_server', 'block_panopto') .
+        "<br/><a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
 
     } else if (isset($selectedserver)) {
 
         // If a $selected server is set, it means that a server has been chosen and that the provisioning should be done instead of
-         // loading the selection form.
+        // loading the selection form.
         $provisioned = array();
         $panoptodata = new panopto_data(null);
 
         // Set the current Moodle course to retrieve info for / provision.
         $panoptodata->moodlecourseid = $courseid;
 
-        // If an application key and server name are pre-set (happens when provisioning from multi-select page) use those, otherwise retrieve
-        // values from the db.
+        // If an application key and server name are pre-set (happens when provisioning from multi-select page) use those,
+        // otherwise retrieve values from the db.
         if (isset($selectedserver)) {
             $panoptodata->servername = $selectedserver;
         } else {
             $panoptodata->servername = $panoptodata->get_panopto_servername($panoptodata->moodlecourseid);
         }
-        
+
         if (isset($selectedkey)) {
             $panoptodata->applicationkey = $selectedkey;
         } else {
@@ -164,7 +171,7 @@ if ($mform->is_cancelled()) {
         $provisioneddata = $panoptodata->provision_course($provisioningdata);
 
         include('views/provisioned_course.html.php');
-        echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . "</a>";
+        echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
     } else {
         $mform->display();
     }
@@ -173,7 +180,9 @@ if ($mform->is_cancelled()) {
 }
 
 /**
- *Returns true if a string is null or empty, false otherwise
+ * Returns true if a string is null or empty, false otherwise
+ *
+ * @param string $name the string being checked for null or empty
  */
 function is_null_or_empty_string($name) {
     return (!isset($name) || trim($name) === '');

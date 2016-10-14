@@ -15,24 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * contains the version information for panopto
+ *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2015 with contributions from Spenser Jones (sjones@ambrose.edu)
+ * @copyright  Panopto 2009 - 2016 with contributions from Spenser Jones (sjones@ambrose.edu)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-//Current internal version number.
-
-$internalversion = 2016081200;
-
-//Initialize $plugin object if it hasn't been already
+// Initialize $plugin object if it hasn't been already.
 $plugin = (isset($plugin) ? $plugin : new stdClass());
 
-//Plugin version should normally be the same as the internal version. 
-//If an admin wants to install with an older version number, however, set that here. 
-$plugin->version = $internalversion;
-$plugin->requires = 2010112400;  // Version 2.0 .
+// Plugin version should normally be the same as the internal version.
+// If an admin wants to install with an older version number, however, set that here.
+$plugin->version = 2016101227;
+
+// Requires this Moodle version - 2.7.
+$plugin->requires  = 2014051200;
 $plugin->cron = 0;
 $plugin->component = 'block_panopto';
 $plugin->maturity = MATURITY_STABLE;
