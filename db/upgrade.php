@@ -95,7 +95,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2015012901, 'panopto');
     }
 
-    if ($oldversion < 2016081900) {
+    if ($oldversion <= 2016101227) {
         // Move block global settings to <prefix>_config_plugin table.
         // First, move each server configuration. We are not relying here on
         // block_panopto_server_number to determine number of servers, as there
@@ -127,7 +127,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
             unset_config('block_panopto_async_tasks');
         }
         // Panopto savepoint reached.
-        upgrade_block_savepoint(true, 2016081900, 'panopto');
+        upgrade_block_savepoint(true, 2016101227, 'panopto');
     }
 
     return true;
