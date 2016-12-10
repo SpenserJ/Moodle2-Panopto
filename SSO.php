@@ -22,6 +22,8 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// This can't be defined moodle internal because it is called from panopto to authorize login.
+
 global $CFG, $USER;
 
 if (empty($CFG)) {

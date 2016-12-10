@@ -130,5 +130,31 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2016101227, 'panopto');
     }
 
+    if ($oldversion < 2016102709) {
+        // Define table importmap where we will place all of our imports.
+        $table = new xmldb_table('block_panopto_importmap');
+
+        if (!$dbman->table_exists($table)) {
+            $importfields = array();
+            $importfields[] = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, true);
+            $importfields[] = new xmldb_field('target_moodle_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL);
+            $importfields[] = new xmldb_field('import_moodle_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL);
+
+            $importkey = new xmldb_key('primary', XMLDB_KEY_PRIMARY, array('id'), null, null);
+
+            foreach ($importfields as $importfield) {
+                // Conditionally launch add field import_moodle_id.
+                $table->addField($importfield);
+            }
+
+            $table->addKey($importkey);
+
+            $dbman->create_table($table);
+        }
+
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2016102709, 'panopto');
+    }
+
     return true;
 }

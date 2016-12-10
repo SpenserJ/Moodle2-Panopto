@@ -48,24 +48,42 @@ class update_user extends \core\task\adhoc_task {
      * the main execution function of the class
      */
     public function execute() {
+        global $DB;
+
         $eventdata = (array) $this->get_custom_data();
 
-        $panopto = new \panopto_data($eventdata['courseid']);
-        $enrollmentinfo = $this->get_info_for_enrollment_change($panopto, $eventdata['relateduserid'], $eventdata['contextid']);
+        $courseid = $eventdata['courseid'];
+        $eventtype = $eventdata['eventtype'];
 
-        switch ($eventdata['eventtype']) {
+        $panopto = new \panopto_data($courseid);
+        $enrollmentinfo = $this->get_info_for_enrollment_change($panopto, $eventdata['relateduserid'], $eventdata['contextid']);
+        $targetrole = $enrollmentinfo['role'];
+        $targetuserkey = $enrollmentinfo['userkey'];
+
+        switch ($eventtype) {
             case 'enroll_add':
-                $panopto->add_course_user($enrollmentinfo['role'], $enrollmentinfo['userkey']);
+                $panopto->add_course_user($targetrole, $targetuserkey);
                 break;
 
             case 'enroll_remove':
-                $panopto->remove_course_user($enrollmentinfo['role'], $enrollmentinfo['userkey']);
+                $panopto->remove_course_user($targetrole, $targetuserkey);
                 break;
 
             case 'role':
-                $panopto->change_user_role($enrollmentinfo['role'], $enrollmentinfo['userkey']);
+                $panopto->change_user_role($targetrole, $targetuserkey);
                 break;
         }
+        // Need to reprovision the course and it's imports for enrollment/role changes to take effect on panopto's side.
+        $courseimports = \panopto_data::get_import_list($courseid);
+        foreach ($courseimports as $importedcourse) {
+            $importedpanopto = new \panopto_data($importedcourse);
+
+            $importprovisioninginfo = $importedpanopto->get_provisioning_info();
+            $importedpanopto->provision_course($importprovisioninginfo);
+        }
+
+        $provisioninginfo = $panopto->get_provisioning_info();
+        $provisioneddata = $panopto->provision_course($provisioninginfo);
     }
 
     /**

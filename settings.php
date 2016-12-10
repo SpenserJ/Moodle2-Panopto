@@ -22,14 +22,11 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die;
-require('version.php');
+require_once(dirname(__FILE__) . '/classes/admin/trim_configtext.php');
 global $CFG;
-global $numservers;
 
 $numservers = get_config('block_panopto', 'server_number');
 $numservers = isset($numservers) ? $numservers : 0;
-
-$currversion = (isset($plugin) && isset($plugin->version))  ? $plugin->version : 0000000000;
 
 $default = 0;
 if ($ADMIN->fulltree) {
@@ -45,7 +42,7 @@ if ($ADMIN->fulltree) {
         )
     );
     $settings->add(
-        new admin_setting_configtext(
+        new  admin_setting_configtext_trimmed(
             'block_panopto/instance_name',
             get_string('block_global_instance_name', 'block_panopto'),
             get_string('block_global_instance_desc', 'block_panopto'),
@@ -56,7 +53,7 @@ if ($ADMIN->fulltree) {
 
     for ($x = 0; $x <= $numservers; $x++) {
         $settings->add(
-            new admin_setting_configtext(
+            new admin_setting_configtext_trimmed(
                 'block_panopto/server_name' . ($x + 1),
                 get_string('block_global_hostname', 'block_panopto') . ' ' . ($x + 1),
                 get_string('block_global_hostname_desc', 'block_panopto'),
@@ -65,7 +62,7 @@ if ($ADMIN->fulltree) {
             )
         );
         $settings->add(
-            new admin_setting_configtext(
+            new admin_setting_configtext_trimmed(
                 'block_panopto/application_key' . ($x + 1),
                 get_string('block_global_application_key', 'block_panopto') . ' ' . ($x + 1),
                 get_string('block_global_application_key_desc', 'block_panopto'),
@@ -90,10 +87,50 @@ if ($ADMIN->fulltree) {
             1
         )
     );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/auto_sync_imports',
+            get_string('block_panopto_auto_sync_imports', 'block_panopto'),
+            get_string('block_panopto_auto_sync_imports_desc', 'block_panopto'),
+            1
+        )
+    );
 
-    $versionnumber = '<b>' . $currversion . '</b><br/>';
-    $settings->add(new admin_setting_heading('block_panopto_display_version', '',
-        'Current version of the panopto block: ' . $versionnumber));
+    $systemcontext = context_system::instance();
+    $systemrolearray = get_assignable_roles($systemcontext, ROLENAME_BOTH);
+
+    $settings->add(
+        new admin_setting_configmultiselect(
+            'block_panopto/publisher_system_role_mapping',
+            get_string('block_panopto_publisher_system_role_mapping', 'block_panopto'),
+            get_string('block_panopto_publisher_system_role_mapping_desc', 'block_panopto'),
+            null,
+            $systemrolearray
+        )
+    );
+
+    $coursecontext = context_course::instance(SITEID);
+    $courserolearray = get_assignable_roles($coursecontext, ROLENAME_BOTH);
+
+    $settings->add(
+        new admin_setting_configmultiselect(
+            'block_panopto/publisher_role_mapping',
+            get_string('block_panopto_publisher_mapping', 'block_panopto'),
+            get_string('block_panopto_publisher_mapping_desc', 'block_panopto'),
+            array(1),
+            $courserolearray
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configmultiselect(
+            'block_panopto/creator_role_mapping',
+            get_string('block_panopto_creator_mapping', 'block_panopto'),
+            get_string('block_panopto_creator_mapping_desc', 'block_panopto'),
+            array(3, 4),
+            $courserolearray
+        )
+    );
 
     $link = '<a href="' . $CFG->wwwroot . '/blocks/panopto/provision_course.php">' .
         get_string('block_global_add_courses', 'block_panopto') . '</a>';

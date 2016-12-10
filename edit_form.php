@@ -49,6 +49,7 @@ class block_panopto_edit_form extends block_edit_form {
 
         if (!empty($panoptodata->servername) && !empty($panoptodata->instancename) && !empty($panoptodata->applicationkey)) {
             $mform->addElement('header', 'configheader', get_string('block_edit_header', 'block_panopto'));
+            $mform->addHelpButton('configheader', 'block_edit_header', 'block_panopto');
 
             $params = new stdClass;
             $params->course_id = $COURSE->id;
@@ -82,10 +83,11 @@ class block_panopto_edit_form extends block_edit_form {
             }
 
             $mform->addElement('header', 'rolemapheader', get_string('role_map_header', 'block_panopto'));
-            $mform->addElement('html', get_string('role_map_info_text', 'block_panopto'));
+            $mform->addHelpButton('rolemapheader', 'role_map_header', 'block_panopto');
 
             $createselect = $mform->addElement('select', 'config_creator', get_string('creator', 'block_panopto'),
                 $rolearray, null);
+            $mform->addHelpButton('config_creator', 'creator', 'block_panopto');
             $createselect->setMultiple(true);
 
             // Set default selected to previous setting.
@@ -95,6 +97,7 @@ class block_panopto_edit_form extends block_edit_form {
 
             $pubselect = $mform->addElement('select', 'config_publisher', get_string('publisher', 'block_panopto'),
                 $rolearray, null);
+            $mform->addHelpButton('config_publisher', 'publisher', 'block_panopto');
             $pubselect->setMultiple(true);
 
             // Set default selected to previous setting.
