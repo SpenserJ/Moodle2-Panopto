@@ -58,7 +58,6 @@ class soap_client_with_timeout extends SoapClient
                 $this->timeout = $options['timeout'];
             } else {
                 // Otherwise, keep default and log that timeout was not set.
-
                 error_log($errorstring);
             }
         }

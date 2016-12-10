@@ -18,5 +18,15 @@
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for test"/>
         </KEYS>
     </TABLE>
+    <TABLE NAME="block_panopto_importmap" COMMENT="Map Moodle courses to imported courses">
+        <FIELDS>
+            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="id of the current import"/>
+            <FIELD NAME="target_moodle_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the recipient Moodle course for the import."/>
+            <FIELD NAME="import_moodle_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of the imported Moodle course."/>
+        </FIELDS>
+        <KEYS>
+            <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for import map table"/>
+        </KEYS>
+    </TABLE>
   </TABLES>
 </XMLDB>

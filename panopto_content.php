@@ -50,10 +50,14 @@ try {
     $panoptodata = new panopto_data($courseid);
 
     if (empty($panoptodata->servername) || empty($panoptodata->instancename) || empty($panoptodata->applicationkey)) {
-        $content->text = get_string('unprovisioned', 'block_panopto') .
-        '<br/><br/>' .
-        "<a href='$CFG->wwwroot/blocks/panopto/provision_course_internal.php?id=$courseid'>" .
-        get_string('provision_course_link_text', 'block_panopto') . '</a>';
+        $content->text = get_string('unprovisioned', 'block_panopto');
+
+        if ($panoptodata->can_user_provision($courseid)) {
+            $content->text .= '<br/><br/>' .
+            "<a href='$CFG->wwwroot/blocks/panopto/provision_course_internal.php?id=$courseid'>" .
+            get_string('provision_course_link_text', 'block_panopto') . '</a>';
+        }
+
         $content->footer = '';
 
         echo $content->text;
@@ -66,7 +70,7 @@ try {
                 $courseinfo = $panoptodata->get_course();
 
                 // Panopto course was deleted, or an exception was thrown while retrieving course data.
-                if ($courseinfo->Access == 'Error') {
+                if (!isset($courseinfo) || $courseinfo->Access == 'Error') {
                     $content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
                 } else {
                     // SSO form passes instance name in POST to keep URLs portable.
@@ -169,7 +173,11 @@ try {
                                     get_string('course_settings', 'block_panopto') .
                                 '</a>' .
                             "</div>\n";
+                    }
 
+                    // A the users who can provision are the moodle admin, and enrolled users given a publisher or creator role.
+                    // This makes it so can_user_provision will allow only creators/publishers/admins to see these links.
+                    if ($panoptodata->can_user_provision($courseid)) {
                         $systeminfo = $panoptodata->get_system_info();
                         $content->text .= "<div class='listItem'>" .
                             get_string('download_recorder', 'block_panopto') .
@@ -177,6 +185,10 @@ try {
                             "<a href='$systeminfo->RecorderDownloadUrl'>Windows</a>" .
                             " | <a href='$systeminfo->MacRecorderDownloadUrl'>Mac</a>)</span>" .
                             "</div>\n";
+
+                        $content->text .= '<br/>' .
+                        "<a href='$CFG->wwwroot/blocks/panopto/provision_course_internal.php?id=$courseid'>" .
+                        get_string('reprovision_course_link_text', 'block_panopto') . '</a>';
                     }
                 }
             }

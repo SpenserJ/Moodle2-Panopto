@@ -22,6 +22,7 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// This can't be defined moodle internal because it is called from panopto to authorize login.
 
 /**
  * Prepend the instance name to the Moodle course ID to create an external ID for Panopto Focus.

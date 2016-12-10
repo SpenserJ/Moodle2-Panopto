@@ -92,18 +92,6 @@ class panopto_data {
     const PAGE_SIZE = 50;
 
     /**
-     * @var int $publisherdefaultrolemapping By default, the Moodle role "Manager" will map to publisher in Panopto.
-     * It's Moodle ID is '1'.
-     */
-    public static $publisherdefaultrolemapping = array('1');
-
-    /**
-     * @var int $creatordefaultrolemapping By default, the Moodle roles "Teacher" and "Non-Editing
-     * Teacher" will map to creator in Panopto. Their Moodle IDs are '3' and '4' respectively.
-     */
-    public static $creatordefaultrolemapping = array('3', '4');
-
-    /**
      * main constructor
      *
      * @param int $moodlecourseid course id class is being provisioned for
@@ -141,6 +129,22 @@ class panopto_data {
     }
 
     /**
+     * Returns if the logged in user can provision.
+     *
+     * @param int $courseid the moodle id of the course we are checking
+     */
+    public function can_user_provision($courseid) {
+        global $USER;
+
+        // Get the context of the course so we can get capaibilities.
+        $context = context_course::instance($courseid, MUST_EXIST);
+
+        return has_capability('block/panopto:provision_aspublisher', $context, $USER->id) ||
+            has_capability('block/panopto:provision_asteacher', $context, $USER->id) ||
+            has_capability('moodle/course:update', $context, $USER->id);
+    }
+
+    /**
      * Gets the toal count of users from all roles given a provisioning info object.
      *
      * @param object $provisioninginfo user info for course being counted
@@ -157,6 +161,135 @@ class panopto_data {
             $usercount += count($provisioninginfo->Students);
         }
         return $usercount;
+    }
+
+    /**
+     * Tests to see if a user is already listed in the user array
+     *
+     * @param object $userinfo the user being tested
+     * @param array $userarray an array of current users
+     *
+     * @return bool whether or not the user is in the list of current users
+     */
+    private function is_user_in_array($userinfo, $userarray) {
+        foreach ($userarray as $currentuser) {
+            if ($userinfo->UserKey === $currentuser->UserKey) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Merges unique users from the right array into the left arry and returns the new array.
+     *
+     * @param array $leftarray an array of current users
+     * @param array $rightarray an array of users being checked and added
+     *
+     * @return array the array of merged users
+     */
+    private function merge_user_arrays($leftarray, $rightarray) {
+        $retarray = $leftarray;
+
+        foreach ($rightarray as $possibleinsert) {
+            $alreadyinarray = $this->is_user_in_array($possibleinsert, $leftarray);
+
+            if (!$alreadyinarray) {
+                array_push($retarray, $possibleinsert);
+            }
+        }
+
+        return $retarray;
+    }
+
+    /**
+     * Appends the provisioning info from all importing courses to thise course, for panopto permissions
+     *
+     * @param object $provisioninginfo the current provisioninginfo.
+     *
+     */
+    private function append_child_provisioning_info($provisioninginfo) {
+        $childcourses = self::get_import_target_list($this->moodlecourseid);
+        foreach ($childcourses as $childcourse) {
+            $childcoursecontext = context_course::instance($childcourse);
+            $currentusers = get_enrolled_users($childcoursecontext);
+
+            if (!empty($currentusers)) {
+
+                if (!isset($provisioninginfo->Students)) {
+                    $provisioninginfo->Students = array();
+                }
+
+                foreach ($currentusers as $user) {
+                    $userinfo = new stdClass;
+                    $userinfo->UserKey = $this->panopto_decorate_username($user->username);
+                    $userinfo->FirstName = $user->firstname;
+                    $userinfo->LastName = $user->lastname;
+                    $userinfo->Email = $user->email;
+
+                    if (!$this->is_user_in_array($userinfo, $provisioninginfo->Students)) {
+                        array_push($provisioninginfo->Students, $userinfo);
+                    }
+                }
+            }
+        }
+
+        return $provisioninginfo;
+    }
+
+    /**
+     * This will iterate through all courses with the same panopto ID and add those users to the provisioning info.
+     *
+     * @param object $provisioninginfo the current provisioninginfo.
+     *
+     */
+    private function append_shared_course_info($provisioninginfo) {
+        $panoptoid = $this->sessiongroupid;
+        $sharedcourses = self::get_moodle_course_id($panoptoid);
+
+        foreach ($sharedcourses as $sharedcourse) {
+            if ($sharedcourse->moodleid !== $this->moodlecourseid) {
+                $sharedpanopto = new panopto_data($sharedcourse->moodleid);
+                $sharedprovisioninginfo = $sharedpanopto->get_provisioning_info(false);
+
+                if (isset($sharedprovisioninginfo->Publishers)) {
+                    if (isset($provisioninginfo->Publishers)) {
+                        $provisioninginfo->Publishers = $this->merge_user_arrays(
+                            $provisioninginfo->Publishers,
+                            $sharedprovisioninginfo->Publishers
+                        );
+                    } else {
+                        $provisioninginfo->Publishers = $sharedprovisioninginfo->Publishers;
+                    }
+                }
+
+                if (isset($sharedprovisioninginfo->Instructors)) {
+                    if (isset($provisioninginfo->Instructors)) {
+                        $provisioninginfo->Instructors = $this->merge_user_arrays(
+                            $provisioninginfo->Instructors,
+                            $sharedprovisioninginfo->Instructors
+                        );
+                    } else {
+                        $provisioninginfo->Instructors = $sharedprovisioninginfo->Instructors;
+                    }
+                }
+
+                if (isset($sharedprovisioninginfo->Students)) {
+                    if (isset($provisioninginfo->Students)) {
+                        $provisioninginfo->Students = $this->merge_user_arrays(
+                            $provisioninginfo->Students,
+                            $sharedprovisioninginfo->Students
+                        );
+                    } else {
+                        $provisioninginfo->Students = $sharedprovisioninginfo->Students;
+                    }
+
+                }
+            }
+        }
+
+        return $provisioninginfo;
     }
 
     /**
@@ -207,45 +340,78 @@ class panopto_data {
 
     /**
      *  Fetch course name and membership info from DB in preparation for provisioning operation.
+     *
+     * @param bool $getsharedinfo a flag that tells us if we should find courses using the same panopto folder and add thier users.
      */
-    public function get_provisioning_info() {
-
-        global $DB;
+    public function get_provisioning_info($getsharedinfo = true) {
+        global $DB, $CFG;
 
         // If old role mappings exists, do not remap. Otherwise, set role mappings to defaults.
         $mappings = self::get_course_role_mappings($this->moodlecourseid);
-
         if (empty($mappings['creator'][0]) && empty($mappings['publisher'][0])) {
+
+            // These settings are returned as a comma seperated string of role Id's.
+            $defaultpublishermapping = explode("," , get_config('block_panopto', 'publisher_role_mapping'));
+            $defaultcreatormapping = explode("," , get_config('block_panopto', 'creator_role_mapping'));
 
             // Set the role mappings for the course to the defaults.
             self::set_course_role_mappings(
                 $this->moodlecourseid,
-                self::$publisherdefaultrolemapping,
-                self::$creatordefaultrolemapping
+                $defaultpublishermapping,
+                $defaultcreatormapping
             );
 
             // Grant course users the proper panopto permissions based on the default role mappings.
             // This will make the role mappings be recognized when provisioning.
             self::set_course_role_permissions(
                 $this->moodlecourseid,
-                self::$publisherdefaultrolemapping,
-                self::$creatordefaultrolemapping
+                $defaultpublishermapping,
+                $defaultcreatormapping
             );
         }
 
-        $provisioninginfo->shortname = $DB->get_field(
-            'course',
-            'shortname',
-            array('id' => $this->moodlecourseid)
-        );
+        $provisioninginfo = new stdClass;
 
-        $provisioninginfo->longname = $DB->get_field(
-            'course',
-            'fullname',
-            array('id' => $this->moodlecourseid)
-        );
+        // If we are provisioning a course with a panopto_id set we should provision that folder.
+        $coursepanoptoid = $this->sessiongroupid;
+        $hasvalidpanoptoid = isset($coursepanoptoid) && !empty($coursepanoptoid);
+        if ($hasvalidpanoptoid) {
+            $mappedpanoptocourse = $this->get_course();
+        }
 
-        $provisioninginfo->ExternalCourseID = $this->instancename . ':' . $this->moodlecourseid;
+        if (isset($mappedpanoptocourse)) {
+            $provisioninginfo->ExternalCourseID = $mappedpanoptocourse->ExternalCourseID;
+
+            $namechunks = explode(':', $mappedpanoptocourse->DisplayName);
+            // Display names generated by panopto are formatted like <shortname>:<longname>, this assumes that format.
+            // Hacky but there is not much else we can do until we move to provisioning by folder ID.
+            if (count($namechunks) === 2) {
+                $provisioninginfo->shortname = $namechunks[0];
+                $provisioninginfo->longname = $namechunks[1];
+            } else {
+                $provisioninginfo->shortname = substr($mappedpanoptocourse->DisplayName, 0, 5);
+                $provisioninginfo->longname = $mappedpanoptocourse->DisplayName;
+            }
+        } else {
+            $provisioninginfo->shortname = $DB->get_field(
+                'course',
+                'shortname',
+                array('id' => $this->moodlecourseid)
+            );
+
+            $provisioninginfo->longname = $DB->get_field(
+                'course',
+                'fullname',
+                array('id' => $this->moodlecourseid)
+            );
+
+            if (!isset($provisioninginfo->shortname) || empty($provisioninginfo->shortname)) {
+                $provisioninginfo->shortname = substr($provisioninginfo->longname, 0, 5);
+            }
+
+            $provisioninginfo->ExternalCourseID = $this->instancename . ':' . $this->moodlecourseid;
+        }
+
         $provisioninginfo->Server = $this->servername;
         $coursecontext = context_course::instance($this->moodlecourseid, MUST_EXIST);
 
@@ -253,18 +419,32 @@ class panopto_data {
         $publisherhash = array();
         $instructorhash = array();
 
+        $systemcontext = context_system::instance();
+        $systempublishers = get_users_by_capability($systemcontext, 'block/panopto:provision_aspublisher');
         $publishers = get_users_by_capability($coursecontext, 'block/panopto:provision_aspublisher');
 
-        if (!empty($publishers)) {
+        if (empty($publishers)) {
+            $publishers = array();
+        }
+
+        if (!empty($systempublishers)) {
+            $totalpublishers = array_merge($publishers, $systempublishers);
+        } else {
+            $totalpublishers = $publishers;
+        }
+
+        if (!empty($totalpublishers)) {
             $provisioninginfo->Publishers = array();
-            foreach ($publishers as $publisher) {
+            foreach ($totalpublishers as $publisher) {
                 $publisherinfo = new stdClass;
                 $publisherinfo->UserKey = $this->panopto_decorate_username($publisher->username);
                 $publisherinfo->FirstName = $publisher->firstname;
                 $publisherinfo->LastName = $publisher->lastname;
                 $publisherinfo->Email = $publisher->email;
 
-                array_push($provisioninginfo->Publishers, $publisherinfo);
+                if (!$this->is_user_in_array($publisherinfo, $provisioninginfo->Publishers)) {
+                    array_push($provisioninginfo->Publishers, $publisherinfo);
+                }
 
                 $publisherhash[$publisher->username] = true;
             }
@@ -276,6 +456,21 @@ class panopto_data {
         // New capability used to identify instructors for provisioning.
         $instructors = get_users_by_capability($coursecontext, 'block/panopto:provision_asteacher');
 
+        // All super admins should get access to all panopto courses as teachers, since they can all provision in the config page.
+        $sql = "SELECT username, firstname, lastname, email " .
+               "FROM {user} " .
+               "WHERE id IN ($CFG->siteadmins)";
+
+        $superadmins = $DB->get_records_sql($sql);
+
+        if (empty($instructors)) {
+            $instructors = array();
+        }
+
+        if (!empty($superadmins)) {
+            $instructors = array_merge($instructors, $superadmins);
+        }
+
         if (!empty($instructors)) {
             $provisioninginfo->Instructors = array();
             foreach ($instructors as $instructor) {
@@ -285,7 +480,9 @@ class panopto_data {
                 $instructorinfo->LastName = $instructor->lastname;
                 $instructorinfo->Email = $instructor->email;
 
-                array_push($provisioninginfo->Instructors, $instructorinfo);
+                if (!$this->is_user_in_array($instructorinfo, $provisioninginfo->Instructors)) {
+                    array_push($provisioninginfo->Instructors, $instructorinfo);
+                }
 
                 $instructorhash[$instructor->username] = true;
             }
@@ -317,7 +514,110 @@ class panopto_data {
             }
         }
 
+        // We need to go through each course importing this course, and add thier users to our couse on Panopto's side.
+        $provisioninginfo = $this->append_child_provisioning_info($provisioninginfo);
+
+        if ($getsharedinfo && $hasvalidpanoptoid) {
+            $provisioninginfo = $this->append_shared_course_info($provisioninginfo);
+        }
+
         return $provisioninginfo;
+    }
+
+    /**
+     * Initializes and syncs a possible new import
+     *
+     * @param int $courseid the id of the recipient course
+     * @param int $newimportid the id of the course being imported
+     *
+     */
+    public function init_and_sync_import($courseid, $newimportid) {
+        $currentimportsources = self::get_import_list($courseid);
+        $possibleimportsources = array_merge(
+            array($newimportid),
+            self::get_import_list($newimportid)
+        );
+
+        foreach ($possibleimportsources as $possiblenewimportsource) {
+            // If a course is already listed as an import we don't need to reprovision it.
+            if (!in_array($possiblenewimportsource, $currentimportsources)) {
+                $currentimportsources[] = $possiblenewimportsource;
+
+                self::add_new_course_import($courseid, $possiblenewimportsource);
+
+                $newimportpanopto = new panopto_data($possiblenewimportsource);
+                $newimportpanopto->provision_course($newimportpanopto->get_provisioning_info());
+            }
+        }
+    }
+
+    /**
+     * Create the provisioning information needed to create permissions on panopto for the new course
+     *
+     * @param int $courseid the id of the course being updated
+     * @param int $newimportid courseid that the target course imports from
+     */
+    public static function add_new_course_import($courseid, $newimportid) {
+        global $DB;
+        $rowarray = array('target_moodle_id' => $courseid, 'import_moodle_id' => $newimportid);
+
+        $currentrow = $DB->get_record('block_panopto_importmap', $rowarray);
+        if (!$currentrow) {
+            $row = (object) $rowarray;
+            return $DB->insert_record('block_panopto_importmap', $row);
+        }
+
+        return;
+    }
+
+    /**
+     * Get the courseid's of the courses being imported to this course
+     *
+     * @param int $courseid
+     */
+    public static function get_import_list($courseid) {
+        global $DB;
+
+        $courseimports = $DB->get_records(
+            'block_panopto_importmap',
+            array('target_moodle_id' => $courseid),
+            null,
+            'import_moodle_id'
+        );
+
+        $retarray = array();
+        if (isset($courseimports) && !empty($courseimports)) {
+            foreach ($courseimports as $courseimport) {
+                $retarray[] = $courseimport->import_moodle_id;
+            }
+        }
+
+        return $retarray;
+    }
+
+    /**
+     * Get the courseid's of the courses importing the given course
+     *
+     * @param int $courseid
+     */
+    public static function get_import_target_list($courseid) {
+        global $DB;
+
+        $courseimports = $DB->get_records(
+            'block_panopto_importmap',
+            array('import_moodle_id' => $courseid),
+            null,
+            'target_moodle_id'
+        );
+
+        $retarray = array();
+        if (isset($courseimports) && !empty($courseimports)) {
+            foreach ($courseimports as $courseimport) {
+                $retarray[] = $courseimport->target_moodle_id;
+            }
+        }
+
+        return $retarray;
     }
 
     /**
@@ -399,6 +699,21 @@ class panopto_data {
      */
     public function panopto_decorate_username($moodleusername) {
         return ($this->instancename . "\\" . $moodleusername);
+    }
+
+    /**
+     * We need to retrieve the current course mapping in the constructor, so this must be static.
+     *
+     * @param int $sessiongroupid id of the panopto folder we are trying to get the moodle courses associated with.
+     */
+    public static function get_moodle_course_id($sessiongroupid) {
+        global $DB;
+        return $DB->get_records(
+            'block_panopto_foldermap',
+            array('panopto_id' => $sessiongroupid),
+            null,
+            'moodleid'
+        );
     }
 
     /**
@@ -744,6 +1059,27 @@ class panopto_data {
     }
 
     /**
+     * Gives selected capabilities to specified roles given a context.
+     *
+     * @param int $context the context of the roles being given the capability
+     * @param array $roles an array of roles to be given the capability
+     * @param string $capability The capability being given to the roles
+     */
+    public static function add_context_capability_to_roles($context, $roles, $capability) {
+        foreach ($roles as $role) {
+            if (isset($role) && trim($role) !== '') {
+                assign_capability(
+                    $capability,
+                    CAP_ALLOW,
+                    $role,
+                    $context,
+                    $overwrite = false
+                );
+            }
+        }
+    }
+
+    /**
      * Gives selected capabilities to specified roles.
      *
      * @param int $courseid the id of the course being focused for this operation
@@ -756,29 +1092,18 @@ class panopto_data {
         // Clear capabilities from all of course's roles to be reassigned.
         self::clear_capabilities_for_course($courseid);
 
-        foreach ($publisherroles as $role) {
-            if (isset($role) && trim($role) !== '') {
-                assign_capability(
-                    'block/panopto:provision_aspublisher',
-                    CAP_ALLOW,
-                    $role,
-                    $coursecontext,
-                    $overwrite = false
-                );
-            }
+        self::add_context_capability_to_roles($coursecontext, $publisherroles, 'block/panopto:provision_aspublisher');
+        self::add_context_capability_to_roles($coursecontext, $creatorroles, 'block/panopto:provision_asteacher');
 
+        $publishersystemroles = explode(',', get_config('block_panopto', 'publisher_system_role_mapping'));
+        if (count($publishersystemroles)) {
+            $systemcontext = context_system::instance();
+            self::add_context_capability_to_roles($systemcontext, $publishersystemroles, 'block/panopto:provision_aspublisher');
+
+            // Mark dirty (moodle standard for capability changes at context level).
+            $systemcontext->mark_dirty();
         }
-        foreach ($creatorroles as $role) {
-            if (isset($role) && trim($role) !== '') {
-                assign_capability(
-                    'block/panopto:provision_asteacher',
-                    CAP_ALLOW,
-                    $role,
-                    $coursecontext,
-                    $overwrite = false
-                );
-            }
-        }
+
         // Mark dirty (moodle standard for capability changes at context level).
         $coursecontext->mark_dirty();
 
