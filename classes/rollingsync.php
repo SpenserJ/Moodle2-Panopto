@@ -45,20 +45,15 @@ require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
 class block_panopto_rollingsync {
 
     /**
-     * @var int $requireversion Moodle version 2.7 or higher required for rolling sync tasks.
-     */
-    private static $requiredversion = 2014051200;
-
-    /**
      * Called when an enrollment has been created.
      *
      * @param \core\event\user_enrolment_created $event
      */
     public static function enrollmentcreated(\core\event\user_enrolment_created $event) {
-        global $CFG;
 
-        if (\panopto_data::get_panopto_course_id($event->courseid) === false
-            || $CFG->version < self::$requiredversion) {
+        if (!\panopto_data::is_main_block_configured() ||
+            \panopto_data::get_panopto_course_id($event->courseid) === false ||
+            !\panopto_data::has_minimum_version()) {
             return;
         }
 
@@ -83,10 +78,9 @@ class block_panopto_rollingsync {
      * @param \core\event\user_enrolment_deleted $event
      */
     public static function enrollmentdeleted(\core\event\user_enrolment_deleted $event) {
-        global $CFG;
-
-        if (\panopto_data::get_panopto_course_id($event->courseid) === false
-            || $CFG->version < self::$requiredversion) {
+        if (!\panopto_data::is_main_block_configured() ||
+            \panopto_data::get_panopto_course_id($event->courseid) === false ||
+            !\panopto_data::has_minimum_version()) {
             return;
         }
 
@@ -112,10 +106,9 @@ class block_panopto_rollingsync {
      * @param \core\event\user_enrolment_updated $event
      */
     public static function enrolmentupdated(\core\event\user_enrolment_updated $event) {
-        global $CFG;
-
-        if (\panopto_data::get_panopto_course_id($event->courseid) === false
-            || $CFG->version < self::$requiredversion) {
+        if (!\panopto_data::is_main_block_configured() ||
+            \panopto_data::get_panopto_course_id($event->courseid) === false ||
+            !\panopto_data::has_minimum_version()) {
             return;
         }
 
@@ -152,10 +145,9 @@ class block_panopto_rollingsync {
      * @param \core\event\role_assigned $event
      */
     public static function roleadded(\core\event\role_assigned $event) {
-        global $CFG;
-
-        if (\panopto_data::get_panopto_course_id($event->courseid) === false
-            || $CFG->version < self::$requiredversion) {
+        if (!\panopto_data::is_main_block_configured() ||
+            \panopto_data::get_panopto_course_id($event->courseid) === false ||
+            !\panopto_data::has_minimum_version()) {
             return;
         }
 
@@ -180,12 +172,9 @@ class block_panopto_rollingsync {
      * @param \core\event\role_unassigned $event
      */
     public static function roledeleted(\core\event\role_unassigned $event) {
-        global $CFG;
-
-        $panoptocourseid = \panopto_data::get_panopto_course_id($event->courseid);
-        $hasminimumversion = $CFG->version >= self::$requiredversion;
-
-        if ($panoptocourseid === false || !$hasminimumversion) {
+        if (!\panopto_data::is_main_block_configured() ||
+            \panopto_data::get_panopto_course_id($event->courseid) === false ||
+            !\panopto_data::has_minimum_version()) {
             return;
         }
 
@@ -210,6 +199,12 @@ class block_panopto_rollingsync {
      * @param \core\event\course_created $event
      */
     public static function coursecreated(\core\event\course_created $event) {
+
+        if (!\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()) {
+            return;
+        }
+
         $allowautoprovision = get_config('block_panopto', 'auto_provision_new_courses');
 
         if ($allowautoprovision) {
@@ -236,6 +231,11 @@ class block_panopto_rollingsync {
      */
     public static function courserestored(\core\event\course_restored $event) {
         global $DB;
+
+        if (!\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()) {
+            return;
+        }
 
         $originalcourseenabled = $event->other['samesite'] && isset($event->other['originalcourseid']);
         if (get_config('block_panopto', 'auto_sync_imports') && $originalcourseenabled) {

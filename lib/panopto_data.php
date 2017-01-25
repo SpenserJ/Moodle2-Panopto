@@ -92,6 +92,11 @@ class panopto_data {
     const PAGE_SIZE = 50;
 
     /**
+     * @var int $requireversion Panopto only supports versions of moodle newer than v2.7(2014051200).
+     */
+    private static $requiredversion = 2014051200;
+
+    /**
      * main constructor
      *
      * @param int $moodlecourseid course id class is being provisioned for
@@ -456,12 +461,16 @@ class panopto_data {
         // New capability used to identify instructors for provisioning.
         $instructors = get_users_by_capability($coursecontext, 'block/panopto:provision_asteacher');
 
-        // All super admins should get access to all panopto courses as teachers, since they can all provision in the config page.
-        $sql = "SELECT username, firstname, lastname, email " .
-               "FROM {user} " .
-               "WHERE id IN ($CFG->siteadmins)";
+        if (get_config('block_panopto', 'auto_add_admins')) {
+            // All super admins should get access to all panopto courses as teachers, since they can all provision in the config page.
+            $sql = "SELECT username, firstname, lastname, email " .
+                   "FROM {user} " .
+                   "WHERE id IN ($CFG->siteadmins)";
 
-        $superadmins = $DB->get_records_sql($sql);
+            $superadmins = $DB->get_records_sql($sql);
+        } else {
+            $superadmins = array();
+        }
 
         if (empty($instructors)) {
             $instructors = array();
@@ -699,6 +708,48 @@ class panopto_data {
      */
     public function panopto_decorate_username($moodleusername) {
         return ($this->instancename . "\\" . $moodleusername);
+    }
+
+    /**
+     * Lets us know if we have a value inside the config for a panopto server, we don't want any of our events to fire on an unconfigured block.
+     *
+     */
+    public static function is_main_block_configured() {
+        $numservers = get_config('block_panopto', 'server_number');
+        $numservers = isset($numservers) ? $numservers : 0;
+
+        $isconfigured = false;
+        if ($numservers > 0) {
+            for ($i = 1; $i <= $numservers; ++$i) {
+                $possibleserver = get_config('block_panopto', 'server_name' . $i);
+                $possibleappkey = get_config('block_panopto', 'application_key' . $i);
+
+                if (isset($possibleserver) && !empty($possibleserver) &&
+                    isset($possibleappkey) && !empty($possibleappkey)) {
+                    $isconfigured = true;
+                    break;
+                }
+            }
+        }
+
+        return $isconfigured;
+    }
+
+    /**
+     * Lets us know is we are using at least the minumum required version for the Panopto block
+     *
+     */
+    public static function has_minimum_version() {
+        global $CFG;
+
+        $hasminversion = true;
+
+        if ($CFG->version < self::$requiredversion) {
+            $hasminversion = false;
+            error_log("Panopto block requires a version newer than " . self::$requiredversion . ", your current version is: " . $CFG->version);
+        }
+
+        return $hasminversion;
     }
 
     /**
