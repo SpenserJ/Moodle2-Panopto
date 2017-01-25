@@ -95,6 +95,14 @@ if ($ADMIN->fulltree) {
             1
         )
     );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/auto_add_admins',
+            get_string('block_panopto_auto_add_admins', 'block_panopto'),
+            get_string('block_panopto_auto_add_admins_desc', 'block_panopto'),
+            1
+        )
+    );
 
     $systemcontext = context_system::instance();
     $systemrolearray = get_assignable_roles($systemcontext, ROLENAME_BOTH);

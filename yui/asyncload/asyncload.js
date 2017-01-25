@@ -16,7 +16,7 @@ YUI.add('moodle-block_panopto-asyncload',
                         var ioconfig = {
                             method: 'POST',
                             sync: false,
-                            timeout: 10000,
+                            timeout: 60000,
                             data: {
                                 'sesskey': M.cfg.sesskey,
                                 'courseid': params.courseid
