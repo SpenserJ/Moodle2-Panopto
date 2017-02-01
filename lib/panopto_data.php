@@ -717,6 +717,7 @@ class panopto_data {
     public static function is_main_block_configured() {
         $numservers = get_config('block_panopto', 'server_number');
         $numservers = isset($numservers) ? $numservers : 0;
+        ++$numservers;
 
         $isconfigured = false;
         if ($numservers > 0) {
