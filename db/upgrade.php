@@ -156,5 +156,83 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2016102709, 'panopto');
     }
 
+    if ($oldversion < 2017031303) {
+
+        // Get the roles using the old method so we can update current customers to the new tables
+        $pubroles = array();
+        $creatorroles = array();
+
+         // Get publisher roles as string and explode to array.
+        $existingcoursemappings = $DB->get_records(
+            'block_panopto_foldermap',
+            null,
+            'moodleid, publisher_mapping, creator_mapping'
+        );
+
+        // Define table table where we will place all of our creator mappings.
+        $creatortable = new xmldb_table('block_panopto_creatormap');
+
+        if (!$dbman->table_exists($creatortable)) {
+            $mappingfields = array();
+            $mappingfields[] = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, true);
+            $mappingfields[] = new xmldb_field('moodle_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL);
+            $mappingfields[] = new xmldb_field('role_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL);
+
+            $mappingkey = new xmldb_key('primary', XMLDB_KEY_PRIMARY, array('id'), null, null);
+
+            foreach ($mappingfields as $mappingfield) {
+                $creatortable->addField($mappingfield);
+            }
+
+            $creatortable->addKey($mappingkey);
+
+            $dbman->create_table($creatortable);
+
+            foreach ($existingcoursemappings as $existingmapping) {
+                if (isset($existingmapping->creator_mapping) && !empty($existingmapping->creator_mapping)) {
+                    $creatorroles = explode(",", $existingmapping->creator_mapping);
+
+                    foreach ($creatorroles as $creatorrole) {
+                        $row = (object) array('moodle_id' => $existingmapping->moodleid, 'role_id' => $creatorrole);
+                        $DB->insert_record('block_panopto_creatormap', $row);
+                    }
+                }
+            }
+        }
+
+        $publishertable = new xmldb_table('block_panopto_publishermap');
+
+        if (!$dbman->table_exists($publishertable)) {
+            $mappingfields = array();
+            $mappingfields[] = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, true);
+            $mappingfields[] = new xmldb_field('moodle_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL);
+            $mappingfields[] = new xmldb_field('role_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL);
+
+            $mappingkey = new xmldb_key('primary', XMLDB_KEY_PRIMARY, array('id'), null, null);
+
+            foreach ($mappingfields as $mappingfield) {
+                $publishertable->addField($mappingfield);
+            }
+
+            $publishertable->addKey($mappingkey);
+
+            $dbman->create_table($publishertable);
+
+            foreach ($existingcoursemappings as $existingmapping) {
+                if (isset($existingmapping->publisher_mapping) && !empty($existingmapping->publisher_mapping)) {
+                    $pubroles = explode("," , $existingmapping->publisher_mapping);
+
+                    foreach ($pubroles as $pubrole) {
+                        $row = (object) array('moodle_id' => $existingmapping->moodleid, 'role_id' => $pubrole);
+                        $DB->insert_record('block_panopto_publishermap', $row);
+                    }
+                }
+            }
+        }
+
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2017031303, 'panopto');
+    }
+
     return true;
 }
