@@ -143,8 +143,8 @@ if ($mform->is_cancelled()) {
         $data = $mform->get_data();
         if ($data) {
             $courses = $data->courses;
-            $selectedserver = $aserverarray[$data->servers];
-            $selectedkey = $appkeyarray[$data->servers];
+            $selectedserver = trim($aserverarray[$data->servers]);
+            $selectedkey = trim($appkeyarray[$data->servers]);
 
             // Are these old? Need input on if we shoud store these in another way.
             $CFG->servername = $selectedserver;

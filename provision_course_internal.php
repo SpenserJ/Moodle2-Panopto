@@ -55,8 +55,8 @@ for ($x = 0; $x < $maxval; $x++) {
 if (count($aserverarray) == 1) {
     // Get first element from associative array. aServerArray and appKeyArray will have same key values.
     $key = array_keys($aserverarray);
-    $selectedserver = $aserverarray[$key[0]];
-    $selectedkey = $appkeyarray[$key[0]];
+    $selectedserver = trim($aserverarray[$key[0]]);
+    $selectedkey = trim($appkeyarray[$key[0]]);
 }
 
 /**
@@ -123,8 +123,8 @@ if ($mform->is_cancelled()) {
 
     // If there is form data, use it to determine the server and app key to provision to.
     if ($data) {
-        $selectedserver = $aserverarray[$data->servers];
-        $selectedkey = $appkeyarray[$data->servers];
+        $selectedserver = trim($aserverarray[$data->servers]);
+        $selectedkey = trim($appkeyarray[$data->servers]);
 
         // Are these old? Need input on if we shoud store these in another way.
         $CFG->servername = $selectedserver;
@@ -143,27 +143,22 @@ if ($mform->is_cancelled()) {
         echo get_string('no_server', 'block_panopto') .
         "<br/><a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
 
-    } else if (isset($selectedserver)) {
+    } else if (isset($selectedserver) && !empty($selectedserver) &&
+               isset($selectedkey) && !empty($selectedkey)) {
 
         // Set the current Moodle course to retrieve info for / provision.
         $panoptodata = new panopto_data($courseid);
 
-        // If an application key and server name are pre-set (happens when provisioning from multi-select page) use those,
-        // otherwise retrieve values from the db.
-        if (isset($selectedserver)) {
-
-            // If we are not using the same server remove the folder ID reference.
-            // NOTE: A moodle course can only point to one panopto server at a time.
-            // So reprovisioning to a different server erases the folder mapping to the original server.
-            if ($panoptodata->servername !== $selectedserver) {
-                $panoptodata->sessiongroupid = null;
-            }
-            $panoptodata->servername = $selectedserver;
+        // If we are not using the same server remove the folder ID reference.
+        // NOTE: A moodle course can only point to one panopto server at a time.
+        // So reprovisioning to a different server erases the folder mapping to the original server.
+        if (!isset($panoptodata->servername) || empty($panoptodata->servername) ||
+            ($panoptodata->servername !== $selectedserver)) {
+            $panoptodata->sessiongroupid = null;
         }
 
-        if (isset($selectedkey)) {
-            $panoptodata->applicationkey = $selectedkey;
-        }
+        $panoptodata->servername = $selectedserver;
+        $panoptodata->applicationkey = $selectedkey;
 
         $provisioningdata = $panoptodata->get_provisioning_info();
         $provisioneddata = $panoptodata->provision_course($provisioningdata);
