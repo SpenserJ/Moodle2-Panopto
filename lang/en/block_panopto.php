@@ -25,6 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['add_to_panopto'] = 'Add this course to Panopto (re-add to sync user lists)';
+$string['application_key'] = 'Application key';
 $string['back_to_config'] = 'Back to config';
 $string['back_to_course'] = 'Back to course';
 $string['block_edit_error'] = 'Cannot configure block instance: Global configuration incomplete. Please contact your system administrator.';
@@ -102,6 +103,8 @@ $string['role_map_header'] = 'Change Panopto Role Mappings';
 $string['role_map_header_help'] = "Choose how Moodle roles map to Panopto roles. Unmapped Moodle roles will be assigned the Viewer role in Panopto";
 $string['select_server'] = 'Select a Panopto server';
 $string['select_server_help'] = 'Choose the Panopto server where the course folders will be provisioned.';
+$string['server_name'] = 'Server name';
+$string['server_info_not_valid'] = 'The server name or application key are not valid, below are attempted values.';
 $string['show_all'] = 'Show All';
 $string['show_less'] = 'Show Less';
 $string['students'] = 'Students';

@@ -36,6 +36,7 @@ if (isset($_SESSION['numservers'])) {
 } else {
     $maxval = 1;
 }
+
 for ($x = 0; $x < $maxval; $x++) {
 
     // Generate strings corresponding to potential servernames in the config.
@@ -47,6 +48,15 @@ for ($x = 0; $x < $maxval; $x++) {
         $aserverarray[$x] = $thisservername;
         $appkeyarray[$x] = $thisappkey;
     }
+}
+
+// If only one server, simply provision with that server. Setting these values will circumvent loading the selection form
+// prior to provisioning.
+if (count($aserverarray) == 1) {
+    // Get first element from associative array. aServerArray and appKeyArray will have same key values.
+    $key = array_keys($aserverarray);
+    $selectedserver = trim($aserverarray[$key[0]]);
+    $selectedkey = trim($appkeyarray[$key[0]]);
 }
 
 /**
@@ -145,10 +155,6 @@ if ($mform->is_cancelled()) {
             $courses = $data->courses;
             $selectedserver = trim($aserverarray[$data->servers]);
             $selectedkey = trim($appkeyarray[$data->servers]);
-
-            // Are these old? Need input on if we shoud store these in another way.
-            $CFG->servername = $selectedserver;
-            $CFG->appkey = $selectedkey;
         }
 
         $manageblocks = new moodle_url('/admin/blocks.php');
@@ -162,16 +168,20 @@ if ($mform->is_cancelled()) {
     echo $OUTPUT->header();
 
     if ($courses) {
+        $coursecount = count($courses);
+
         foreach ($courses as $courseid) {
             if (empty($courseid)) {
                 continue;
             }
+
             // Set the current Moodle course to retrieve info for / provision.
             $panoptodata = new panopto_data($courseid);
 
             // If an application key and server name are pre-set (happens when provisioning from multi-select page) use those,
             // otherwise retrieve values from the db.
-            if (isset($selectedserver)) {
+            if (isset($selectedserver) && !empty($selectedserver) &&
+                isset($selectedkey) && !empty($selectedkey)) {
 
                 // If we are not using the same server remove the folder ID reference.
                 // NOTE: A moodle course can only point to one panopto server at a time.
@@ -180,15 +190,29 @@ if ($mform->is_cancelled()) {
                     $panoptodata->sessiongroupid = null;
                 }
                 $panoptodata->servername = $selectedserver;
-            }
-
-            if (isset($selectedkey)) {
                 $panoptodata->applicationkey = $selectedkey;
             }
 
-            $provisioningdata = $panoptodata->get_provisioning_info();
-            $provisioneddata = $panoptodata->provision_course($provisioningdata);
-            include('views/provisioned_course.html.php');
+            if (isset($panoptodata->servername) && !empty($panoptodata->servername) &&
+                isset($panoptodata->applicationkey) && !empty($panoptodata->applicationkey)) {
+                $provisioningdata = $panoptodata->get_provisioning_info();
+                $provisioneddata = $panoptodata->provision_course($provisioningdata);
+                include('views/provisioned_course.html.php');
+            } else if ($coursecount == 1) {
+                // If there is only one course in the count and the server info is invalid redirect to the form for manual provisioning.
+                $mform->display();
+            } else {
+                // For some reason the server name or application key are invalid and we can't redirect to the form since there are multiple courses, let the user know.
+                echo "<div class='block_panopto'>" .
+                        "<div class='courseProvisionResult'>" .
+                            "<div class='errorMessage'>" . get_string('server_info_not_valid', 'block_panopto') . "</div>" .
+                            "<div class='attribute'>" . get_string('server_name', 'block_panopto') . "</div>" .
+                            "<div class='value'>" . $panoptodata->servername . "</div>" .
+                            "<div class='attribute'>" . get_string('application_key', 'block_panopto') . "</div>" .
+                            "<div class='value'>" . $panoptodata->applicationkey . "</div>" .
+                        "</div>" .
+                    "</div>";
+            }
         }
         echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
     } else {
