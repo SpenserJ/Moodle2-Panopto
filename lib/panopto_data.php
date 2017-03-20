@@ -465,9 +465,9 @@ class panopto_data {
             // All super admins should get access to all panopto courses as teachers, since they can all provision in the config page.
             $sql = "SELECT username, firstname, lastname, email " .
                    "FROM {user} " .
-                   "WHERE id IN ($CFG->siteadmins)";
+                   "WHERE id IN (:siteadmins)";
 
-            $superadmins = $DB->get_records_sql($sql);
+            $superadmins = $DB->get_records_sql($sql, array('siteadmins' => $CFG->siteadmins));
         } else {
             $superadmins = array();
         }
