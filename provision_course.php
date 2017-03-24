@@ -207,9 +207,9 @@ if ($mform->is_cancelled()) {
                         "<div class='courseProvisionResult'>" .
                             "<div class='errorMessage'>" . get_string('server_info_not_valid', 'block_panopto') . "</div>" .
                             "<div class='attribute'>" . get_string('server_name', 'block_panopto') . "</div>" .
-                            "<div class='value'>" . $panoptodata->servername . "</div>" .
+                            "<div class='value'>" . format_string($panoptodata->servername, false) . "</div>" .
                             "<div class='attribute'>" . get_string('application_key', 'block_panopto') . "</div>" .
-                            "<div class='value'>" . $panoptodata->applicationkey . "</div>" .
+                            "<div class='value'>" . format_string($panoptodata->applicationkey) . "</div>" .
                         "</div>" .
                     "</div>";
             }
