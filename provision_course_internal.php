@@ -31,22 +31,24 @@ global $courses;
 // Populate list of servernames to select from.
 $aserverarray = array();
 $appkeyarray = array();
-if (isset($_SESSION['numservers'])) {
-    $maxval = $_SESSION['numservers'];
-} else {
-    $maxval = 1;
-}
 
-for ($x = 0; $x < $maxval; $x++) {
+$numservers = get_config('block_panopto', 'server_number');
+$numservers = isset($numservers) ? $numservers : 0;
+
+// Increment numservers by 1 to take into account starting at 0.
+++$numservers;
+
+for ($serverwalker = 1; $serverwalker <= $numservers; $serverwalker++) {
 
     // Generate strings corresponding to potential servernames in the config.
-    $thisservername = get_config('block_panopto', 'server_name' . ($x + 1));
-    $thisappkey = get_config('block_panopto', 'application_key' . ($x + 1));
+    $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
+    $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
 
     $hasservername = !is_null_or_empty_string($thisservername);
     if ($hasservername && !is_null_or_empty_string($thisappkey)) {
-        $aserverarray[$x] = $thisservername;
-        $appkeyarray[$x] = $thisappkey;
+        // array reference so we should substract 1 to start at 0.
+        $aserverarray[$serverwalker - 1] = $thisservername;
+        $appkeyarray[$serverwalker - 1] = $thisappkey;
     }
 }
 
@@ -69,7 +71,7 @@ if (count($aserverarray) == 1) {
 class panopto_provision_form extends moodleform {
 
     /**
-     * Defines a panopto provision form
+     * Defines a Panopto provision form
      */
     public function definition() {
 
@@ -102,56 +104,38 @@ $urlparams['return_url'] = $returnurl;
 $PAGE->set_url('/blocks/panopto/provision_course_internal.php?id=' . $courseid, $urlparams);
 $PAGE->set_pagelayout('base');
 
-
 $mform = new panopto_provision_form($PAGE->url);
+// Set Moodle page info.
+$provisiontitle = get_string('provision_courses', 'block_panopto');
+$PAGE->set_title($provisiontitle);
+$PAGE->set_heading($provisiontitle);
+
+// Course context.
+require_capability('block/panopto:provision_course', $context);
+$editcourseurl = new moodle_url($returnurl);
+$PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $editcourseurl);
+
+$manageblocks = new moodle_url('/admin/blocks.php');
+$panoptosettings = new moodle_url('/admin/settings.php?section=blocksettingpanopto');
+$PAGE->navbar->add(get_string('blocks'), $manageblocks);
+$PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panoptosettings);
+$PAGE->navbar->add($provisiontitle, new moodle_url($PAGE->url));
+
+echo $OUTPUT->header();
 
 if ($mform->is_cancelled()) {
     redirect(new moodle_url($returnurl));
-} else {
+} else if ($data = $mform->get_data()) {
+    // If data has been submitted use it then lose it for next time.
 
-    // Set Moodle page info.
-    $provisiontitle = get_string('provision_courses', 'block_panopto');
-    $PAGE->set_pagelayout('base');
-    $PAGE->set_title($provisiontitle);
-    $PAGE->set_heading($provisiontitle);
+    $selectedserver = trim($aserverarray[$data->servers]);
+    $selectedkey = trim($appkeyarray[$data->servers]);
 
-    // Course context.
-    require_capability('block/panopto:provision_course', $context);
-    $editcourseurl = new moodle_url($returnurl);
-    $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $editcourseurl);
-    $data = $mform->get_data();
+    if (isset($selectedserver) && !empty($selectedserver) &&
+        isset($selectedkey) && !empty($selectedkey)) {
 
-    // If there is form data, use it to determine the server and app key to provision to.
-    if ($data) {
-        $selectedserver = trim($aserverarray[$data->servers]);
-        $selectedkey = trim($appkeyarray[$data->servers]);
-
-        // Are these old? Need input on if we shoud store these in another way.
-        $CFG->servername = $selectedserver;
-        $CFG->appkey = $selectedkey;
-    }
-
-    $manageblocks = new moodle_url('/admin/blocks.php');
-    $panoptosettings = new moodle_url('/admin/settings.php?section=blocksettingpanopto');
-    $PAGE->navbar->add(get_string('blocks'), $manageblocks);
-    $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panoptosettings);
-    $PAGE->navbar->add($provisiontitle, new moodle_url($PAGE->url));
-    echo $OUTPUT->header();
-
-    // If there are no servers specified for provisioning, give a failure notice and allow user to return to course page.
-    if (count($aserverarray) < 1) {
-        echo get_string('no_server', 'block_panopto') .
-        "<br/><a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
-
-    } else if (isset($selectedserver) && !empty($selectedserver) &&
-               isset($selectedkey) && !empty($selectedkey)) {
-
-        // Set the current Moodle course to retrieve info for / provision.
         $panoptodata = new panopto_data($courseid);
 
-        // If we are not using the same server remove the folder ID reference.
-        // NOTE: A moodle course can only point to one panopto server at a time.
-        // So reprovisioning to a different server erases the folder mapping to the original server.
         if (!isset($panoptodata->servername) || empty($panoptodata->servername) ||
             ($panoptodata->servername !== $selectedserver)) {
             $panoptodata->sessiongroupid = null;
@@ -168,9 +152,52 @@ if ($mform->is_cancelled()) {
     } else {
         $mform->display();
     }
+} else {
 
-    echo $OUTPUT->footer();
+    // If there are no servers specified for provisioning, give a failure notice and allow user to return to course page.
+    if (count($aserverarray) < 1) {
+        echo get_string('no_server', 'block_panopto') .
+        "<br/><a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
+
+    } else if (count($aserverarray) === 1) {
+        // Get first element from associative array. aServerArray and appKeyArray will have same key values.
+        $key = array_keys($aserverarray);
+        $selectedserver = trim($aserverarray[$key[0]]);
+        $selectedkey = trim($appkeyarray[$key[0]]);
+
+        $panoptodata = new panopto_data($courseid);
+
+        // If we are not using the same server remove the folder ID reference.
+        // NOTE: A Moodle course can only point to one Panopto server at a time.
+        // So reprovisioning to a different server erases the folder mapping to the original server.
+        if (!isset($panoptodata->servername) || empty($panoptodata->servername) ||
+            ($panoptodata->servername !== $selectedserver)) {
+            $panoptodata->sessiongroupid = null;
+        }
+
+        $panoptodata->servername = $selectedserver;
+        $panoptodata->applicationkey = $selectedkey;
+
+        $provisioningdata = $panoptodata->get_provisioning_info();
+        $provisioneddata = $panoptodata->provision_course($provisioningdata);
+
+        include('views/provisioned_course.html.php');
+        echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
+    } else {
+        $panoptodata = new panopto_data($courseid);
+        if (in_array($panoptodata->servername, $aserverarray)) {
+            $provisioningdata = $panoptodata->get_provisioning_info();
+            $provisioneddata = $panoptodata->provision_course($provisioningdata);
+
+            include('views/provisioned_course.html.php');
+            echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
+        } else {
+            $mform->display();
+        }
+    }
 }
+
+echo $OUTPUT->footer();
 
 /**
  * Returns true if a string is null or empty, false otherwise

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The auth soap client for panopto
+ * The auth soap client for Panopto
  *
  * @package block_panopto
  * @copyright Panopto 2009 - 2016 with contributions from Spenser Jones (sjones@ambrose.edu),
@@ -23,71 +23,86 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// This can't be defined moodle internal because it is called from panopto to authorize login.
+// This can't be defined Moodle internal because it is called from Panopto to authorize login.
 
 /**
- * The auth soap client for panopto
+ * The auth soap client for Panopto
  *
  * @copyright Panopto 2009 - 2016 with contributions from Spenser Jones (sjones@ambrose.edu),
  * Skylar Kelty <S.Kelty@kent.ac.uk>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+require_once(dirname(__FILE__) . '/AuthManagement/AuthManagementAutoload.php');
+
 class panopto_auth_soap_client extends SoapClient {
 
+
     /**
-     * @var string $getversionaction
+     * @var array $authparam
      */
-    private $getversionaction = 'http://tempuri.org/IAuth/GetServerVersion';
+    private $authparam;
+
+    /**
+     * @var array $apiurl
+     */
+    private $apiurl;
 
     /**
      * main constructor
      *
-     * @param string $servername the name of the server we are on
+     * @param string $servername
+     * @param string $apiuseruserkey
+     * @param string $apiuserauthcode
      */
-    public function __construct($servername) {
+    public function __construct($servername, $apiuseruserkey, $apiuserauthcode) {
+
         // Instantiate SoapClient in WSDL mode.
         // Set call timeout to 5 minutes.
-        parent::__construct
-        (
-            'https://'. $servername . '/Panopto/PublicAPI/4.0/Auth.svc?wsdl'
-        );
-    }
+        $this->apiurl = 'https://'. $servername . '/Panopto/PublicAPI/4.2/Auth.svc?wsdl';
 
-    /**
-     * Override SOAP action to work around bug in older PHP SOAP versions.
-     *
-     * @param string $request the request being processed
-     * @param string $location
-     * @param string $action
-     * @param string $version
-     * @param string $oneway
-     */
-    public function __doRequest($request, $location, $action, $version, $oneway = null) {
-        return parent::__doRequest($request, $location, $this->getversionaction, $version);
+        // Cache web service credentials for all calls requiring authentication.
+        $this->authparam = new AuthManagementStructAuthenticationInfo($apiuserauthcode, null, $apiuseruserkey);
     }
 
     /**
      * gets the version of the server.
      */
-    private function get_server_version() {
-        return parent::__soapCall('GetServerVersion', array());
+    public function get_server_version() {
+        $returnvalue = false;
+        $authmanagementserviceget = new AuthManagementServiceGet(array('wsdl_url' => $this->apiurl));
+        if ($authmanagementserviceget->GetServerVersion()) {
+            $returnvalue = $authmanagementserviceget->getResult()->GetServerVersionResult;
+        } else {
+            error_log(print_r($authmanagementserviceget->getLastError(), true));
+        }
+        return $returnvalue;
     }
 
     /**
      * Returns the version number of the current Panopto server.
+     * @param string $idprovidername - instnace name for current server IDP
+     * @param string $moduleversion - current plug in version
+     * @param string $targetplatformversion - Moodle version
      */
-    public function get_panopto_server_version() {
-        $panoptoversion;
+    public function report_integration_info($idprovidername, $moduleversion, $targetplatformversion) {
+        $returnvalue = false;
 
-        $serverversionresult = $this->get_server_version();
+        $authmanagementservicereport = new AuthManagementServiceReport(array('wsdl_url' => $this->apiurl));
+        $reportparams = new AuthManagementStructReportIntegrationInfo(
+            $this->authparam,
+            strval($idprovidername),
+            strval($moduleversion),
+            strval($targetplatformversion)
+        );
 
-        if (!empty($serverversionresult)) {
-            if (!empty($serverversionresult->{'GetServerVersionResult'})) {
-                $panoptoversion = $serverversionresult->{'GetServerVersionResult'};
-            }
+        if ($authmanagementservicereport->ReportIntegrationInfo($reportparams)) {
+            $returnvalue = true;
+        } else {
+            $lasterror = $authmanagementservicereport->getLastError()['AuthManagementServiceReport::ReportIntegrationInfo'];
+            error_log(print_r($lasterror, true));
         }
-        return $panoptoversion;
+
+        return $returnvalue;
     }
 }
-
 /* End of file panopto_auth_soap_client.php */

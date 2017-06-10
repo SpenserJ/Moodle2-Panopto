@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * manages the content on the panopto block
+ * manages the content on the Panopto block
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
@@ -62,23 +62,43 @@ try {
 
         echo $content->text;
     } else {
+
         try {
             if (!$panoptodata->sessiongroupid) {
                 $content->text = get_string('no_course_selected', 'block_panopto');
             } else {
                 // Get course info from SOAP service.
-                $courseinfo = $panoptodata->get_course();
 
-                // Panopto course was deleted, or an exception was thrown while retrieving course data.
-                if (!isset($courseinfo) || $courseinfo->Access == 'Error') {
+                // We can get by external_id but there is no point because atm it calls this method redundantly anyway.
+                $courseinfo = $panoptodata->get_folders_by_id();
+
+                // Panopto course folder was deleted, or an exception was thrown while retrieving course data.
+                if (!isset($courseinfo) || !$courseinfo || $courseinfo === -1) {
                     $content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
                 } else {
                     // SSO form passes instance name in POST to keep URLs portable.
                     $content->text .= "<form name='SSO' method='post'>" .
                         "<input type='hidden' name='instance' value='$panoptodata->instancename' /></form>";
 
+
+                    // Get all Completed.
+                    $sessionlist = $panoptodata->get_session_list();
+                    $livesessions = array();
+
+                    if (is_array($sessionlist) && !empty($sessionlist)) {
+                        foreach ($sessionlist as $sessionobj) {
+                            $sessionvars = get_object_vars($sessionobj);
+
+                            if ($sessionobj->IsBroadcast && empty($sessionobj->Duration)) {
+                                $livesessions[] = $sessionobj;
+                            } else if (!empty($sessionobj->Duration)) {
+                                $completeddeliveries[] = $sessionobj;
+                            }
+                        }
+                    }
+
                     $content->text .= '<div><b>' . get_string('live_sessions', 'block_panopto') . '</b></div>';
-                    $livesessions = $panoptodata->get_live_sessions();
+
                     if (!empty($livesessions)) {
                         $i = 0;
                         foreach ($livesessions as $livesession) {
@@ -88,11 +108,11 @@ try {
                             $livesessiondisplayname = s($livesession->Name);
                             $content->text .= "<div class='listItem $altclass'>" . $livesessiondisplayname .
                                 "<span class='nowrap'>" .
-                                "[<a href='javascript:panopto_launchNotes(\"$livesession->LiveNotesURL\")'>" .
+                                "[<a href='javascript:panopto_launchNotes(\"$livesession->NotesURL\")'>" .
                                 get_string('take_notes', 'block_panopto') . '</a>]';
 
-                            if ($livesession->BroadcastViewerURL) {
-                                $content->text .= "[<a href='$livesession->BroadcastViewerURL' " .
+                            if ($livesession->ViewerUrl) {
+                                $content->text .= "[<a href='$livesession->ViewerUrl' " .
                                     "onclick='return panopto_startSSO(this)'>" .
                                     get_string('watch_live', 'block_panopto') . '</a>]';
                             }
@@ -108,7 +128,6 @@ try {
                     $content->text .= "<div class='sectionHeader'><b>" .
                         get_string('completed_recordings', 'block_panopto') . '</b></div>';
 
-                    $completeddeliveries = $panoptodata->get_completed_deliveries();
                     if (!empty($completeddeliveries)) {
                         $i = 0;
                         foreach ($completeddeliveries as $completeddelivery) {
@@ -120,9 +139,9 @@ try {
                             // Alternate gray background for readability.
                             $altclass = ($i % 2) ? 'listItemAlt' : '';
 
-                            $completeddeliverydisplayname = s($completeddelivery->DisplayName);
+                            $completeddeliverydisplayname = s($completeddelivery->Name);
                             $content->text .= "<div class='listItem $altclass'>" .
-                                "<a href='$completeddelivery->ViewerURL' onclick='return panopto_startSSO(this)'>" .
+                                "<a href='$completeddelivery->ViewerUrl' onclick='return panopto_startSSO(this)'>" .
                                 $completeddeliverydisplayname .
                                 '</a></div>';
                             $i++;
@@ -139,27 +158,27 @@ try {
                             get_string('no_completed_recordings', 'block_panopto') . '</div>';
                     }
 
-                    if ($courseinfo->AudioPodcastURL) {
+                    if ($courseinfo->AudioPodcastITunesUrl) {
                         $content->text .= "<div class='sectionHeader'><b>" . get_string('podcast_feeds', 'block_panopto') .
                             '</b></div>' .
                             "<div class='listItem'>" .
                                 "<img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />" .
-                                "<a href='$courseinfo->AudioPodcastURL'>" .
+                                "<a href='$courseinfo->AudioPodcastITunesUrl'>" .
                                     get_string('podcast_audio', 'block_panopto') .
                                 '</a>' .
                                 "<span class='rssParen'>(</span>" .
-                                "<a href='$courseinfo->AudioRssURL' target='_blank' class='rssLink'>RSS</a>" .
+                                "<a href='$courseinfo->AudioRssUrl' target='_blank' class='rssLink'>RSS</a>" .
                                 "<span class='rssParen'>)</span>" .
                             "</div>\n";
 
-                        if ($courseinfo->VideoPodcastURL) {
+                        if ($courseinfo->VideoPodcastITunesUrl) {
                             $content->text .= "<div class='listItem'>" .
                                 "<img src='$CFG->wwwroot/blocks/panopto/images/feed_icon.gif' />" .
-                                "<a href='$courseinfo->VideoPodcastURL'>" .
+                                "<a href='$courseinfo->VideoPodcastITunesUrl'>" .
                                     get_string('podcast_video', 'block_panopto') .
                                 '</a>' .
                                 "<span class='rssParen'>(</span>" .
-                                "<a href='$courseinfo->VideoRssURL' target='_blank' class='rssLink'>RSS</a>" .
+                                "<a href='$courseinfo->VideoRssUrl' target='_blank' class='rssLink'>RSS</a>" .
                                 "<span class='rssParen'>)</span>" .
                                 "</div>\n";
                         }
@@ -169,20 +188,20 @@ try {
                         $content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') .
                             '</b></div>' .
                             "<div class='listItem'>" .
-                                "<a href='$courseinfo->CourseSettingsURL' onclick='return panopto_startSSO(this)'>" .
+                                "<a href='$courseinfo->SettingsUrl' onclick='return panopto_startSSO(this)'>" .
                                     get_string('course_settings', 'block_panopto') .
                                 '</a>' .
                             "</div>\n";
                     }
 
-                    // A the users who can provision are the moodle admin, and enrolled users given a publisher or creator role.
+                    // A the users who can provision are the Moodle admin, and enrolled users given a publisher or creator role.
                     // This makes it so can_user_provision will allow only creators/publishers/admins to see these links.
                     if ($panoptodata->can_user_provision($courseid)) {
-                        $systeminfo = $panoptodata->get_system_info();
+                        $systeminfo = $panoptodata->get_recorder_download_urls();
                         $content->text .= "<div class='listItem'>" .
                             get_string('download_recorder', 'block_panopto') .
                             "<span class='nowrap'>(" .
-                            "<a href='$systeminfo->RecorderDownloadUrl'>Windows</a>" .
+                            "<a href='$systeminfo->WindowsRecorderDownloadUrl'>Windows</a>" .
                             " | <a href='$systeminfo->MacRecorderDownloadUrl'>Mac</a>)</span>" .
                             "</div>\n";
 

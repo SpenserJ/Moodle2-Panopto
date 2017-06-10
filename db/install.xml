@@ -28,24 +28,38 @@
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for import map table"/>
         </KEYS>
     </TABLE>
-    <TABLE NAME="block_panopto_creatormap" COMMENT="a table that maps moodle roles to the creator capability when provisioning to Panopto">
+    <TABLE NAME="block_panopto_creatormap" COMMENT="a table that maps Moodle roles to the creator capability when provisioning to Panopto">
         <FIELDS>
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="id of mapping row, key"/>
             <FIELD NAME="moodle_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The ID of the course the mapping belongs to"/>
-            <FIELD NAME="role_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the ID in moodle of the role given the creator permissions"/>
+            <FIELD NAME="role_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the ID in Moodle of the role given the creator permissions"/>
         </FIELDS>
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for creator map table"/>
         </KEYS>
     </TABLE>
-    <TABLE NAME="block_panopto_publishermap" COMMENT="a table that maps moodle roles to the publisher capability when provisioning to Panopto">
+    <TABLE NAME="block_panopto_publishermap" COMMENT="a table that maps Moodle roles to the publisher capability when provisioning to Panopto">
         <FIELDS>
             <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="id of mapping row, key"/>
             <FIELD NAME="moodle_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The ID of the course the mapping belongs to"/>
-            <FIELD NAME="role_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the ID in moodle of the role given the publisher permissions"/>
+            <FIELD NAME="role_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="the ID in Moodle of the role given the publisher permissions"/>
         </FIELDS>
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for publisher map table"/>
+        </KEYS>
+    </TABLE>
+    <TABLE NAME="block_panopto_old_foldermap" COMMENT="Map Moodle courses to inactive ClientData style Panopto folders">
+        <FIELDS>
+            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="id of the table, please edit me"/>
+            <FIELD NAME="moodleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of Moodle course."/>
+            <FIELD NAME="panopto_id" TYPE="char" LENGTH="36" NOTNULL="true" SEQUENCE="false" COMMENT="Public ID of Panopto folder."/>
+            <FIELD NAME="panopto_server" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Panopto server name for course."/>
+            <FIELD NAME="panopto_app_key" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Panopto application key for server."/>
+            <FIELD NAME="publisher_mapping" TYPE="char" LENGTH="20" NOTNULL="false" DEFAULT="1" SEQUENCE="false"/>
+            <FIELD NAME="creator_mapping" TYPE="char" LENGTH="20" NOTNULL="false" DEFAULT="3,4" SEQUENCE="false"/>
+        </FIELDS>
+        <KEYS>
+            <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for test"/>
         </KEYS>
     </TABLE>
   </TABLES>

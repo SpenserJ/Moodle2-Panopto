@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * adds rolling sync capability to panopto
+ * adds rolling sync capability to Panopto
  *
  * @package block_panopto
  * @copyright Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu),
@@ -45,24 +45,19 @@ require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
 class block_panopto_rollingsync {
 
     /**
-     * Called when an enrollment has been created.
+     * Called when a user has been logged in as.
      *
-     * @param \core\event\user_enrolment_created $event
+     * @param \core\event\user_loggedinas $event
      */
-    public static function enrollmentcreated(\core\event\user_enrolment_created $event) {
-
+    public static function userloggedinas(\core\event\user_loggedinas $event) {
         if (!\panopto_data::is_main_block_configured() ||
-            \panopto_data::get_panopto_course_id($event->courseid) === false ||
             !\panopto_data::has_minimum_version()) {
             return;
         }
 
-        $task = new \block_panopto\task\update_user();
+        $task = new \block_panopto\task\sync_user();
         $task->set_custom_data(array(
-            'courseid' => $event->courseid,
-            'relateduserid' => $event->relateduserid,
-            'contextid' => $event->contextid,
-            'eventtype' => 'enroll_add'
+            'userid' => $event->relateduserid
         ));
 
         if (get_config('block_panopto', 'async_tasks')) {
@@ -73,117 +68,19 @@ class block_panopto_rollingsync {
     }
 
     /**
-     * Called when an enrollment has been deleted.
+     * Called when a user has been logged in.
      *
-     * @param \core\event\user_enrolment_deleted $event
+     * @param \core\event\user_loggedin $event
      */
-    public static function enrollmentdeleted(\core\event\user_enrolment_deleted $event) {
+    public static function userloggedin(\core\event\user_loggedin $event) {
         if (!\panopto_data::is_main_block_configured() ||
-            \panopto_data::get_panopto_course_id($event->courseid) === false ||
             !\panopto_data::has_minimum_version()) {
             return;
         }
 
-        $task = new \block_panopto\task\update_user();
+        $task = new \block_panopto\task\sync_user();
         $task->set_custom_data(array(
-            'courseid' => $event->courseid,
-            'relateduserid' => $event->relateduserid,
-            'contextid' => $event->contextid,
-            'eventtype' => 'enroll_remove'
-        ));
-
-        if (get_config('block_panopto', 'async_tasks')) {
-            \core\task\manager::queue_adhoc_task($task);
-        } else {
-            $task->execute();
-        }
-    }
-
-    /**
-     * Called when an enrolment has been suspended or reactivated
-     * but not when new enrollments are added or when enrollments are removed.
-     *
-     * @param \core\event\user_enrolment_updated $event
-     */
-    public static function enrolmentupdated(\core\event\user_enrolment_updated $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            \panopto_data::get_panopto_course_id($event->courseid) === false ||
-            !\panopto_data::has_minimum_version()) {
-            return;
-        }
-
-        $task = new \block_panopto\task\update_user();
-        $context = context_course::instance($event->courseid);
-        if (is_enrolled($context, $event->relateduserid, '', true)) {
-            // User is enrolled.  Make sure they are added in Panopto.
-            $task->set_custom_data(array(
-                'courseid' => $event->courseid,
-                'relateduserid' => $event->relateduserid,
-                'contextid' => $event->contextid,
-                'eventtype' => "enroll_add"
-            ));
-        } else {
-            // User is unenrolled or suspended.  Make sure they are removed from Panopto.
-            $task->set_custom_data(array(
-                'courseid' => $event->courseid,
-                'relateduserid' => $event->relateduserid,
-                'contextid' => $event->contextid,
-                'eventtype' => "enroll_remove"
-            ));
-        }
-
-        if (get_config('block_panopto', 'async_tasks')) {
-            \core\task\manager::queue_adhoc_task($task);
-        } else {
-            $task->execute();
-        }
-    }
-
-    /**
-     * Called when an role has been added.
-     *
-     * @param \core\event\role_assigned $event
-     */
-    public static function roleadded(\core\event\role_assigned $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            \panopto_data::get_panopto_course_id($event->courseid) === false ||
-            !\panopto_data::has_minimum_version()) {
-            return;
-        }
-
-        $task = new \block_panopto\task\update_user();
-        $task->set_custom_data(array(
-            'courseid' => $event->courseid,
-            'relateduserid' => $event->relateduserid,
-            'contextid' => $event->contextid,
-            'eventtype' => 'role'
-        ));
-
-        if (get_config('block_panopto', 'async_tasks')) {
-            \core\task\manager::queue_adhoc_task($task);
-        } else {
-            $task->execute();
-        }
-    }
-
-    /**
-     * Called when an role has been removed.
-     *
-     * @param \core\event\role_unassigned $event
-     */
-    public static function roledeleted(\core\event\role_unassigned $event) {
-        if (!\panopto_data::is_main_block_configured() ||
-            \panopto_data::get_panopto_course_id($event->courseid) === false ||
-            !\panopto_data::has_minimum_version()) {
-            return;
-        }
-
-        $task = new \block_panopto\task\update_user();
-        $task->set_custom_data(array(
-            'courseid' => $event->courseid,
-            'relateduserid' => $event->relateduserid,
-            'contextid' => $event->contextid,
-            'eventtype' => 'role'
+            'userid' => $event->userid
         ));
 
         if (get_config('block_panopto', 'async_tasks')) {
@@ -199,7 +96,6 @@ class block_panopto_rollingsync {
      * @param \core\event\course_created $event
      */
     public static function coursecreated(\core\event\course_created $event) {
-
         if (!\panopto_data::is_main_block_configured() ||
             !\panopto_data::has_minimum_version()) {
             return;
@@ -230,8 +126,6 @@ class block_panopto_rollingsync {
      * @param \core\event\course_restored $event
      */
     public static function courserestored(\core\event\course_restored $event) {
-        global $DB;
-
         if (!\panopto_data::is_main_block_configured() ||
             !\panopto_data::has_minimum_version()) {
             return;
@@ -243,7 +137,7 @@ class block_panopto_rollingsync {
             $originalcourseid = intval($event->other['originalcourseid']);
 
             $panoptodata = new panopto_data($newcourseid);
-            $panoptodata->init_and_sync_import($newcourseid, $originalcourseid);
+            $panoptodata->init_and_sync_import($originalcourseid);
         }
     }
 }

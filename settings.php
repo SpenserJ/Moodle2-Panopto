@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the main config settings for the panopto block
+ * the main config settings for the Panopto block
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
@@ -28,16 +28,17 @@ global $CFG;
 $numservers = get_config('block_panopto', 'server_number');
 $numservers = isset($numservers) ? $numservers : 0;
 
-$default = 0;
+// Increment numservers by 1 to take into account starting at 0.
+++$numservers;
+
 if ($ADMIN->fulltree) {
-    $_SESSION['numservers'] = $numservers + 1;
 
     $settings->add(
         new admin_setting_configselect(
             'block_panopto/server_number',
             get_string('block_panopto_server_number_name', 'block_panopto'),
             get_string('block_panopto_server_number_desc', 'block_panopto'),
-            $default,
+            0,
             range(1, 10, 1)
         )
     );
@@ -51,11 +52,11 @@ if ($ADMIN->fulltree) {
         )
     );
 
-    for ($x = 0; $x <= $numservers; $x++) {
+    for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
         $settings->add(
             new admin_setting_configtext_trimmed(
-                'block_panopto/server_name' . ($x + 1),
-                get_string('block_global_hostname', 'block_panopto') . ' ' . ($x + 1),
+                'block_panopto/server_name' . $serverwalker,
+                get_string('block_global_hostname', 'block_panopto') . ' ' . $serverwalker,
                 get_string('block_global_hostname_desc', 'block_panopto'),
                 '',
                 PARAM_TEXT
@@ -63,19 +64,28 @@ if ($ADMIN->fulltree) {
         );
         $settings->add(
             new admin_setting_configtext_trimmed(
-                'block_panopto/application_key' . ($x + 1),
-                get_string('block_global_application_key', 'block_panopto') . ' ' . ($x + 1),
+                'block_panopto/application_key' . $serverwalker,
+                get_string('block_global_application_key', 'block_panopto') . ' ' . $serverwalker,
                 get_string('block_global_application_key_desc', 'block_panopto'),
                 '',
                 PARAM_TEXT
             )
         );
     }
+
     $settings->add(
         new admin_setting_configcheckbox(
             'block_panopto/async_tasks',
             get_string('block_panopto_async_tasks', 'block_panopto'),
             get_string('block_panopto_async_tasks_desc', 'block_panopto'),
+            1
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/prefix_new_folder_names',
+            get_string('block_panopto_prefix_new_folder_shortnames', 'block_panopto'),
+            get_string('block_panopto_prefix_new_folder_shortnames_desc', 'block_panopto'),
             1
         )
     );

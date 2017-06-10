@@ -42,7 +42,7 @@ class block_panopto extends block_base {
     const CONTENTID = 'block_panopto_content';
 
     /**
-     * Name of the panopto block. Should match the block's directory name on the server.
+     * Name of the Panopto block. Should match the block's directory name on the server.
      *
      * @var string $blockname the name of the current block.
      */
@@ -72,7 +72,7 @@ class block_panopto extends block_base {
     /**
      * Save per-instance config in custom table instead of mdl_block_instance configdata column.
      *
-     * @param array $data the data being set on panopto
+     * @param array $data the data being set on Panopto
      * @param bool $nolongerused depcrecated variable
      */
     public function instance_config_save($data, $nolongerused = false) {
@@ -91,7 +91,8 @@ class block_panopto extends block_base {
             );
 
             $panoptodata = new panopto_data($this->page->course->id);
-            $panoptodata->provision_course($panoptodata->get_provisioning_info());
+            $provisioninginfo = $panoptodata->get_provisioning_info();
+            $panoptodata->provision_course($provisioninginfo);
         }
     }
 

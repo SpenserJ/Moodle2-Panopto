@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the provision course logic for panopto
+ * the provision course logic for Panopto
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
@@ -31,22 +31,23 @@ global $courses;
 // Populate list of servernames to select from.
 $aserverarray = array();
 $appkeyarray = array();
-if (isset($_SESSION['numservers'])) {
-    $maxval = $_SESSION['numservers'];
-} else {
-    $maxval = 1;
-}
 
-for ($x = 0; $x < $maxval; $x++) {
+$numservers = get_config('block_panopto', 'server_number');
+$numservers = isset($numservers) ? $numservers : 0;
+
+// Increment numservers by 1 to take into account starting at 0.
+++$numservers;
+
+for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
 
     // Generate strings corresponding to potential servernames in the config.
-    $thisservername = get_config('block_panopto', 'server_name' . ($x + 1));
-    $thisappkey = get_config('block_panopto', 'application_key' . ($x + 1));
+    $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
+    $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
 
     $hasservername = !is_null_or_empty_string($thisservername);
     if ($hasservername && !is_null_or_empty_string($thisappkey)) {
-        $aserverarray[$x] = $thisservername;
-        $appkeyarray[$x] = $thisappkey;
+        $aserverarray[$serverwalker - 1] = $thisservername;
+        $appkeyarray[$serverwalker - 1] = $thisappkey;
     }
 }
 
@@ -78,7 +79,7 @@ class panopto_provision_form extends moodleform {
     protected $description = '';
 
     /**
-     * Defines a panopto provision form
+     * Defines a Panopto provision form
      */
     public function definition() {
 
@@ -184,7 +185,7 @@ if ($mform->is_cancelled()) {
                 isset($selectedkey) && !empty($selectedkey)) {
 
                 // If we are not using the same server remove the folder ID reference.
-                // NOTE: A moodle course can only point to one panopto server at a time.
+                // NOTE: A Moodle course can only point to one Panopto server at a time.
                 // So reprovisioning to a different server erases the folder mapping to the original server.
                 if ($panoptodata->servername !== $selectedserver) {
                     $panoptodata->sessiongroupid = null;
@@ -208,8 +209,6 @@ if ($mform->is_cancelled()) {
                             "<div class='errorMessage'>" . get_string('server_info_not_valid', 'block_panopto') . "</div>" .
                             "<div class='attribute'>" . get_string('server_name', 'block_panopto') . "</div>" .
                             "<div class='value'>" . format_string($panoptodata->servername, false) . "</div>" .
-                            "<div class='attribute'>" . get_string('application_key', 'block_panopto') . "</div>" .
-                            "<div class='value'>" . format_string($panoptodata->applicationkey) . "</div>" .
                         "</div>" .
                     "</div>";
             }

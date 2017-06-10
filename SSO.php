@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * manages the single sign on logic between panopto and moodle
+ * manages the single sign on logic between Panopto and Moodle
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// This can't be defined moodle internal because it is called from panopto to authorize login.
+// This can't be defined Moodle internal because it is called from Panopto to authorize login.
 
 global $CFG, $USER;
 

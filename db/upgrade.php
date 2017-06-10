@@ -25,12 +25,29 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Upgrades panopto for xmldb
+ * Update the upgrade progress bar for Panopto.
  *
- * @param int $oldversion the previous version panopto is being upgraded from
+ * @param int $currentprogress the current progress that the bar needs to reflect.
+ * @param int $totalitems the total number of items in the current step to be processed.
+ * @param int $progressstep if set upgrade the progress step to this value.
+ */
+function update_upgrade_progress($currentprogress, $totalitems, $progressstep = null) {
+    if (isset($progressstep) && !empty($progressstep)) {
+        error_log('Now beginning the step: ' . $progressstep);
+    }
+
+    if ($currentprogress > 0) {
+        error_log('Processing folder ' . $currentprogress . ' out of ' . $totalitems);
+    }
+}
+
+/**
+ * Upgrades Panopto for xmldb
+ *
+ * @param int $oldversion the previous version Panopto is being upgraded from
  */
 function xmldb_block_panopto_upgrade($oldversion = 0) {
-    global $CFG, $DB;
+    global $CFG, $DB, $USER;
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2014121502) {
@@ -158,7 +175,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
     if ($oldversion < 2017031303) {
 
-        // Get the roles using the old method so we can update current customers to the new tables
+        // Get the roles using the old method so we can update current customers to the new tables.
         $pubroles = array();
         $creatorroles = array();
 
@@ -232,6 +249,141 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2017031303, 'panopto');
+    }
+
+    if ($oldversion < 2017061000) {
+        // Get all active courses mapped to Panopto.
+        $oldpanoptocourses = $DB->get_records(
+            'block_panopto_foldermap',
+            null,
+            'moodleid'
+        );
+
+        $currindex = 0;
+        $totalupgradesteps = count($oldpanoptocourses);
+        $upgradestep = "Verifying Permission";
+        update_upgrade_progress($currindex, $totalupgradesteps, $upgradestep);
+
+        $panoptocourseobjects = array();
+        $errorstring = get_string('upgrade_provision_access_error', 'block_panopto');
+        $versionerrorstring = get_string('upgrade_panopto_required_version', 'block_panopto');
+        $usercanupgrade = true;
+
+        foreach ($oldpanoptocourses as $oldcourse) {
+            $oldpanoptocourse = new stdClass;
+            $oldpanoptocourse->panopto = new panopto_data($oldcourse->moodleid);
+            if (isset($oldpanoptocourse->panopto->servername) && !empty($oldpanoptocourse->panopto->servername) &&
+                isset($oldpanoptocourse->panopto->applicationkey) && !empty($oldpanoptocourse->panopto->applicationkey)) {
+                if (isset($oldpanoptocourse->panopto->uname) && !empty($oldpanoptocourse->panopto->uname) &&
+                   $oldpanoptocourse->panopto->uname !== 'guest') {
+                    $oldpanoptocourse->panopto->ensure_auth_manager();
+                    $activepanoptoserverversion = $oldpanoptocourse->panopto->authmanager->get_server_version();
+                    if (!version_compare($activepanoptoserverversion, get_config('block_panopto', 'minimum_panopto_version'), '>=')) {
+                        echo "<div class='alert alert-error alert-block'>" .
+                                "<strong>Panopto ClientData(old) to Public API(new) Upgrade Error - Panopto Server requires newer version</strong>" .
+                                "<br/>" .
+                                "<p>" . $versionerrorstring . "</p><br/>" .
+                                "<p>Impacted server: " . $oldpanoptocourse->panopto->servername . "</p>" .
+                                "<p>Minimum required version: " . get_config('block_panopto', 'minimum_panopto_version') . "</p>" .
+                                "<p>Current version: " . $activepanoptoserverversion . "</p>" .
+                            "</div>";
+                        return false;
+                    }
+                } else {
+                    echo "<div class='alert alert-error alert-block'>" .
+                            "<strong>Panopto ClientData(old) to Public API(new) Upgrade Error - Not valid user</strong>" .
+                            "<br/>" .
+                            $errorstring .
+                        "</div>";
+                    return false;
+                }
+            } else {
+                // Shouldn't hit this case, but in the case a row in the DB has invalid data move it to the old_foldermap.
+                panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
+                // Continue to the next entry assuming this one was cleanup.
+                continue;
+            }
+
+            $oldpanoptocourse->provisioninginfo = $oldpanoptocourse->panopto->get_provisioning_info();
+            if (isset($oldpanoptocourse->provisioninginfo->accesserror) &&
+               $oldpanoptocourse->provisioninginfo->accesserror === true) {
+                $usercanupgrade = false;
+                break;
+            } else {
+                if (isset($oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder) &&
+                   $oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder === true) {
+                    // Course was mapped to a folder but that folder was not found, most likely folder was deleted on Panopto side.
+                    // The true parameter moves the row to the old_foldermap instead of deleting it.
+                    panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
+                    // Imports SHOULD still work for this case, so continue to below code.
+                }
+                $oldpanoptocourse->courseimports = panopto_data::get_import_list($oldpanoptocourse->panopto->moodlecourseid);
+                foreach ($oldpanoptocourse->courseimports as $courseimport) {
+                    $importpanopto = new panopto_data($courseimport);
+
+                    // False means the user failed to get the folder.
+                    $importpanoptofolder = $importpanopto->get_folders_by_id();
+                    if (isset($importpanoptofolder) && $importpanoptofolder === false) {
+                        $usercanupgrade = false;
+                        break;
+                    } else if (!isset($importpanoptofolder) || $importpanoptofolder === -1) {
+                        // In this case the folder was not found, not an access issue. Most likely the folder was deleted and this is an old entry.
+                        // Move the entry to the old_foldermap so user still has a reference.
+                        panopto_data::delete_panopto_relation($courseimport, true);
+                        // We can still continue on with the upgrade, assume this was an old entry that was deleted from Panopto side.
+                    }
+                }
+            }
+            $panoptocourseobjects[] = $oldpanoptocourse;
+
+            ++$currindex;
+            update_upgrade_progress($currindex, $totalupgradesteps);
+        }
+
+        if (!$usercanupgrade) {
+            echo "<div class='alert alert-error alert-block'>" .
+                    "<strong>Panopto ClientData(old) to Public API(new) Upgrade Error - Lacking Folder Access</strong>" .
+                    "<br/>" .
+                    $errorstring .
+                "</div>";
+            return false;
+        }
+
+        // Define table table where we will place all of our old/broken folder mappings. So customers can keep the data if needed.
+        $oldfoldermaptable = new xmldb_table('block_panopto_old_foldermap');
+        if (!$dbman->table_exists($oldfoldermaptable)) {
+            $mappingfields = array();
+            $mappingfields[] = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, true);
+            $mappingfields[] = new xmldb_field('moodleid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'id');
+            $mappingfields[] = new xmldb_field('panopto_id', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'moodleid');
+            $mappingfields[] = new xmldb_field('panopto_server', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, 'panopto_id');
+            $mappingfields[] = new xmldb_field('panopto_app_key', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, 'panopto_server');
+            $mappingfields[] = new xmldb_field('publisher_mapping', XMLDB_TYPE_CHAR, '20', null, null, null, '1', 'panopto_app_key');
+            $mappingfields[] = new xmldb_field('creator_mapping', XMLDB_TYPE_CHAR, '20', null, null, null, '3,4', 'publisher_mapping');
+            $mappingkey = new xmldb_key('primary', XMLDB_KEY_PRIMARY, array('id'), null, null);
+            foreach ($mappingfields as $mappingfield) {
+                $oldfoldermaptable->addField($mappingfield);
+            }
+            $oldfoldermaptable->addKey($mappingkey);
+            $dbman->create_table($oldfoldermaptable);
+        }
+
+        $upgradestep = "Upgrading Provisioned courses";
+        $currindex = 0;
+        $totalupgradesteps = count($panoptocourseobjects);
+        update_upgrade_progress($currindex, $totalupgradesteps, $upgradestep);
+        foreach ($panoptocourseobjects as $mappablecourse) {
+            // This should add the required groups to the existing Panopto folder.
+            $mappablecourse->panopto->provision_course($mappablecourse->provisioninginfo);
+            foreach ($mappablecourse->courseimports as $importedcourse) {
+                $mappablecourse->panopto->init_and_sync_import($importedcourse);
+            }
+
+            ++$currindex;
+            update_upgrade_progress($currindex, $totalupgradesteps);
+        }
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2017061000, 'panopto');
     }
 
     return true;

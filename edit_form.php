@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the edit form for the panopto block
+ * the edit form for the Panopto block
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
@@ -63,7 +63,7 @@ class block_panopto_edit_form extends block_edit_form {
 
             $courselist = $panoptodata->get_course_options();
 
-            $mform->addElement('selectgroups', 'config_course', get_string('existing_course', 'block_panopto'),
+            $mform->addElement('select', 'config_course', get_string('existing_course', 'block_panopto'),
                 $courselist['courses']);
             $mform->setDefault('config_course', $courselist['selected']);
 

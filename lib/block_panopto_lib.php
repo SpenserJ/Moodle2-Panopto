@@ -22,21 +22,21 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// This can't be defined moodle internal because it is called from panopto to authorize login.
+// This can't be defined Moodle internal because it is called from Panopto to authorize login.
 
 /**
  * Prepend the instance name to the Moodle course ID to create an external ID for Panopto Focus.
  *
- * @param int $moodlecourseid the id the the moodle course being edited
+ * @param int $moodlecourseid the id the the Moodle course being edited
  */
 function panopto_decorate_course_id($moodlecourseid) {
     return (get_config('block_panopto', 'instance_name') . ':' . $moodlecourseid);
 }
 
 /**
- * Decorate a moodle username with the instancename outside the context of a panopto_data object.
+ * Decorate a Moodle username with the instancename outside the context of a panopto_data object.
  *
- * @param int $moodleusername the name the the moodle user being edited
+ * @param int $moodleusername the name the the Moodle user being edited
  */
 function panopto_decorate_username($moodleusername) {
     return (get_config('block_panopto', 'instance_name') . '\\' . $moodleusername);

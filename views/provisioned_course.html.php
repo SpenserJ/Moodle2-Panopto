@@ -25,84 +25,52 @@
 
 <div class='block_panopto'>
     <div class='courseProvisionResult'>
-        <div class='attribute'><?php echo get_string('course_name', 'block_panopto') ?></div>
-        <div class='value'><?php echo $provisioningdata->shortname . ': ' . $provisioningdata->longname ?></div>
-
-        <div class='attribute'><?php echo get_string('publishers', 'block_panopto') ?></div>
-        <div class='value'>
-            <?php
-            if (!empty($provisioningdata->Publishers)) {
-                $publishers = $provisioningdata->Publishers;
-
-                // Single-element return set comes back as scalar, not array (?).
-                if (!is_array($publishers)) {
-                    $publishers = array($publishers);
-                }
-                $publisherinfo = array();
-                foreach ($publishers as $publisher) {
-                    array_push($publisherinfo,
-                        "$publisher->UserKey ($publisher->FirstName $publisher->LastName &lt;$publisher->Email&gt;)");
-                }
-
-                echo join('<br />', $publisherinfo);
-            } else {
-                ?><div class='errorMessage'><?php echo get_string('no_publishers', 'block_panopto') ?></div><?php
-            }
-            ?>
-        </div>
-
-        <div class='attribute'><?php echo get_string('creators', 'block_panopto') ?></div>
-        <div class='value'>
-            <?php
-            if (!empty($provisioningdata->Instructors)) {
-                $instructors = $provisioningdata->Instructors;
-
-                // Single-element return set comes back as scalar, not array (?).
-                if (!is_array($instructors)) {
-                    $instructors = array($instructors);
-                }
-                $instructorinfo = array();
-                foreach ($instructors as $instructor) {
-                    array_push($instructorinfo,
-                        "$instructor->UserKey ($instructor->FirstName $instructor->LastName &lt;$instructor->Email&gt;)");
-                }
-
-                echo join('<br />', $instructorinfo);
-            } else {
-                ?><div class='errorMessage'><?php echo get_string('no_creators', 'block_panopto') ?></div><?php
-            }
-            ?>
-        </div>
-        <div class='attribute'><?php echo get_string('students', 'block_panopto') ?></div>
-        <div class='value'>
-            <?php
-            if (!empty($provisioningdata->Students)) {
-                $students = $provisioningdata->Students;
-
-                // Single-element return set comes back as scalar, not array (?).
-                if (!is_array($students)) {
-                    $students = array($students);
-                }
-                $studentinfo = array();
-                foreach ($students as $student) {
-                    array_push($studentinfo, $student->UserKey);
-                }
-
-                echo join(', ', $studentinfo);
-            } else {
-                ?><div class='errorMessage'><?php echo get_string('no_students', 'block_panopto') ?></div><?php
-            }
-            ?>
-        </div>
-        <div class='attribute'><?php echo get_string('result', 'block_panopto') ?></div>
         <div class='value'>
             <?php
             if (!empty($provisioneddata)) {
+                if (isset($provisioneddata->accesserror) && $provisioneddata->accesserror === true) {
                 ?>
-                <div class='successMessage'>
-                    <?php echo get_string('provision_successful', 'block_panopto') ?> {<?php echo $provisioneddata->PublicID ?>}
-                </div>
+                    <div class='errorMessage'>
+                        <?php echo get_string('provision_access_error', 'block_panopto') ?>
+                    </div>
+                    <div class='attribute'><?php echo get_string('attempted_moodle_course_id', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioneddata->moodlecourseid ?></div>
+                    <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioneddata->servername ?></div>
                 <?php
+                } else if (isset($provisioneddata->unknownerror) && $provisioneddata->unknownerror === true) {
+                ?>
+                    <div class='errorMessage'>
+                        <?php echo get_string('provision_error', 'block_panopto') ?>
+                    </div>
+                    <div class='attribute'><?php echo get_string('attempted_moodle_course_id', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioneddata->moodlecourseid ?></div>
+                    <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioneddata->servername ?></div>                <?php
+                } else if (isset($provisioneddata->missingrequiredversion) && $provisioneddata->missingrequiredversion === true) {
+                ?>
+                    <div class='errorMessage'>
+                        <?php echo get_string('missing_required_version', 'block_panopto') ?>
+                    </div>
+                    <div class='attribute'><?php echo get_string('require_panopto_version_title', 'block_panopto') ?></div>
+                    <div class='value'><?php echo get_string('block_panopto', 'minimum_panopto_version') ?></div>
+                    <div class='attribute'><?php echo get_string('attempted_moodle_course_id', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioneddata->moodlecourseid ?></div>
+                    <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioneddata->servername ?></div>
+                <?php
+                } else {
+                ?>
+                    <div class='attribute'><?php echo get_string('course_name', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioningdata->fullname ?></div>
+                    <div class='attribute'><?php echo get_string('no_users_synced', 'block_panopto') ?></div>
+                    <div class='value'><?php echo get_string('no_users_synced_desc', 'block_panopto') ?></div>
+                    <div class='attribute'><?php echo get_string('result', 'block_panopto') ?></div>
+                    <div class='successMessage'>
+                        <?php echo get_string('provision_successful', 'block_panopto') ?> {<?php echo $provisioneddata->Id ?>}
+                    </div>
+                <?php
+                }
             } else {
                 ?>
                 <div class='errorMessage'><?php echo get_string('provision_error', 'block_panopto') ?></div>
