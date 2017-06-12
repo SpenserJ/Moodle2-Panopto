@@ -53,7 +53,7 @@
                         <?php echo get_string('missing_required_version', 'block_panopto') ?>
                     </div>
                     <div class='attribute'><?php echo get_string('require_panopto_version_title', 'block_panopto') ?></div>
-                    <div class='value'><?php echo get_string('block_panopto', 'minimum_panopto_version') ?></div>
+                    <div class='value'><?php echo get_config('block_panopto', 'minimum_panopto_version') ?></div>
                     <div class='attribute'><?php echo get_string('attempted_moodle_course_id', 'block_panopto') ?></div>
                     <div class='value'><?php echo $provisioneddata->moodlecourseid ?></div>
                     <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>

@@ -29,13 +29,8 @@ $plugin = (isset($plugin) ? $plugin : new stdClass());
 
 // Plugin version should normally be the same as the internal version.
 // If an admin wants to install with an older version number, however, set that here.
-$currentversion = 2017061000;
-set_config('current_version', $currentversion, 'block_panopto');
 
-// This version of the Moodle block requires API calls only added in versions of Panopto more recent than and including 5.4.0.
-set_config('minimum_panopto_version', '5.4.0', 'block_panopto');
-
-$plugin->version = $currentversion;
+$plugin->version = 2017061000;
 
 // Requires this Moodle version - 2.7.
 $plugin->requires  = 2014051200;
@@ -46,4 +41,7 @@ $plugin->maturity = MATURITY_STABLE;
 $plugin->dependencies = array(
     'mod_forum' => ANY_VERSION
 );
+
+set_config('current_version', $plugin->version, 'block_panopto');
+set_config('minimum_panopto_version', '5.4.0', 'block_panopto');
 /* End of file version.php */
