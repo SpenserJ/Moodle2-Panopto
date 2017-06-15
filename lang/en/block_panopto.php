@@ -111,6 +111,7 @@ $string['provisioncourseselect_help'] = 'Multiple selections are possible by Ctr
 $string['publisher'] = 'Publisher';
 $string['publisher_help'] = 'A Publisher can approve content submitted by Creators';
 $string['publishers'] = 'Publishers';
+$string['removing_invalid_folder_row'] = "Moodle course was deleted from Moodle or the link to Panopto does not contain all of the necessary info to connect to this folder. Moving foldermap entry to old_foldermap for user reference.\n";
 $string['reprovision_course_link_text'] = 'Reprovision Course';
 $string['result'] = 'Result';
 $string['require_panopto_version_title'] = 'Minimum Panopto version required for this version of the Moodle Panopto block';

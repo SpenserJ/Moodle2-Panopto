@@ -42,5 +42,9 @@ $observers = array(
     array(
         'eventname' => '\core\event\course_restored',
         'callback' => 'block_panopto_rollingsync::courserestored',
-    )
+    ),
+    array(
+        'eventname' => '\core\event\course_deleted',
+        'callback' => 'block_panopto_rollingsync::coursedeleted',
+    ),
 );

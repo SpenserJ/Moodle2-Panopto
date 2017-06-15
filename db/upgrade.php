@@ -256,6 +256,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         $oldpanoptocourses = $DB->get_records(
             'block_panopto_foldermap',
             null,
+            null,
             'moodleid'
         );
 
@@ -289,10 +290,19 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         $usercanupgrade = true;
 
         foreach ($oldpanoptocourses as $oldcourse) {
+            ++$currindex;
+            update_upgrade_progress($currindex, $totalupgradesteps);
+
             $oldpanoptocourse = new stdClass;
             $oldpanoptocourse->panopto = new panopto_data($oldcourse->moodleid);
-            if (isset($oldpanoptocourse->panopto->servername) && !empty($oldpanoptocourse->panopto->servername) &&
-                isset($oldpanoptocourse->panopto->applicationkey) && !empty($oldpanoptocourse->panopto->applicationkey)) {
+
+            $existingmoodlecourse = $DB->get_record('course', array('id' => $oldcourse->moodleid));
+
+            $moodlecourseexists = isset($existingmoodlecourse) && $existingmoodlecourse !== false;
+            $hasvalidpanoptodata = isset($oldpanoptocourse->panopto->servername) && !empty($oldpanoptocourse->panopto->servername) &&
+                                   isset($oldpanoptocourse->panopto->applicationkey) && !empty($oldpanoptocourse->panopto->applicationkey);
+
+            if ($moodlecourseexists && $hasvalidpanoptodata) {
                 if (isset($oldpanoptocourse->panopto->uname) && !empty($oldpanoptocourse->panopto->uname) &&
                    $oldpanoptocourse->panopto->uname !== 'guest') {
                     $oldpanoptocourse->panopto->ensure_auth_manager();
@@ -318,6 +328,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
                 }
             } else {
                 // Shouldn't hit this case, but in the case a row in the DB has invalid data move it to the old_foldermap.
+                error_log(get_string('removing_invalid_folder_row', 'block_panopto'));
                 panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
                 // Continue to the next entry assuming this one was cleanup.
                 continue;
@@ -334,6 +345,10 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
                     // Course was mapped to a folder but that folder was not found, most likely folder was deleted on Panopto side.
                     // The true parameter moves the row to the old_foldermap instead of deleting it.
                     panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
+
+                    //Recreate the default role mappings that were deleted by the above line.
+                    $oldpanoptocourse->panopto->check_course_role_mappings();
+
                     // Imports SHOULD still work for this case, so continue to below code.
                 }
                 $oldpanoptocourse->courseimports = panopto_data::get_import_list($oldpanoptocourse->panopto->moodlecourseid);
@@ -354,9 +369,6 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
                 }
             }
             $panoptocourseobjects[] = $oldpanoptocourse;
-
-            ++$currindex;
-            update_upgrade_progress($currindex, $totalupgradesteps);
         }
 
         if (!$usercanupgrade) {

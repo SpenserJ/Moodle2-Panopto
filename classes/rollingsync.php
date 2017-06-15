@@ -121,6 +121,20 @@ class block_panopto_rollingsync {
     }
 
     /**
+     * Called when a course has been deleted.
+     *
+     * @param \core\event\course_deleted $event
+     */
+    public static function coursedeleted(\core\event\course_deleted $event) {
+        if (!\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()) {
+            return;
+        }
+
+        \panopto_data::delete_panopto_relation($event->courseid, true);
+    }
+
+    /**
      * Called when a course has been restored (imported/backed up).
      *
      * @param \core\event\course_restored $event

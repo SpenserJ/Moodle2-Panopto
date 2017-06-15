@@ -324,7 +324,6 @@ class panopto_session_soap_client extends SoapClient {
         if ($this->sessionmanagementserviceget->GetFoldersList($folderlistparams)) {
             $retobj = $this->sessionmanagementserviceget->getResult();
             $totalresults = $retobj->GetFoldersListResult->TotalNumberResults;
-            error_log(print_r($totalresults, true));
 
             $folderlist = $retobj->GetFoldersListResult->Results->Folder;
 
