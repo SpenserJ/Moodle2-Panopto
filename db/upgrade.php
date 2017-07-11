@@ -252,6 +252,9 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2017061000) {
+        // 7200 seconds is 2 hours, this is for larger Moodle instances with a lot of Panopto folders mapped to it.
+        upgrade_set_timeout(7200);
+
         // Get all active courses mapped to Panopto.
         $oldpanoptocourses = $DB->get_records(
             'block_panopto_foldermap',
@@ -307,13 +310,13 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
                    $oldpanoptocourse->panopto->uname !== 'guest') {
                     $oldpanoptocourse->panopto->ensure_auth_manager();
                     $activepanoptoserverversion = $oldpanoptocourse->panopto->authmanager->get_server_version();
-                    if (!version_compare($activepanoptoserverversion, get_config('block_panopto', 'minimum_panopto_version'), '>=')) {
+                    if (!version_compare($activepanoptoserverversion, \panopto_data::$requiredpanoptoversion, '>=')) {
                         echo "<div class='alert alert-error alert-block'>" .
                                 "<strong>Panopto ClientData(old) to Public API(new) Upgrade Error - Panopto Server requires newer version</strong>" .
                                 "<br/>" .
                                 "<p>" . $versionerrorstring . "</p><br/>" .
                                 "<p>Impacted server: " . $oldpanoptocourse->panopto->servername . "</p>" .
-                                "<p>Minimum required version: " . get_config('block_panopto', 'minimum_panopto_version') . "</p>" .
+                                "<p>Minimum required version: " . \panopto_data::$requiredpanoptoversion . "</p>" .
                                 "<p>Current version: " . $activepanoptoserverversion . "</p>" .
                             "</div>";
                         return false;

@@ -104,6 +104,11 @@ class panopto_data {
     private static $requiredversion = 2014051200;
 
     /**
+     * @var string $requiredpanoptoversion Any block_panopto newer than 2017061000 will require a Panopto server to be at least this version to succeed.
+     */
+    public static $requiredpanoptoversion = '5.4.0';
+
+    /**
      * main constructor
      *
      * @param int $moodlecourseid course id class is being provisioned for. Can be null for bulk provisioning and manual provisioning.
@@ -244,7 +249,7 @@ class panopto_data {
      * @param object $provisioninginfo info for course being provisioned
      */
     public function provision_course($provisioninginfo) {
-        global $CFG, $USER;
+        global $CFG, $USER, $DB;
 
         if (isset($provisioninginfo->fullname) && !empty($provisioninginfo->fullname) &&
             isset($provisioninginfo->externalcourseid) && !empty($provisioninginfo->externalcourseid)) {
@@ -279,10 +284,16 @@ class panopto_data {
 
                 $this->ensure_auth_manager();
 
+                $currentblockversion = $DB->get_record(
+                    'config_plugins',
+                    array('plugin' => 'block_panopto', 'name' => 'version'),
+                    'value'
+                );
+
                 // If we succeeded in provisioning lets send the Panopto server some updated integration information.
                 $this->authmanager->report_integration_info(
                     get_config('block_panopto', 'instance_name'),
-                    get_config('block_panopto', 'current_version'),
+                    $currentblockversion->value,
                     $CFG->version
                 );
 
@@ -293,6 +304,7 @@ class panopto_data {
                 $courseinfo->servername = $this->servername;
                 $courseinfo->applicationkey = $this->applicationkey;
                 $courseinfo->missingrequiredversion = true;
+                $courseinfo->requiredpanoptoversion = self::$requiredpanoptoversion;
             }
         } else {
             // Give the user some basic info they can use to debug or send to AE.
@@ -341,7 +353,7 @@ class panopto_data {
             $provisioninginfo->fullname = $mappedpanoptocourse->Name;
         } else if ($foundmappedfolder && !$userhasaccesstofolder) {
             // API call returned false, course exists but the user does not have access to the folder.
-            error_log(get_string('provisioning_access_error', 'block_panopto'));
+            error_log(get_string('provision_access_error', 'block_panopto'));
             $provisioninginfo->accesserror = true;
             return $provisioninginfo;
         } else {
