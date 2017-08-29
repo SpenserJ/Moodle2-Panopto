@@ -33,6 +33,7 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 require_once(dirname(__FILE__) . '/AuthManagement/AuthManagementAutoload.php');
+require_once(dirname(__FILE__) . '/panopto_data.php');
 
 class panopto_auth_soap_client extends SoapClient {
 
@@ -73,7 +74,7 @@ class panopto_auth_soap_client extends SoapClient {
         if ($authmanagementserviceget->GetServerVersion()) {
             $returnvalue = $authmanagementserviceget->getResult()->GetServerVersionResult;
         } else {
-            error_log(print_r($authmanagementserviceget->getLastError(), true));
+            panopto_data::print_log(print_r($authmanagementserviceget->getLastError(), true));
         }
         return $returnvalue;
     }
@@ -99,7 +100,7 @@ class panopto_auth_soap_client extends SoapClient {
             $returnvalue = true;
         } else {
             $lasterror = $authmanagementservicereport->getLastError()['AuthManagementServiceReport::ReportIntegrationInfo'];
-            error_log(print_r($lasterror, true));
+            panopto_data::print_log(print_r($lasterror, true));
         }
 
         return $returnvalue;

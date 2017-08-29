@@ -200,7 +200,7 @@ class panopto_data {
             );
 
             if (!isset($this->sessionmanager)) {
-                error_log(get_string('api_manager_unavailable', 'block_panopto', 'session'));
+                self::print_log(get_string('api_manager_unavailable', 'block_panopto', 'session'));
             }
         }
     }
@@ -219,26 +219,29 @@ class panopto_data {
             );
 
             if (!isset($this->authmanager)) {
-                error_log(get_string('api_manager_unavailable', 'block_panopto', 'auth'));
+                self::print_log(get_string('api_manager_unavailable', 'block_panopto', 'auth'));
             }
         }
     }
 
     /**
      * Return the user manager, if it does not yet exist try to create it.
+     *
+     * @param $usertomanage since the User management works on the user passed in through the auth param we need to pass the uname for the user we are managing.
      */
-    public function ensure_user_manager() {
+    public function ensure_user_manager($usertomanage) {
         // If no session soap client exists instantiate one.
-        if (!isset($this->usermanager)) {
+        if (!isset($this->usermanager) || ($this->usermanager->authparam->UserKey !== $this->panopto_decorate_username($usertomanage))) {
+
             // If no auth soap client for this instance, instantiate one.
             $this->usermanager = self::instantiate_user_soap_client(
-                $this->uname,
+                $usertomanage,
                 $this->servername,
                 $this->applicationkey
             );
 
             if (!isset($this->usermanager)) {
-                error_log(get_string('api_manager_unavailable', 'block_panopto', 'user'));
+                self::print_log(get_string('api_manager_unavailable', 'block_panopto', 'user'));
             }
         }
     }
@@ -256,7 +259,7 @@ class panopto_data {
 
             $this->ensure_session_manager();
 
-            if (isset($this->sessiongroupid)) {
+            if (isset($this->sessiongroupid) && !empty($this->sessiongroupid) && ($this->sessiongroupid !== false)) {
                 $courseinfo = $this->sessionmanager->set_external_course_access_for_roles(
                     $provisioninginfo->fullname,
                     $provisioninginfo->externalcourseid,
@@ -294,8 +297,19 @@ class panopto_data {
                     $CFG->version
                 );
 
-                // uname will be guest is provisioning/upgrading through cli, no need to sync this 'user'.
-                if ($this->uname !== 'guest') {
+                // syncs every user enrolled in the course, this is fairly expensive so it should be normally turned off.
+                if (get_config('block_panopto', 'sync_after_provisioning')) {
+                    $coursecontext = context_course::instance($this->moodlecourseid);
+                    $enrolledusers = get_enrolled_users($coursecontext);
+
+                    // sync every user enrolled in the course
+                    foreach ($enrolledusers as $enrolleduser) {
+                        $this->sync_external_user($enrolleduser->id);
+                    }
+                } else if ($this->uname !== 'guest') {
+                    // uname will be guest is provisioning/upgrading through cli, no need to sync this 'user'.
+                    // This is intended to make sure provisioning teachers get access without relogging, so we only need to perform this if we aren't syncing all enrolled users.
+
                     // Update permissions so user can see everything they should.
                     $this->sync_external_user($USER->id);
                 }
@@ -317,7 +331,7 @@ class panopto_data {
             if (isset($provisioninginfo->accesserror) && $provisioninginfo->accesserror === true) {
                 $courseinfo->accesserror = true;
             } else {
-                error_log(get_string('unknown_provisioning_error', 'block_panopto'));
+                self::print_log(get_string('unknown_provisioning_error', 'block_panopto'));
                 $courseinfo->unknownerror = true;
             }
         }
@@ -355,7 +369,7 @@ class panopto_data {
             $provisioninginfo->fullname = $mappedpanoptocourse->Name;
         } else if ($foundmappedfolder && !$userhasaccesstofolder) {
             // API call returned false, course exists but the user does not have access to the folder.
-            error_log(get_string('provision_access_error', 'block_panopto'));
+            self::print_log(get_string('provision_access_error', 'block_panopto'));
             $provisioninginfo->accesserror = true;
             return $provisioninginfo;
         } else {
@@ -363,7 +377,7 @@ class panopto_data {
                 // If we had a sessiongroupid set from a previous folder, but that folder was not found on Panopto.
                 // Set the current sessiongroupid to null to allow for a fresh provisioning/folder.
                 // Provisioning will fail if this is not done, the wrong API endpoint will be called.
-                error_log(get_string('folder_not_found_error', 'block_panopto'));
+                self::print_log(get_string('folder_not_found_error', 'block_panopto'));
                 $this->sessiongroupid = null;
                 $provisioninginfo->couldnotfindmappedfolder = true;
             }
@@ -426,7 +440,7 @@ class panopto_data {
             $provisioninginfo = $this->get_provisioning_info();
 
             if (!isset($importpanopto->sessiongroupid)) {
-                error_log(get_string('import_not_mapped', 'block_panopto'));
+                self::print_log(get_string('import_not_mapped', 'block_panopto'));
             } else if (!isset($provisioninginfo->accesserror)) {
                 // Only do this code if we have proper access to the target Panopto course folder.
                 $importresult = $this->sessionmanager->set_copied_external_course_access_for_roles(
@@ -437,7 +451,7 @@ class panopto_data {
                 if (isset($importresult)) {
                     $importinfo[] = $importresult;
                 } else {
-                    error_log(get_string('missing_required_version', 'block_panopto'));
+                    self::print_log(get_string('missing_required_version', 'block_panopto'));
                     return false;
                 }
             }
@@ -565,7 +579,8 @@ class panopto_data {
             // Only try to sync the users if he Panopto server is up.
             if (self::is_server_alive('https://' . $this->servername . '/Panopto')) {
 
-                $this->ensure_user_manager();
+                //
+                $this->ensure_user_manager($userinfo->username);
 
                 $this->usermanager->sync_external_user(
                     $userinfo->firstname,
@@ -574,7 +589,7 @@ class panopto_data {
                     $groupstosync
                 );
             } else {
-                error_log(get_string('panopto_server_error', 'block_panopto', $this->servername));
+                self::print_log(get_string('panopto_server_error', 'block_panopto', $this->servername));
             }
         }
 
@@ -716,7 +731,7 @@ class panopto_data {
 
         if ($CFG->version < self::$requiredversion) {
             $hasminversion = false;
-            error_log(get_string('missing_moodle_required_version', 'block_panopto', $versionobject));
+            self::print_log(get_string('missing_moodle_required_version', 'block_panopto', $versionobject));
         }
 
         return $hasminversion;
@@ -1168,6 +1183,10 @@ class panopto_data {
     }
 
     public static function is_server_alive($url = null) {
+        // Only proceed with the cURL check if this toggle is true. This code is dependent on platform/OS specific calls.
+        if (!get_config('block_panopto', 'check_server_status')) {
+            return true;
+        }
         if ($url == null) {
             return false;
         }
@@ -1186,6 +1205,16 @@ class panopto_data {
             return true;
         } else {
             return false;
+        }
+    }
+
+    public static function print_log($logmessage) {
+        global $CFG;
+
+        if (get_config('block_panopto', 'print_log_to_file')) {
+            file_put_contents($CFG->dirroot . '/PanoptoLogs.txt', $logmessage . "\n", FILE_APPEND);
+        } else {
+            error_log($logmessage);
         }
     }
 }

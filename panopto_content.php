@@ -67,7 +67,7 @@ try {
             if (!$panoptodata->sessiongroupid) {
                 $content->text = get_string('no_course_selected', 'block_panopto');
             } else if (!\panopto_data::is_server_alive('https://' . $panoptodata->servername . '/Panopto')) {
-                error_log(get_string('server_not_available', 'block_panopto', $panoptodata->servername));
+                \panopto_data::print_log(get_string('server_not_available', 'block_panopto', $panoptodata->servername));
                 $content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
             } else {
                 // We can get by external_id but there is no point because atm it calls this method redundantly anyway.

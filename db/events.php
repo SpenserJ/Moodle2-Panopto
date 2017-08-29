@@ -25,7 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $observers = array(
-    // User enrolled event.
     array(
         'eventname' => '\core\event\course_created',
         'callback' => 'block_panopto_rollingsync::coursecreated',
@@ -39,4 +38,14 @@ $observers = array(
         'eventname' => '\core\event\course_deleted',
         'callback' => 'block_panopto_rollingsync::coursedeleted',
     ),
+    // User unenroled event.
+    array(
+        'eventname' => '\core\event\user_enrolment_deleted',
+        'callback' => 'block_panopto_rollingsync::userenrolmentdeleted',
+    ),
+    // User enroled event.
+    array(
+        'eventname' => '\core\event\user_enrolment_created',
+        'callback' => 'block_panopto_rollingsync::userenrolmentcreated',
+    )
 );

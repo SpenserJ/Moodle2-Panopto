@@ -32,12 +32,13 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once(dirname(__FILE__) . '/UserManagement/UserManagementAutoload.php');
+require_once(dirname(__FILE__) . '/panopto_data.php');
 
 class panopto_user_soap_client extends SoapClient {
     /**
      * @var array $authparam
      */
-    private $authparam;
+    public $authparam;
 
     /**
      * @var array $apiurl
@@ -83,7 +84,7 @@ class panopto_user_soap_client extends SoapClient {
 
         // Returns false if the call failed.
         if (!$usermanagementsync->SyncExternalUser($syncparamsobject)) {
-            error_log(print_r($usermanagementsync->getLastError(), true));
+            panopto_data::print_log(print_r($usermanagementsync->getLastError(), true));
         }
     }
 
@@ -98,9 +99,9 @@ class panopto_user_soap_client extends SoapClient {
         // Returns false if the call failed.
         if ($usermanagementserviceget->GetUserByKey($getuserbykeyparams)) {
             $result = $usermanagementserviceget->getResult();
-            error_log(print_r($result, true));
+            panopto_data::print_log(print_r($result, true));
         } else {
-            error_log(print_r($usermanagementserviceget->getLastError(), true));
+            panopto_data::print_log(print_r($usermanagementserviceget->getLastError(), true));
         }
 
         return $result;
@@ -134,7 +135,7 @@ class panopto_user_soap_client extends SoapClient {
         if ($usermanagementcreate->CreateUser($createuserparams)) {
             $result = $usermanagementcreate->getResult();
         } else {
-            error_log(print_r($usermanagementcreate->getLastError(), true));
+            panopto_data::print_log(print_r($usermanagementcreate->getLastError(), true));
         }
 
         return $result;

@@ -74,6 +74,30 @@ if ($ADMIN->fulltree) {
     }
     $settings->add(
         new admin_setting_configcheckbox(
+            'block_panopto/sync_after_provisioning',
+            get_string('block_panopto_sync_after_provisioning', 'block_panopto'),
+            get_string('block_panopto_sync_after_provisioning_desc', 'block_panopto'),
+            0
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/sync_on_enrolment',
+            get_string('block_panopto_sync_on_enrolment', 'block_panopto'),
+            get_string('block_panopto_sync_on_enrolment_desc', 'block_panopto'),
+            0
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/async_tasks',
+            get_string('block_panopto_async_tasks', 'block_panopto'),
+            get_string('block_panopto_async_tasks_desc', 'block_panopto'),
+            1
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
             'block_panopto/prefix_new_folder_names',
             get_string('block_panopto_prefix_new_folder_shortnames', 'block_panopto'),
             get_string('block_panopto_prefix_new_folder_shortnames_desc', 'block_panopto'),
@@ -94,6 +118,22 @@ if ($ADMIN->fulltree) {
             get_string('block_panopto_auto_sync_imports', 'block_panopto'),
             get_string('block_panopto_auto_sync_imports_desc', 'block_panopto'),
             1
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/check_server_status',
+            get_string('block_panopto_check_server_status', 'block_panopto'),
+            get_string('block_panopto_check_server_status_desc', 'block_panopto'),
+            0
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/print_log_to_file',
+            get_string('block_panopto_print_log_to_file', 'block_panopto'),
+            get_string('block_panopto_print_log_to_file_desc', 'block_panopto'),
+            0
         )
     );
 
