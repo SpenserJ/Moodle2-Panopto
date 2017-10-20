@@ -136,6 +136,22 @@ if ($ADMIN->fulltree) {
             0
         )
     );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/anyone_view_recorder_links',
+            get_string('block_panopto_anyone_view_recorder_links', 'block_panopto'),
+            get_string('block_panopto_anyone_view_recorder_links_desc', 'block_panopto'),
+            0
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/any_creator_can_view_folder_settings',
+            get_string('block_panopto_any_creator_can_view_folder_settings', 'block_panopto'),
+            get_string('block_panopto_any_creator_can_view_folder_settings_desc', 'block_panopto'),
+            0
+        )
+    );
 
     $systemcontext = context_system::instance();
     $systemrolearray = get_assignable_roles($systemcontext, ROLENAME_BOTH);
@@ -177,5 +193,10 @@ if ($ADMIN->fulltree) {
         get_string('block_global_add_courses', 'block_panopto') . '</a>';
 
     $settings->add(new admin_setting_heading('block_panopto_add_courses', '', $link));
+
+    $importlink = '<a id="panopto_reinitialize_imports_btn" href="' . $CFG->wwwroot . '/blocks/panopto/reinitialize_imports.php">' .
+        get_string('block_global_reinitialize_all_imports', 'block_panopto') . '</a>';
+
+    $settings->add(new admin_setting_heading('block_panopto_reinitialize_all_imports', '', $importlink));
 }
 /* End of file settings.php */

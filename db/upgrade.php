@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
+
 /**
  * Update the upgrade progress bar for Panopto.
  *

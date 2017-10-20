@@ -31,14 +31,9 @@ try {
     require_login();
     require_sesskey();
     header('Content-Type: text/html; charset=utf-8');
-    global $CFG;
+    global $CFG, $USER;
 
     $courseid = required_param('courseid', PARAM_INT);
-
-    // Sync role mapping. In case this is the first time block is running we need to load old settings from db.
-    // They will be the default values if this is the first time running.
-    $mapping = panopto_data::get_course_role_mappings($courseid);
-    panopto_data::set_course_role_permissions($courseid, $mapping['publisher'], $mapping['creator']);
 
     $content = new stdClass;
 
@@ -185,7 +180,15 @@ try {
                         }
                     }
                     $context = context_course::instance($courseid, MUST_EXIST);
-                    if (has_capability('moodle/course:update', $context)) {
+
+                    // This does not consider roles.
+                    $isteacheroradmin = has_capability('moodle/course:update', $context);
+
+                    $hascreatoraccess = has_capability('block/panopto:provision_aspublisher', $context, $USER->id) ||
+                        has_capability('block/panopto:provision_asteacher', $context, $USER->id);
+
+                    // Settings link can only be viewed by Teachers, Admins. If the proper setting is enabled, any creators can also view the link.
+                    if ($isteacheroradmin || (get_config('block_panopto', 'any_creator_can_view_folder_settings') && $hascreatoraccess)) {
                         $content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') .
                             '</b></div>' .
                             "<div class='listItem'>" .
@@ -197,7 +200,7 @@ try {
 
                     // A the users who can provision are the Moodle admin, and enrolled users given a publisher or creator role.
                     // This makes it so can_user_provision will allow only creators/publishers/admins to see these links.
-                    if ($panoptodata->can_user_provision($courseid)) {
+                    if (get_config('block_panopto', 'anyone_view_recorder_links') || $panoptodata->can_user_provision($courseid)) {
                         $systeminfo = $panoptodata->get_recorder_download_urls();
                         $content->text .= "<div class='listItem'>" .
                             get_string('download_recorder', 'block_panopto') .
@@ -205,10 +208,6 @@ try {
                             "<a href='$systeminfo->WindowsRecorderDownloadUrl'>Windows</a>" .
                             " | <a href='$systeminfo->MacRecorderDownloadUrl'>Mac</a>)</span>" .
                             "</div>\n";
-
-                        $content->text .= '<br/>' .
-                        "<a href='$CFG->wwwroot/blocks/panopto/provision_course_internal.php?id=$courseid'>" .
-                        get_string('reprovision_course_link_text', 'block_panopto') . '</a>';
                     }
                 }
             }
