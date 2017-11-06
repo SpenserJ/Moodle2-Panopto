@@ -198,5 +198,10 @@ if ($ADMIN->fulltree) {
         get_string('block_global_reinitialize_all_imports', 'block_panopto') . '</a>';
 
     $settings->add(new admin_setting_heading('block_panopto_reinitialize_all_imports', '', $importlink));
+
+    $upgradelink = '<a id="panopto_upgrade_folders_btn" href="' . $CFG->wwwroot . '/blocks/panopto/upgrade_all_folders.php">' .
+        get_string('block_global_upgrade_all_folders', 'block_panopto') . '</a>';
+
+    $settings->add(new admin_setting_heading('block_panopto_upgrade_all_folders', '', $upgradelink));
 }
 /* End of file settings.php */
