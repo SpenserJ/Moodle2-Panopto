@@ -66,8 +66,10 @@
                     <div class='attribute'><?php echo get_string('no_users_synced', 'block_panopto') ?></div>
                     <div class='value'><?php echo get_string('no_users_synced_desc', 'block_panopto') ?></div>
                     <div class='attribute'><?php echo get_string('result', 'block_panopto') ?></div>
-                    <div class='successMessage'>
-                        <?php echo get_string('provision_successful', 'block_panopto') ?> {<?php echo $provisioneddata->Id ?>}
+                    <div class="value">
+                        <div class='successMessage'>
+                            <?php echo get_string('provision_successful', 'block_panopto', $provisioneddata->Id) ?>
+                        </div>
                     </div>
                 <?php
                 }

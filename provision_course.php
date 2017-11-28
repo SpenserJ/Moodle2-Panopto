@@ -197,7 +197,7 @@ if ($mform->is_cancelled()) {
             if (isset($panoptodata->servername) && !empty($panoptodata->servername) &&
                 isset($panoptodata->applicationkey) && !empty($panoptodata->applicationkey)) {
                 $provisioningdata = $panoptodata->get_provisioning_info();
-                $provisioneddata = $panoptodata->provision_course($provisioningdata);
+                $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
                 include('views/provisioned_course.html.php');
             } else if ($coursecount == 1) {
                 // If there is only one course in the count and the server info is invalid redirect to the form for manual provisioning.

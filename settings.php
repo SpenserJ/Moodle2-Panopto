@@ -138,6 +138,14 @@ if ($ADMIN->fulltree) {
     );
     $settings->add(
         new admin_setting_configcheckbox(
+            'block_panopto/print_verbose_logs',
+            get_string('block_panopto_print_verbose_logs', 'block_panopto'),
+            get_string('block_panopto_print_verbose_logs_desc', 'block_panopto'),
+            0
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
             'block_panopto/anyone_view_recorder_links',
             get_string('block_panopto_anyone_view_recorder_links', 'block_panopto'),
             get_string('block_panopto_anyone_view_recorder_links_desc', 'block_panopto'),

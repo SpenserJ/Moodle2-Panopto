@@ -91,7 +91,7 @@ class block_panopto extends block_base {
 
             $panoptodata = new panopto_data($this->page->course->id);
             $provisioninginfo = $panoptodata->get_provisioning_info();
-            $panoptodata->provision_course($provisioninginfo);
+            $panoptodata->provision_course($provisioninginfo, false);
         }
     }
 
@@ -121,7 +121,7 @@ class block_panopto extends block_base {
             }
             $panoptodata->moodlecourseid = $course->moodleid;
             $provisioningdata = $panoptodata->get_provisioning_info();
-            $provisioneddata = $panoptodata->provision_course($provisioningdata);
+            $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
 
             if (!empty($provisioneddata)) {
                 mtrace("Successfully provisioned course for $provisioneddata->ExternalCourseID");

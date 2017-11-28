@@ -15,74 +15,36 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the Generation 1 to Generation 2 logic for Panopto
+ * This logic will get a list of all current Panopto folders on a Moodle server then it will go through each folder
+ * and reprovision them and reinitialize the imports to that folders if the user has access to the folder.
+ * This is needed for the Panopto Generation 1 to Generation 2 migration.
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2017
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../config.php');
-require_once($CFG->libdir . '/formslib.php');
-require_once('lib/panopto_data.php');
+define('CLI_SCRIPT', 1);
+require_once(dirname(__FILE__) . '/../../../../config.php');
 
-class panopto_upgrade_all_folders_form extends moodleform {
+global $CFG, $DB;
+require_once("$CFG->libdir/clilib.php");
+require_once("$CFG->libdir/formslib.php");
+require_once(dirname(__FILE__) . '/../panopto_data.php');
 
-    /**
-     * @var string $title
-     */
-    protected $title = '';
-
-    /**
-     * @var string $description
-     */
-    protected $description = '';
-
-    /**
-     * Defines a Panopto upgrade form
-     */
-    public function definition() {
-        global $DB;
-
-        $mform = & $this->_form;
-
-        $this->add_action_buttons(true, get_string('begin_folder_upgrade', 'block_panopto'));
-    }
-
+$admin = get_admin();
+if (!$admin) {
+    mtrace("Error: No admin account was found");
+    die;
 }
+\core\session\manager::set_user(get_admin());
+cli_heading('Upgrading all panopto folders');
 
-require_login();
-
-/**
- * Update the upgrade progress for Panopto.
- *
- * @param int $currentprogress the current progress that the bar needs to reflect.
- * @param int $totalitems the total number of items in the current step to be processed.
- * @param int $progressstep if set upgrade the progress step to this value.
- */
-function update_upgrade_progress($currentprogress, $totalitems, $progressstep = null) {
-    if (isset($progressstep) && !empty($progressstep)) {
-        panopto_data::print_log('Now beginning the step: ' . $progressstep);
-    }
-
-    if ($currentprogress > 0) {
-        panopto_data::print_log('Processing folder ' . $currentprogress . ' out of ' . $totalitems);
-    }
-}
-
-
-/**
- * The Upgrade process workhorse funciton
- */
 function upgrade_all_panopto_folders() {
     global $DB;
 
-    $defaultmaxtime = ini_get('max_execution_time');
-    panopto_data::print_log(print_r($defaultmaxtime, true));
-
-    $twohoursinseconds = 7200;
-
-    set_time_limit($twohoursinseconds);
+    // raise the max php time limit.
+    core_php_time_limit::raise();
 
     // Get all active courses mapped to Panopto.
     $oldpanoptocourses = $DB->get_records(
@@ -114,36 +76,30 @@ function upgrade_all_panopto_folders() {
 
         $moodlecourseexists = isset($existingmoodlecourse) && $existingmoodlecourse !== false;
         $hasvalidpanoptodata = isset($oldpanoptocourse->panopto->servername) && !empty($oldpanoptocourse->panopto->servername) &&
-                               isset($oldpanoptocourse->panopto->applicationkey) && !empty($oldpanoptocourse->panopto->applicationkey);
+            isset($oldpanoptocourse->panopto->applicationkey) && !empty($oldpanoptocourse->panopto->applicationkey);
 
         if ($moodlecourseexists && $hasvalidpanoptodata) {
             if (isset($oldpanoptocourse->panopto->uname) && !empty($oldpanoptocourse->panopto->uname)) {
                 $oldpanoptocourse->panopto->ensure_auth_manager();
                 $activepanoptoserverversion = $oldpanoptocourse->panopto->authmanager->get_server_version();
                 if (!version_compare($activepanoptoserverversion, \panopto_data::$requiredpanoptoversion, '>=')) {
-                    echo "<div class='alert alert-error alert-block'>" .
-                            "<strong>Panopto Generation 1 to Generation 2 Upgrade Error - Panopto Server requires newer version</strong>" .
-                            "<br/>" .
-                            "<p>" . $versionerrorstring . "</p><br/>" .
-                            "<p>Impacted server: " . $oldpanoptocourse->panopto->servername . "</p>" .
-                            "<p>Minimum required version: " . \panopto_data::$requiredpanoptoversion . "</p>" .
-                            "<p>Current version: " . $activepanoptoserverversion . "</p>" .
-                        "</div>";
+                    cli_writeln("Panopto Generation 1 to Generation 2 Upgrade Error - Panopto Server requires newer version");
+                    cli_writeln($versionerrorstring);
+                    cli_writeln("Impacted server: " . $oldpanoptocourse->panopto->servername);
+                    cli_writeln("Minimum required version: " . \panopto_data::$requiredpanoptoversion);
+                    cli_writeln("Current version: " . $activepanoptoserverversion);
 
                     return false;
                 }
             } else {
-                echo "<div class='alert alert-error alert-block'>" .
-                        "<strong>Panopto Generation 1 to Generation 2 Upgrade Error - Not valid user</strong>" .
-                        "<br/>" .
-                        $errorstring .
-                    "</div>";
+                cli_writeln("Panopto Generation 1 to Generation 2 Upgrade Error - Not valid user</strong>");
+                cli_writeln($errorstring);
 
                 return false;
             }
         } else {
             // Shouldn't hit this case, but in the case a row in the DB has invalid data move it to the old_foldermap.
-            panopto_data::print_log(get_string('removing_corrupt_folder_row', 'block_panopto') . $oldcourse->moodleid);
+            cli_writeln(get_string('removing_corrupt_folder_row', 'block_panopto') . $oldcourse->moodleid);
             panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
             // Continue to the next entry assuming this one was cleanup.
             continue;
@@ -151,17 +107,16 @@ function upgrade_all_panopto_folders() {
 
         $oldpanoptocourse->provisioninginfo = $oldpanoptocourse->panopto->get_provisioning_info();
         if (isset($oldpanoptocourse->provisioninginfo->accesserror) &&
-           $oldpanoptocourse->provisioninginfo->accesserror === true) {
-            echo "<div class='alert alert-error alert-block'>" .
-                    "<strong>Panopto ClientData(old) to Public API(new) Upgrade Error - Not valid user</strong>" .
-                    "<br/>" .
-                    $errorstring .
-                "</div>";
+            $oldpanoptocourse->provisioninginfo->accesserror === true
+        ) {
+            cli_writeln("Panopto ClientData(old) to Public API(new) Upgrade Error - Not valid user");
+            cli_writeln($errorstring);
 
             return false;
         } else {
             if (isset($oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder) &&
-               $oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder === true) {
+                $oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder === true
+            ) {
                 // Course was mapped to a folder but that folder was not found, most likely folder was deleted on Panopto side.
                 // The true parameter moves the row to the old_foldermap instead of deleting it.
                 panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
@@ -180,7 +135,7 @@ function upgrade_all_panopto_folders() {
 
                 $moodlecourseexists = isset($existingmoodlecourse) && $existingmoodlecourse !== false;
                 $hasvalidpanoptodata = isset($importpanopto->servername) && !empty($importpanopto->servername) &&
-                                       isset($importpanopto->applicationkey) && !empty($importpanopto->applicationkey);
+                    isset($importpanopto->applicationkey) && !empty($importpanopto->applicationkey);
 
                 // Only perform the actions below if the import is in a valid state, otherwise remove it.
                 if ($moodlecourseexists && $hasvalidpanoptodata) {
@@ -195,7 +150,7 @@ function upgrade_all_panopto_folders() {
                         // We can still continue on with the upgrade, assume this was an old entry that was deleted from Panopto side.
                     }
                 } else {
-                    panopto_data::print_log(get_string('removing_corrupt_folder_row', 'block_panopto') . $courseimport);
+                    cli_writeln(get_string('removing_corrupt_folder_row', 'block_panopto') . $courseimport);
                     panopto_data::delete_panopto_relation($courseimport, true);
                     // Continue to the next entry assuming this one was cleanup.
                     continue;
@@ -216,57 +171,22 @@ function upgrade_all_panopto_folders() {
         // This should add the required groups to the existing Panopto folder.
         $provisioningdata = $mappablecourse->provisioninginfo;
         $provisioneddata = $mappablecourse->panopto->provision_course($provisioningdata, true);
-        include('views/provisioned_course.html.php');
 
         $courseimports = panopto_data::get_import_list($mappablecourse->panopto->moodlecourseid);
         foreach ($courseimports as $importedcourse) {
             $mappablecourse->panopto->init_and_sync_import($importedcourse);
         }
     }
-
-    set_time_limit($defaultmaxtime);
 }
 
-$context = context_system::instance();
+function update_upgrade_progress($currentprogress, $totalitems, $progressstep = null) {
+    if (isset($progressstep) && !empty($progressstep)) {
+        cli_writeln('Now beginning the step: ' . $progressstep);
+    }
 
-$PAGE->set_context($context);
-
-$returnurl = optional_param('return_url', $CFG->wwwroot . '/admin/settings.php?section=blocksettingpanopto', PARAM_LOCALURL);
-
-$urlparams['return_url'] = $returnurl;
-
-$PAGE->set_url('/blocks/panopto/upgrade_all_folders.php', $urlparams);
-$PAGE->set_pagelayout('base');
-
-$mform = new panopto_upgrade_all_folders_form($PAGE->url);
-
-if ($mform->is_cancelled()) {
-    redirect(new moodle_url($returnurl));
-} else if ($mform->get_data()) {
-    $upgradetitle = get_string('block_global_upgrade_all_folders', 'block_panopto');
-    $PAGE->set_pagelayout('base');
-    $PAGE->set_title($upgradetitle);
-    $PAGE->set_heading($upgradetitle);
-
-    // System context.
-    require_capability('block/panopto:provision_multiple', $context);
-
-    $manageblocks = new moodle_url('/admin/blocks.php');
-    $panoptosettings = new moodle_url('/admin/settings.php?section=blocksettingpanopto');
-    $PAGE->navbar->add(get_string('blocks'), $manageblocks);
-    $PAGE->navbar->add(get_string('pluginname', 'block_panopto'), $panoptosettings);
-
-    $PAGE->navbar->add($upgradetitle, new moodle_url($PAGE->url));
-
-    echo $OUTPUT->header();
-
-    upgrade_all_panopto_folders();
-
-    echo "<a href='$returnurl'>" . get_string('back_to_config', 'block_panopto') . '</a>';
-
-    echo $OUTPUT->footer();
-} else {
-    $mform->display();
+    if ($currentprogress > 0) {
+        cli_writeln('Processing folder ' . $currentprogress . ' out of ' . $totalitems);
+    }
 }
 
-/* End of file upgrade_all_folders.php */
+upgrade_all_panopto_folders();

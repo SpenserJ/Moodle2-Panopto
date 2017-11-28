@@ -144,7 +144,7 @@ if ($mform->is_cancelled()) {
         $panoptodata->applicationkey = $selectedkey;
 
         $provisioningdata = $panoptodata->get_provisioning_info();
-        $provisioneddata = $panoptodata->provision_course($provisioningdata);
+        $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
 
         include('views/provisioned_course.html.php');
         echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
@@ -178,7 +178,7 @@ if ($mform->is_cancelled()) {
         $panoptodata->applicationkey = $selectedkey;
 
         $provisioningdata = $panoptodata->get_provisioning_info();
-        $provisioneddata = $panoptodata->provision_course($provisioningdata);
+        $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
 
         include('views/provisioned_course.html.php');
         echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
@@ -186,7 +186,7 @@ if ($mform->is_cancelled()) {
         $panoptodata = new panopto_data($courseid);
         if (in_array($panoptodata->servername, $aserverarray)) {
             $provisioningdata = $panoptodata->get_provisioning_info();
-            $provisioneddata = $panoptodata->provision_course($provisioningdata);
+            $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
 
             include('views/provisioned_course.html.php');
             echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';

@@ -251,8 +251,10 @@ class panopto_data {
      *
      * @param object $provisioninginfo info for course being provisioned
      */
-    public function provision_course($provisioninginfo) {
+    public function provision_course($provisioninginfo, $skipusersync) {
         global $CFG, $USER, $DB;
+
+        self::print_log_verbose(get_string('attempt_provision_course', 'block_panopto', $provisioninginfo->externalcourseid));
 
         if (isset($provisioninginfo->fullname) && !empty($provisioninginfo->fullname) &&
             isset($provisioninginfo->externalcourseid) && !empty($provisioninginfo->externalcourseid)) {
@@ -260,6 +262,9 @@ class panopto_data {
             $this->ensure_session_manager();
 
             if (isset($this->sessiongroupid) && !empty($this->sessiongroupid) && ($this->sessiongroupid !== false)) {
+
+                self::print_log_verbose(get_string('course_already_provisioned', 'block_panopto', $this->sessiongroupid));
+
                 $courseinfo = $this->sessionmanager->set_external_course_access_for_roles(
                     $provisioninginfo->fullname,
                     $provisioninginfo->externalcourseid,
@@ -273,6 +278,9 @@ class panopto_data {
             }
 
             if (isset($courseinfo) && isset($courseinfo->Id)) {
+
+                self::print_log_verbose(get_string('provision_successful', 'block_panopto', $this->sessiongroupid));
+
                 // Store the Panopto folder Id in the foldermap table so we know it exists.
                 self::set_course_foldermap(
                     $this->moodlecourseid,
@@ -297,21 +305,23 @@ class panopto_data {
                     $CFG->version
                 );
 
-                // syncs every user enrolled in the course, this is fairly expensive so it should be normally turned off.
-                if (get_config('block_panopto', 'sync_after_provisioning')) {
-                    $coursecontext = context_course::instance($this->moodlecourseid);
-                    $enrolledusers = get_enrolled_users($coursecontext);
+                if (!$skipusersync) {
+                    // syncs every user enrolled in the course, this is fairly expensive so it should be normally turned off.
+                    if (get_config('block_panopto', 'sync_after_provisioning')) {
+                        $coursecontext = context_course::instance($this->moodlecourseid);
+                        $enrolledusers = get_enrolled_users($coursecontext);
 
-                    // sync every user enrolled in the course
-                    foreach ($enrolledusers as $enrolleduser) {
-                        $this->sync_external_user($enrolleduser->id);
+                        // sync every user enrolled in the course
+                        foreach ($enrolledusers as $enrolleduser) {
+                            $this->sync_external_user($enrolleduser->id);
+                        }
+                    } else if ($this->uname !== 'guest') {
+                        // uname will be guest is provisioning/upgrading through cli, no need to sync this 'user'.
+                        // This is intended to make sure provisioning teachers get access without relogging, so we only need to perform this if we aren't syncing all enrolled users.
+
+                        // Update permissions so user can see everything they should.
+                        $this->sync_external_user($USER->id);
                     }
-                } else if ($this->uname !== 'guest') {
-                    // uname will be guest is provisioning/upgrading through cli, no need to sync this 'user'.
-                    // This is intended to make sure provisioning teachers get access without relogging, so we only need to perform this if we aren't syncing all enrolled users.
-
-                    // Update permissions so user can see everything they should.
-                    $this->sync_external_user($USER->id);
                 }
             } else {
                 // Give the user some basic info they can use to debug or send to AE.
@@ -346,6 +356,8 @@ class panopto_data {
     public function get_provisioning_info() {
         global $DB;
 
+        self::print_log_verbose(get_string('get_provisioning_info', 'block_panopto', $this->moodlecourseid));
+
         $this->check_course_role_mappings();
 
         $provisioninginfo = new stdClass;
@@ -355,7 +367,7 @@ class panopto_data {
         $hasvalidpanoptoid = isset($this->sessiongroupid) && !empty($this->sessiongroupid);
 
         if ($hasvalidpanoptoid) {
-            $mappedpanoptocourse = $this->get_folders_by_id();
+            $mappedpanoptocourse = $this->get_folders_by_id_no_sync();
         }
 
         // The get_folders_by_id api wrapper returns -1 if the api returns a folder not found error.
@@ -418,6 +430,10 @@ class panopto_data {
      *
      */
     public function init_and_sync_import($newimportid) {
+
+        self::print_log_verbose(get_string('init_import_target', 'block_panopto', $this->moodlecourseid));
+        self::print_log_verbose(get_string('init_import_source', 'block_panopto', $newimportid));
+
         $importinfo = null;
         $currentimportsources = self::get_import_list($this->moodlecourseid);
 
@@ -486,6 +502,16 @@ class panopto_data {
         // Update permissions so user can see everything they should.
         $this->sync_external_user($USER->id);
 
+        return $this->get_folders_by_id_no_sync();
+    }
+
+    /**
+     * Attempts to get a folder by it's public Guid without syncing it to Panopto.
+     *
+     */
+    public function get_folders_by_id_no_sync() {
+        $ret = false;
+
         if (isset($this->sessiongroupid)) {
             $this->ensure_session_manager();
 
@@ -527,6 +553,9 @@ class panopto_data {
      */
     public function sync_external_user($userid) {
         global $DB, $CFG;
+
+        self::print_log_verbose(get_string('attempt_sync_user', 'block_panopto', $userid));
+        self::print_log_verbose(get_string('attempt_sync_user_server', 'block_panopto', $this->servername));
 
         $userinfo = $DB->get_record('user', array('id' => $userid));
 
@@ -572,7 +601,6 @@ class panopto_data {
             // Only try to sync the users if he Panopto server is up.
             if (self::is_server_alive('https://' . $this->servername . '/Panopto')) {
 
-                //
                 $this->ensure_user_manager($userinfo->username);
 
                 $this->usermanager->sync_external_user(
@@ -1208,9 +1236,20 @@ class panopto_data {
         } else {
             error_log($logmessage);
 
-            // This is needed to longer processes like the Moodle upgrade process and import process.
-            ob_flush();
+            // These flush's are needed for longer processes like the Moodle upgrade process and import process.
+
+            // If the oblength are false then there is no active outbut buffer, if we call ob_flush without an output buffer (e.g. from the cli) it will spit out an error. This doesn't break the execution of the script, but it's ugly and a lot of bloat.
+            $obstatus = ob_get_status();
+            if (isset($obstatus) && !empty($obstatus)) {
+                ob_flush();
+            }
             flush();
+        }
+    }
+
+    public static function print_log_verbose($logmessage) {
+        if (get_config('block_panopto', 'print_verbose_logs')) {
+            self::print_log($logmessage);
         }
     }
 }
