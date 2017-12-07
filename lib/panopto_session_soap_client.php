@@ -385,7 +385,7 @@ class panopto_session_soap_client extends SoapClient {
         $pagination = new SessionManagementStructPagination(100, 0);
         $remoterecorderid = null;
         $sortby = SessionManagementEnumSessionSortField::VALUE_DATE;
-        $sortincreasing = true;
+        $sortincreasing = false;
         $states = new SessionManagementStructArrayOfSessionState(
             array(
                 SessionManagementEnumSessionState::VALUE_BROADCASTING,

@@ -20,7 +20,7 @@
  * This is needed for the Panopto Generation 1 to Generation 2 migration.
  *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2017
+ * @copyright  Panopto 2009 - 2017 with contributions from Hittesh Ahuja
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
