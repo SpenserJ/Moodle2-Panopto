@@ -97,7 +97,6 @@ class block_panopto extends block_base {
 
     /**
      * Cron function to provision all valid courses at once.
-     * Hittesh Ahuja - University of Bath.
      */
     public function cron() {
         global $DB;

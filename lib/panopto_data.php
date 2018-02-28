@@ -18,7 +18,7 @@
  * contains main Panopto getters
  *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @copyright  Panopto 2009 - 2018 /With contributions from Spenser Jones (sjones@ambrose.edu), and Tim Lock
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
@@ -1113,37 +1113,70 @@ class panopto_data {
     }
 
     /**
-     * Gives selected capabilities to specified roles given a context.
+     * Build a list of capabilities to be assigned for a specified roles given a context.
+     *
+     * @param array $roles an array of roles to be given the capability
+     * @param string $capability The capability being given to the roles
+     */
+    public static function build_capability_to_roles($roles, $capability) {
+        $assigncaps = array();
+        foreach ($roles as $role) {
+            if (isset($role) && trim($role) !== '') {
+                $assigncaps[$role] = $capability;
+            }
+        }
+        return $assigncaps;
+    }
+
+    /**
+     * Gives selected capabilities to specified roles given a context, verify that there are capabilities
+     * to be added or remove insteaad of rebuilding every page load.
      *
      * @param int $context the context of the roles being given the capability
      * @param array $roles an array of roles to be given the capability
      * @param string $capability The capability being given to the roles
      */
-    public static function add_context_capability_to_roles($context, $roles, $capability) {
-        foreach ($roles as $role) {
-            if (isset($role) && trim($role) !== '') {
-                assign_capability(
-                    $capability,
-                    CAP_ALLOW,
-                    $role,
-                    $context,
-                    $overwrite = false
-                );
+    public static function build_and_assign_context_capability_to_roles($context, $roles, $capability) {
+        global $DB;
+
+        $processed = false;
+        $assigned = self::build_capability_to_roles($roles, $capability);
+        $existing = array();
+
+        // Extract the existing capabilities that have been assigned for context, role and capability.
+        foreach ($roles as $key => $roleid) {
+            if ($roleid & $DB->record_exists('role_capabilities', array('contextid'=>$context->id, 'roleid'=>$roleid, 'capability'=>$capability))) {
+                $existing[$roleid] = $capability;
             }
         }
-    }
 
-    /**
-     * Gives selected capabilities to specified roles given a context.
-     *
-     * @param int $context the context of the roles being affected
-     * @param array $roles an array of roles to be unnassigned
-     * @param string $capability The capability being removed to the roles
-     */
-    public static function remove_context_capability_from_roles($context, $roles, $capability) {
-        foreach ($roles as $role) {
-            unassign_capability($capability, $role->id, $context);
+        // Remove existing capabilities that are no longer needed.
+        $assignnew = array_diff($existing, $assigned);
+        if (!empty($assignnew)) {
+            foreach ($assignnew as $roleid => $cap) {
+                unassign_capability($capability, $roleid, $context);
+                $processed = true;
+            }
         }
+
+        // Add new capabilities that don't exist yet.
+        $existingnew = array_diff($assigned, $existing);
+        if (!empty($existingnew)) {
+            foreach ($existingnew as $roleid => $cap) {
+                if (isset($roleid) && trim($roleid) !== '') {
+                    assign_capability(
+                        $capability,
+                        CAP_ALLOW,
+                        $roleid,
+                        $context,
+                        $overwrite = false
+                    );
+                }
+                $processed = true;
+            }
+        }
+
+        return $processed;
     }
 
     /**
@@ -1156,50 +1189,35 @@ class panopto_data {
     public static function set_course_role_permissions($courseid, $publisherroles, $creatorroles) {
         $coursecontext = context_course::instance($courseid);
 
-        // Clear capabilities from all of course's roles to be reassigned.
-        self::clear_capabilities_for_course($courseid);
+        // Get the current role mappings set for the current course from the db.
+        $mappings = self::get_course_role_mappings($courseid);
 
-        self::add_context_capability_to_roles($coursecontext, $publisherroles, 'block/panopto:provision_aspublisher');
-        self::add_context_capability_to_roles($coursecontext, $creatorroles, 'block/panopto:provision_asteacher');
+        // Build and process new/old changes to capabilities to be applied to roles and capabilities.
+        $capability = 'block/panopto:provision_aspublisher';
+        $publisherprocessed = self::build_and_assign_context_capability_to_roles($coursecontext, $publisherroles, $capability);
+        $capability = 'block/panopto:provision_asteacher';
+        $creatorprocessed = self::build_and_assign_context_capability_to_roles($coursecontext, $creatorroles, $capability);
 
-        // Remove all system level publisher roles and re-add them below to roles that still need them.
+        // If any changes where made, context needs to be flagged as dirty to be re-cached.
+        if ($publisherprocessed || $creatorprocessed) {
+            $coursecontext->mark_dirty();
+        }
+
         $systemcontext = context_system::instance();
-        $systemrolearray = get_all_roles($systemcontext);
-        self::remove_context_capability_from_roles($systemcontext, $systemrolearray, 'block/panopto:provision_aspublisher');
-
         $publisherrolesstring = trim(get_config('block_panopto', 'publisher_system_role_mapping'));
         if (isset($publisherrolesstring) && !empty($publisherrolesstring)) {
             $publishersystemroles = explode(',', $publisherrolesstring);
-            self::add_context_capability_to_roles($systemcontext, $publishersystemroles, 'block/panopto:provision_aspublisher');
-            // Mark dirty (moodle standard for capability changes at context level).
-            $systemcontext->mark_dirty();
-        }
+            // Build and process new/old changes to capabilities to roles and capabilities.
+            $capability = 'block/panopto:provision_aspublisher';
+            $publisherprocessed = self::build_and_assign_context_capability_to_roles($systemcontext, $publishersystemroles, $capability);
 
-        // Mark dirty (Moodle standard for capability changes at context level).
-        $coursecontext->mark_dirty();
+            // If any changes where made, context needs to be flagged as dirty to be re-cached.
+            if ($publisherprocessed) {
+                $systemcontext->mark_dirty();
+            }
+        }
 
         self::set_course_role_mappings($courseid, $publisherroles, $creatorroles);
-    }
-
-    /**
-     * Clears capabilities from all roles so that they may be reassigned as specified.
-     *
-     * @param int $courseid the id of the course being targets for clearing
-     */
-    public static function clear_capabilities_for_course($courseid) {
-        $coursecontext = context_course::instance($courseid);
-
-        // Get all roles for current course.
-        $currentcourseroles = get_all_roles($coursecontext);
-
-        // Remove publisher and creator capabilities from all roles.
-        foreach ($currentcourseroles as $role) {
-            unassign_capability('block/panopto:provision_aspublisher', $role->id, $coursecontext);
-            unassign_capability('block/panopto:provision_asteacher', $role->id, $coursecontext);
-
-            // Mark dirty (Moodle standard for capability changes at context level).
-            $coursecontext->mark_dirty();
-        }
     }
 
     public static function is_server_alive($url = null) {
