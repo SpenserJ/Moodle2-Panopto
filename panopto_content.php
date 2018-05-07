@@ -78,14 +78,16 @@ try {
 
 
                     // Get all Completed.
-                    $sessionlist = $panoptodata->get_session_list();
+                    $sessionlist = $panoptodata->get_session_list($courseinfo->DeliveriesHaveSpecifiedOrder);
                     $livesessions = array();
 
                     if (is_array($sessionlist) && !empty($sessionlist)) {
                         foreach ($sessionlist as $sessionobj) {
-                            $sessionvars = get_object_vars($sessionobj);
 
-                            if ($sessionobj->IsBroadcast && empty($sessionobj->Duration)) {
+                            // If the session is a live broadcast from the Windows/Mac Recorder or Remote Recorder check if its live
+                            $islivesession = $sessionobj->State === 'Broadcasting';
+
+                            if ($islivesession) {
                                 $livesessions[] = $sessionobj;
                             } else if (!empty($sessionobj->Duration)) {
                                 $completeddeliveries[] = $sessionobj;
@@ -184,11 +186,10 @@ try {
                     // This does not consider roles.
                     $isteacheroradmin = has_capability('moodle/course:update', $context);
 
-                    $hascreatoraccess = has_capability('block/panopto:provision_aspublisher', $context, $USER->id) ||
-                        has_capability('block/panopto:provision_asteacher', $context, $USER->id);
+                    $hascreatoraccess = has_capability('block/panopto:provision_asteacher', $context, $USER->id);
 
                     // Settings link can only be viewed by Teachers, Admins. If the proper setting is enabled, any creators can also view the link.
-                    if ($isteacheroradmin || (get_config('block_panopto', 'any_creator_can_view_folder_settings') && $hascreatoraccess)) {
+                    if ($hascreatoraccess && ($isteacheroradmin || get_config('block_panopto', 'any_creator_can_view_folder_settings'))) {
                         $content->text .= "<div class='sectionHeader'><b>" . get_string('links', 'block_panopto') .
                             '</b></div>' .
                             "<div class='listItem'>" .

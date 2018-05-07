@@ -1,6 +1,6 @@
 <?php
 /**
- * Test with AuthManagement for 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.2/Auth.svc?wsdl'
+ * Test with AuthManagement for 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.2/Auth.svc?singlewsdl'
  * @package AuthManagement
  * @author WsdlToPhp Team <contact@wsdltophp.com>
  * @version 20150429-01
@@ -24,7 +24,7 @@ require_once dirname(__FILE__) . '/AuthManagementAutoload.php';
  *
  * Here is below an example of how you can set the array:
  * $wsdl = array();
- * $wsdl[AuthManagementWsdlClass::WSDL_URL] = 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.2/Auth.svc?wsdl';
+ * $wsdl[AuthManagementWsdlClass::WSDL_URL] = 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.2/Auth.svc?singlewsdl';
  * $wsdl[AuthManagementWsdlClass::WSDL_CACHE_WSDL] = WSDL_CACHE_NONE;
  * $wsdl[AuthManagementWsdlClass::WSDL_TRACE] = true;
  * $wsdl[AuthManagementWsdlClass::WSDL_LOGIN] = 'myLogin';

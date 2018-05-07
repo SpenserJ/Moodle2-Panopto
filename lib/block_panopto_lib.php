@@ -25,6 +25,17 @@
 // This can't be defined Moodle internal because it is called from Panopto to authorize login.
 
 /**
+ * Send a Javascript alert to the window for the current user to see.
+ *
+ * @param string $alertmessage - the message the user is supposed to see.
+ */
+function panopto_alert_user($alertmessage) {
+    echo '<script language="javascript">';
+    echo 'alert("' . $alertmessage . '")';
+    echo '</script>';
+}
+
+/**
  * Prepend the instance name to the Moodle course ID to create an external ID for Panopto Focus.
  *
  * @param int $moodlecourseid the id the the Moodle course being edited
@@ -76,6 +87,29 @@ function panopto_generate_auth_code($payload) {
  */
 function panopto_validate_auth_code($payload, $authcode) {
     return (panopto_generate_auth_code($payload) == $authcode);
+}
+
+/**
+ * takes an api url, then checks the Panopto config for proxy settings, and returns the relevant serviceparams object.
+ *
+ * @param string apiurl
+ */
+function generate_wsdl_service_params($apiurl) {
+    $serviceparams = array('wsdl_url' => $apiurl);
+
+    // Check to see if the user set any proxy options
+    $proxyhost = get_config('block_panopto', 'wsdl_proxy_host');
+    $proxyport = get_config('block_panopto', 'wsdl_proxy_port');
+
+    if (isset($proxyhost) && !empty($proxyhost)) {
+        $serviceparams['wsdl_proxy_host'] = $proxyhost;
+    }
+
+    if (isset($proxyport) && !empty($proxyport)) {
+        $serviceparams['wsdl_proxy_port'] = $proxyport;
+    }
+
+    return $serviceparams;
 }
 
 /* End of file block_panopto_lib.php */

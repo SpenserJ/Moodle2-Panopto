@@ -94,11 +94,6 @@ class panopto_data {
     public $uname;
 
     /**
-     * @var int PAGE_SIZE size of the pages
-     */
-    const PAGE_SIZE = 50;
-
-    /**
      * @var int $requireversion Panopto only supports versions of Moodle newer than v2.7(2014051200).
      */
     private static $requiredversion = 2014051200;
@@ -107,6 +102,17 @@ class panopto_data {
      * @var string $requiredpanoptoversion Any block_panopto newer than 2017061000 will require a Panopto server to be at least this version to succeed.
      */
     public static $requiredpanoptoversion = '5.4.0';
+
+    /**
+     * @var string $requiredpanoptoversion Any block_panopto newer than 2017061000 will require a Panopto server to be at least this version to succeed.
+     */
+    public static function getpossiblefoldernamestyles() {
+        return array(
+            'fullname' => get_string('name_style_fullname', 'block_panopto'),
+            'shortname' => get_string('name_style_shortname', 'block_panopto'),
+            'combination' => get_string('name_style_combination', 'block_panopto')
+        );
+    }
 
     /**
      * main constructor
@@ -324,13 +330,22 @@ class panopto_data {
                     }
                 }
             } else {
+
+                $provisionresponse = $courseinfo;
                 // Give the user some basic info they can use to debug or send to AE.
                 $courseinfo = new stdClass;
                 $courseinfo->moodlecourseid = $this->moodlecourseid;
                 $courseinfo->servername = $this->servername;
                 $courseinfo->applicationkey = $this->applicationkey;
-                $courseinfo->missingrequiredversion = true;
-                $courseinfo->requiredpanoptoversion = self::$requiredpanoptoversion;
+
+                // If the provisioning attempted to target a personal folder let the user know.
+                if ($provisionresponse === panopto_session_soap_client::PERSONAL_FOLDER_ERROR) {
+                    $courseinfo->provisionedpersonalfolder = true;
+                } else {
+                    // Currently the only other known failure from this state would be the Panopto server not being new enough.
+                    $courseinfo->missingrequiredversion = true;
+                    $courseinfo->requiredpanoptoversion = self::$requiredpanoptoversion;
+                }
             }
         } else {
             // Give the user some basic info they can use to debug or send to AE.
@@ -411,10 +426,21 @@ class panopto_data {
             }
 
             $provisioninginfo->fullname = '';
-            if (get_config('block_panopto', 'prefix_new_folder_names')) {
-                $provisioninginfo->fullname .= $provisioninginfo->shortname . ': ';
+
+            $selectednamestyle = get_config('block_panopto', 'folder_name_style');
+
+            switch ($selectednamestyle) {
+                case 'combination':
+                    $provisioninginfo->fullname .= $provisioninginfo->shortname . ': ' . $provisioninginfo->longname;
+                break;
+                case 'shortname':
+                    $provisioninginfo->fullname .= $provisioninginfo->shortname;
+                break;
+                case 'fullname':
+                default:
+                    $provisioninginfo->fullname .= $provisioninginfo->longname;
+                break;
             }
-            $provisioninginfo->fullname .= $provisioninginfo->longname;
         }
 
         // Always set this, even in the case of an already existing folder we will overwrite the old Id with this one.
@@ -538,11 +564,9 @@ class panopto_data {
         // Update permissions so user can see everything they should.
         $this->sync_external_user($USER->id);
 
-        if (isset($this->sessiongroupid)) {
-            $this->ensure_session_manager();
+        $this->ensure_session_manager();
 
-            $ret = $this->sessionmanager->get_folders_list();
-        }
+        $ret = $this->sessionmanager->get_folders_list();
 
         return $ret;
     }
@@ -689,13 +713,13 @@ class panopto_data {
     /**
      * Get ongoing Panopto sessions for the currently mapped course.
      */
-    public function get_session_list() {
+    public function get_session_list($sessionshavespecificorder) {
         $sessionlist = array();
         if ($this->servername && $this->applicationkey && $this->sessiongroupid) {
             $this->ensure_session_manager();
         }
 
-        $sessionlist = $this->sessionmanager->get_session_list($this->sessiongroupid);
+        $sessionlist = $this->sessionmanager->get_session_list($this->sessiongroupid, $sessionshavespecificorder);
 
         return $sessionlist;
     }
@@ -1047,17 +1071,21 @@ class panopto_data {
     }
 
     /**
-     * Get list of available courses from db based on user's access level on course.
+     * Get list of available folders from db based on user's access level on course. Only get unmapped folders, and the current course folder
      */
     public function get_course_options() {
+        global $DB;
 
-        $panoptocourses = $this->get_folders_list();
-        if (!empty($panoptocourses)) {
+        $panoptofolders = $this->get_folders_list();
+        if (!empty($panoptofolders)) {
             $options = array();
-            foreach ($panoptocourses as $courseinfo) {
-                $options[$courseinfo->Id] = $courseinfo->Name;
+            foreach ($panoptofolders as $folderinfo) {
+                // Only add a folder to the course options if it is not already mapped to a course on moodle (unless its the current course)
+                if (!$DB->get_records('block_panopto_foldermap', array('panopto_id' => $folderinfo->Id)) || ($this->sessiongroupid === $folderinfo->Id)) {
+                    $options[$folderinfo->Id] = $folderinfo->Name;
+                }
             }
-        } else if (isset($panoptocourses)) {
+        } else if (isset($panoptofolders)) {
             $options = array('Error' => array('-- No Courses Available --'));
         } else {
             $options = array('Error' => array('!! Unable to retrieve course list !!'));
@@ -1145,7 +1173,8 @@ class panopto_data {
 
         // Extract the existing capabilities that have been assigned for context, role and capability.
         foreach ($roles as $key => $roleid) {
-            if ($roleid & $DB->record_exists('role_capabilities', array('contextid'=>$context->id, 'roleid'=>$roleid, 'capability'=>$capability))) {
+            // Only query the DB if $roleid is not null
+            if ($roleid && $DB->record_exists('role_capabilities', array('contextid'=>$context->id, 'roleid'=>$roleid, 'capability'=>$capability))) {
                 $existing[$roleid] = $capability;
             }
         }

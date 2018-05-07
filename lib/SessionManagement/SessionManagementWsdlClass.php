@@ -25,7 +25,7 @@ class SessionManagementWsdlClass extends stdClass implements ArrayAccess,Iterato
      * Constant to define the default WSDL URI
      * @var string
      */
-    const VALUE_WSDL_URL = 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/SessionManagement.svc?wsdl';
+    const VALUE_WSDL_URL = 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/SessionManagement.svc?singlewsdl';
     /**
      * Option key to define WSDL login
      * @var string

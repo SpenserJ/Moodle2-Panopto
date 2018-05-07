@@ -34,6 +34,7 @@
  */
 require_once(dirname(__FILE__) . '/AuthManagement/AuthManagementAutoload.php');
 require_once(dirname(__FILE__) . '/panopto_data.php');
+require_once(dirname(__FILE__) . '/block_panopto_lib.php');
 
 class panopto_auth_soap_client extends SoapClient {
 
@@ -44,9 +45,19 @@ class panopto_auth_soap_client extends SoapClient {
     private $authparam;
 
     /**
-     * @var array $apiurl
+     * @var array $serviceparams the url used to get the service wsdl, as well as optional proxy options
      */
-    private $apiurl;
+    private $serviceparams;
+
+    /**
+     * @var AuthManagementServiceReport authmanagementservicereport object used to call the auth report service
+     */
+    private $authmanagementservicereport;
+
+    /**
+     * @var AuthManagementServiceGet authmanagementserviceget object used to call the auth get service
+     */
+    private $authmanagementserviceget;
 
     /**
      * main constructor
@@ -57,12 +68,15 @@ class panopto_auth_soap_client extends SoapClient {
      */
     public function __construct($servername, $apiuseruserkey, $apiuserauthcode) {
 
-        // Instantiate SoapClient in WSDL mode.
-        // Set call timeout to 5 minutes.
-        $this->apiurl = 'https://'. $servername . '/Panopto/PublicAPI/4.2/Auth.svc?wsdl';
-
         // Cache web service credentials for all calls requiring authentication.
-        $this->authparam = new AuthManagementStructAuthenticationInfo($apiuserauthcode, null, $apiuseruserkey);
+        $this->authparam = new AuthManagementStructAuthenticationInfo(
+            $apiuserauthcode,
+            null,
+            $apiuseruserkey
+        );
+
+        $this->serviceparams = generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.2/Auth.svc?singlewsdl');
+
     }
 
     /**
@@ -70,11 +84,15 @@ class panopto_auth_soap_client extends SoapClient {
      */
     public function get_server_version() {
         $returnvalue = false;
-        $authmanagementserviceget = new AuthManagementServiceGet(array('wsdl_url' => $this->apiurl));
-        if ($authmanagementserviceget->GetServerVersion()) {
-            $returnvalue = $authmanagementserviceget->getResult()->GetServerVersionResult;
+
+        if (!isset($this->authmanagementserviceget)) {
+            $this->authmanagementserviceget = new AuthManagementServiceGet($this->serviceparams);
+        }
+
+        if ($this->authmanagementserviceget->GetServerVersion()) {
+            $returnvalue = $this->authmanagementserviceget->getResult()->GetServerVersionResult;
         } else {
-            panopto_data::print_log(print_r($authmanagementserviceget->getLastError(), true));
+            panopto_data::print_log(print_r($this->authmanagementserviceget->getLastError(), true));
         }
         return $returnvalue;
     }
@@ -88,7 +106,10 @@ class panopto_auth_soap_client extends SoapClient {
     public function report_integration_info($idprovidername, $moduleversion, $targetplatformversion) {
         $returnvalue = false;
 
-        $authmanagementservicereport = new AuthManagementServiceReport(array('wsdl_url' => $this->apiurl));
+        if (!isset($this->authmanagementservicereport)) {
+            $this->authmanagementservicereport = new AuthManagementServiceReport($this->serviceparams);
+        }
+
         $reportparams = new AuthManagementStructReportIntegrationInfo(
             $this->authparam,
             strval($idprovidername),
@@ -96,10 +117,10 @@ class panopto_auth_soap_client extends SoapClient {
             strval($targetplatformversion)
         );
 
-        if ($authmanagementservicereport->ReportIntegrationInfo($reportparams)) {
+        if ($this->authmanagementservicereport->ReportIntegrationInfo($reportparams)) {
             $returnvalue = true;
         } else {
-            $lasterror = $authmanagementservicereport->getLastError()['AuthManagementServiceReport::ReportIntegrationInfo'];
+            $lasterror = $this->authmanagementservicereport->getLastError()['AuthManagementServiceReport::ReportIntegrationInfo'];
             panopto_data::print_log(print_r($lasterror, true));
         }
 

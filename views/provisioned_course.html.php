@@ -59,6 +59,16 @@
                     <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
                     <div class='value'><?php echo $provisioneddata->servername ?></div>
                 <?php
+                }  else if (isset($provisioneddata->provisionedpersonalfolder) && $provisioneddata->provisionedpersonalfolder === true) {
+                ?>
+                    <div class='errorMessage'>
+                        <?php echo get_string('attempted_provisioning_personal_folder', 'block_panopto') ?>
+                    </div>
+                    <div class='attribute'><?php echo get_string('attempted_moodle_course_id', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioneddata->moodlecourseid ?></div>
+                    <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioneddata->servername ?></div>
+                <?php
                 } else {
                 ?>
                     <div class='attribute'><?php echo get_string('course_name', 'block_panopto') ?></div>

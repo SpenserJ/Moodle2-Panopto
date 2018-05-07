@@ -45,18 +45,24 @@ class SessionManagementEnumSessionSortField extends SessionManagementWsdlClass
      */
     const VALUE_RELEVANCE = 'Relevance';
     /**
+     * Constant for value 'Order'
+     * @return string 'Order'
+     */
+    const VALUE_ORDER = 'Order';
+    /**
      * Return true if value is allowed
      * @uses SessionManagementEnumSessionSortField::VALUE_NAME
      * @uses SessionManagementEnumSessionSortField::VALUE_DATE
      * @uses SessionManagementEnumSessionSortField::VALUE_DURATION
      * @uses SessionManagementEnumSessionSortField::VALUE_STATE
      * @uses SessionManagementEnumSessionSortField::VALUE_RELEVANCE
+     * @uses SessionManagementEnumSessionSortField::VALUE_ORDER
      * @param mixed $_value value
      * @return bool true|false
      */
     public static function valueIsValid($_value)
     {
-        return in_array($_value,array(SessionManagementEnumSessionSortField::VALUE_NAME,SessionManagementEnumSessionSortField::VALUE_DATE,SessionManagementEnumSessionSortField::VALUE_DURATION,SessionManagementEnumSessionSortField::VALUE_STATE,SessionManagementEnumSessionSortField::VALUE_RELEVANCE));
+        return in_array($_value,array(SessionManagementEnumSessionSortField::VALUE_NAME,SessionManagementEnumSessionSortField::VALUE_DATE,SessionManagementEnumSessionSortField::VALUE_DURATION,SessionManagementEnumSessionSortField::VALUE_STATE,SessionManagementEnumSessionSortField::VALUE_RELEVANCE,SessionManagementEnumSessionSortField::VALUE_ORDER));
     }
     /**
      * Method returning the class name

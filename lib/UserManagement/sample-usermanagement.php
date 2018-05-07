@@ -1,6 +1,6 @@
 <?php
 /**
- * Test with UserManagement for 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/UserManagement.svc?wsdl'
+ * Test with UserManagement for 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/UserManagement.svc?singlewsdl'
  * @package UserManagement
  * @author WsdlToPhp Team <contact@wsdltophp.com>
  * @version 20150429-01
@@ -24,7 +24,7 @@ require_once dirname(__FILE__) . '/UserManagementAutoload.php';
  *
  * Here is below an example of how you can set the array:
  * $wsdl = array();
- * $wsdl[UserManagementWsdlClass::WSDL_URL] = 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/UserManagement.svc?wsdl';
+ * $wsdl[UserManagementWsdlClass::WSDL_URL] = 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/UserManagement.svc?singlewsdl';
  * $wsdl[UserManagementWsdlClass::WSDL_CACHE_WSDL] = WSDL_CACHE_NONE;
  * $wsdl[UserManagementWsdlClass::WSDL_TRACE] = true;
  * $wsdl[UserManagementWsdlClass::WSDL_LOGIN] = 'myLogin';

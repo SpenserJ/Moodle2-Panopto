@@ -23,6 +23,8 @@
  */
 defined('MOODLE_INTERNAL') || die;
 require_once(dirname(__FILE__) . '/classes/admin/trim_configtext.php');
+require_once('lib/panopto_data.php');
+
 global $CFG;
 
 $numservers = get_config('block_panopto', 'server_number');
@@ -96,12 +98,15 @@ if ($ADMIN->fulltree) {
             1
         )
     );
+
+    $possiblefoldernamestyles = \panopto_data::getpossiblefoldernamestyles();
     $settings->add(
-        new admin_setting_configcheckbox(
-            'block_panopto/prefix_new_folder_names',
-            get_string('block_panopto_prefix_new_folder_shortnames', 'block_panopto'),
-            get_string('block_panopto_prefix_new_folder_shortnames_desc', 'block_panopto'),
-            1
+        new admin_setting_configselect(
+            'block_panopto/folder_name_style',
+            get_string('block_panopto_folder_name_style', 'block_panopto'),
+            get_string('block_panopto_folder_name_style_desc', 'block_panopto'),
+            $possiblefoldernamestyles['fullname'], // Default to longname only
+            $possiblefoldernamestyles
         )
     );
     $settings->add(
@@ -169,7 +174,7 @@ if ($ADMIN->fulltree) {
             'block_panopto/publisher_system_role_mapping',
             get_string('block_panopto_publisher_system_role_mapping', 'block_panopto'),
             get_string('block_panopto_publisher_system_role_mapping_desc', 'block_panopto'),
-            null,
+            array(),
             $systemrolearray
         )
     );
@@ -194,6 +199,26 @@ if ($ADMIN->fulltree) {
             get_string('block_panopto_creator_mapping_desc', 'block_panopto'),
             array(3, 4),
             $courserolearray
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configtext_trimmed(
+            'block_panopto/wsdl_proxy_host',
+            get_string('block_panopto_wsdl_proxy_host', 'block_panopto'),
+            get_string('block_panopto_wsdl_proxy_host_desc', 'block_panopto'),
+            '',
+            PARAM_TEXT
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configtext_trimmed(
+            'block_panopto/wsdl_proxy_port',
+            get_string('block_panopto_wsdl_proxy_port', 'block_panopto'),
+            get_string('block_panopto_wsdl_proxy_port_desc', 'block_panopto'),
+            '',
+            PARAM_TEXT
         )
     );
 

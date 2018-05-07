@@ -24,8 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
-
 /**
  * Upgrades Panopto for xmldb
  *
@@ -258,6 +256,17 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         }
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2017110600, 'panopto');
+    }
+
+    if ($oldversion < 2018030200) {
+
+        // Since this toggle got changed/removed for a select, get the old value and if it's set then set the new feature as appropriate.
+        if (get_config('block_panopto', 'prefix_new_folder_names')) {
+            set_config('folder_name_style', 'combination', 'block_panopto');
+        }
+
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2018030200, 'panopto');
     }
 
     return true;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Test with SessionManagement for 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/SessionManagement.svc?wsdl'
+ * Test with SessionManagement for 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/SessionManagement.svc?singlewsdl'
  * @package SessionManagement
  * @author WsdlToPhp Team <contact@wsdltophp.com>
  * @version 20150429-01
@@ -24,7 +24,7 @@ require_once dirname(__FILE__) . '/SessionManagementAutoload.php';
  *
  * Here is below an example of how you can set the array:
  * $wsdl = array();
- * $wsdl[SessionManagementWsdlClass::WSDL_URL] = 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/SessionManagement.svc?wsdl';
+ * $wsdl[SessionManagementWsdlClass::WSDL_URL] = 'https://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/SessionManagement.svc?singlewsdl';
  * $wsdl[SessionManagementWsdlClass::WSDL_CACHE_WSDL] = WSDL_CACHE_NONE;
  * $wsdl[SessionManagementWsdlClass::WSDL_TRACE] = true;
  * $wsdl[SessionManagementWsdlClass::WSDL_LOGIN] = 'myLogin';
