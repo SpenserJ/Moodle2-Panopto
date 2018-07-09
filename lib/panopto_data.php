@@ -114,6 +114,13 @@ class panopto_data {
         );
     }
 
+
+    public static function remove_all_panopto_adhoc_tasks() {
+        global $DB;
+
+        return $DB->delete_records_select('task_adhoc', $DB->sql_like('classname', '?'), array('%block_panopto%task%'));
+    }
+
     /**
      * main constructor
      *
@@ -620,7 +627,6 @@ class panopto_data {
                     }
                 }
             }
-
 
             // Only try to sync the users if he Panopto server is up.
             if (self::is_server_alive('https://' . $this->servername . '/Panopto')) {
@@ -1179,8 +1185,8 @@ class panopto_data {
             }
         }
 
-        // Remove existing capabilities that are no longer needed.
-        $assignnew = array_diff($existing, $assigned);
+        // Remove existing capabilities that are no longer needed. This needs to be assoc to take into account the keys
+        $assignnew = array_diff_assoc($existing, $assigned);
         if (!empty($assignnew)) {
             foreach ($assignnew as $roleid => $cap) {
                 unassign_capability($capability, $roleid, $context);
@@ -1189,7 +1195,8 @@ class panopto_data {
         }
 
         // Add new capabilities that don't exist yet.
-        $existingnew = array_diff($assigned, $existing);
+        $existingnew = array_diff_assoc($assigned, $existing);
+
         if (!empty($existingnew)) {
             foreach ($existingnew as $roleid => $cap) {
                 if (isset($roleid) && trim($roleid) !== '') {
@@ -1218,9 +1225,6 @@ class panopto_data {
     public static function set_course_role_permissions($courseid, $publisherroles, $creatorroles) {
         $coursecontext = context_course::instance($courseid);
 
-        // Get the current role mappings set for the current course from the db.
-        $mappings = self::get_course_role_mappings($courseid);
-
         // Build and process new/old changes to capabilities to be applied to roles and capabilities.
         $capability = 'block/panopto:provision_aspublisher';
         $publisherprocessed = self::build_and_assign_context_capability_to_roles($coursecontext, $publisherroles, $capability);
@@ -1247,6 +1251,23 @@ class panopto_data {
         }
 
         self::set_course_role_mappings($courseid, $publisherroles, $creatorroles);
+    }
+
+    // If a role was unset from a capability we need to reflect that change on Moodle.
+    public static function unset_course_role_permissions($courseid, $oldpublisherroles, $oldcreatorroles) {
+        $coursecontext = context_course::instance($courseid);
+
+        foreach ($oldpublisherroles as $publisherrole) {
+                unassign_capability('block/panopto:provision_aspublisher', $publisherrole, $coursecontext);
+        }
+
+        foreach ($oldcreatorroles as $creatorrole) {
+                unassign_capability('block/panopto:provision_asteacher', $creatorrole, $coursecontext);
+        }
+
+        if (!empty($oldpublisherroles) || !empty($oldcreatorroles)) {
+            $coursecontext->mark_dirty();
+        }
     }
 
     public static function is_server_alive($url = null) {

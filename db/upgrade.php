@@ -254,6 +254,10 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
             $oldfoldermaptable->addKey($mappingkey);
             $dbman->create_table($oldfoldermaptable);
         }
+
+        // Delete any existing tasks since those would be from the old plug-in generation.
+        $DB->delete_records_select('task_adhoc', $DB->sql_like('classname', '?'), array('%block_panopto%task%'));
+
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2017110600, 'panopto');
     }

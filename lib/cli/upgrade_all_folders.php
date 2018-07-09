@@ -99,7 +99,7 @@ function upgrade_all_panopto_folders() {
             }
         } else {
             // Shouldn't hit this case, but in the case a row in the DB has invalid data move it to the old_foldermap.
-            cli_writeln(get_string('removing_corrupt_folder_row', 'block_panopto') . $oldcourse->moodleid);
+            cli_writeln(get_string('removing_corrupt_folder_row', 'block_panopto', $oldcourse->moodleid));
             panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
             // Continue to the next entry assuming this one was cleanup.
             continue;
@@ -150,7 +150,7 @@ function upgrade_all_panopto_folders() {
                         // We can still continue on with the upgrade, assume this was an old entry that was deleted from Panopto side.
                     }
                 } else {
-                    cli_writeln(get_string('removing_corrupt_folder_row', 'block_panopto') . $courseimport);
+                    cli_writeln(get_string('removing_corrupt_folder_row', 'block_panopto', $courseimport));
                     panopto_data::delete_panopto_relation($courseimport, true);
                     // Continue to the next entry assuming this one was cleanup.
                     continue;

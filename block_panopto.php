@@ -82,6 +82,19 @@ class block_panopto extends block_base {
             $publisherroles = (isset($data->publisher)) ? $data->publisher : array();
             $creatorroles = (isset($data->creator)) ? $data->creator : array();
 
+            // Get the current role mappings set for the current course from the db.
+            $mappings = panopto_data::get_course_role_mappings($this->page->course->id);
+
+            $oldcreators = array_diff($mappings['creator'], $creatorroles);
+            $oldpublishers = array_diff($mappings['publisher'], $publisherroles);
+
+            // Make sure the old unassigned roles get unset.
+            panopto_data::unset_course_role_permissions(
+                $this->page->course->id,
+                $oldpublishers,
+                $oldcreators
+            );
+
             panopto_data::set_course_role_permissions(
                 $this->page->course->id,
                 $publisherroles,
