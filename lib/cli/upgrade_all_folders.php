@@ -51,7 +51,7 @@ function upgrade_all_panopto_folders() {
         'block_panopto_foldermap',
         null,
         null,
-        'moodleid'
+        'id,moodleid'
     );
 
     $currindex = 0;

@@ -203,6 +203,15 @@ if ($ADMIN->fulltree) {
     );
 
     $settings->add(
+        new admin_setting_configcheckbox(
+            'block_panopto/enforce_https_on_wsdl',
+            get_string('block_panopto_enforce_https_on_wsdl', 'block_panopto'),
+            get_string('block_panopto_enforce_https_on_wsdl_desc', 'block_panopto'),
+            1
+        )
+    );
+
+    $settings->add(
         new admin_setting_configtext_trimmed(
             'block_panopto/wsdl_proxy_host',
             get_string('block_panopto_wsdl_proxy_host', 'block_panopto'),

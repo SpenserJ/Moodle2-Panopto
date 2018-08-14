@@ -14,6 +14,9 @@
  * @version 20150429-01
  * @date 2017-01-19
  */
+
+defined('MOODLE_INTERNAL') || die();
+
 class SessionManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,Countable
 {
     /**
@@ -947,5 +950,35 @@ class SessionManagementWsdlClass extends stdClass implements ArrayAccess,Iterato
     public function __toString()
     {
         return __CLASS__;
+    }
+}
+
+/**
+* Class SessionManagementSoapClient
+*/
+class SessionManagementSoapClient extends SoapClient {
+
+    /**
+     * Constructor wrapper
+     */
+    public function __construct ($wsdl, array $options = null) {
+        parent::__construct($wsdl, $options);
+    }
+
+    /**
+     * wrapper around dorequest so we can enforce https on all calls
+     *
+     * @param object $request - the request being made
+     * @param string $location - the location the request will be made to
+     * @param string $action
+     * @param string $version
+     * @param int $one_way
+     */
+    public function __doRequest ($request, $location, $action, $version, $one_way = 0) {
+        if (get_config('block_panopto', 'enforce_https_on_wsdl')) {
+            $location = str_replace('http://', 'https://', $location);
+        }
+
+        return parent::__doRequest($request, $location, $action, $version, $one_way);
     }
 }

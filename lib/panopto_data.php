@@ -678,7 +678,7 @@ class panopto_data {
             'block_panopto_importmap',
             array('target_moodle_id' => $courseid),
             null,
-            'import_moodle_id'
+            'id,import_moodle_id'
         );
 
         $retarray = array();
@@ -703,7 +703,7 @@ class panopto_data {
             'block_panopto_importmap',
             array('import_moodle_id' => $courseid),
             null,
-            'target_moodle_id'
+            'id,target_moodle_id'
         );
 
         $retarray = array();
@@ -799,7 +799,7 @@ class panopto_data {
             'block_panopto_foldermap',
             array('panopto_id' => $sessiongroupid),
             null,
-            'moodleid'
+            'id,moodleid'
         );
     }
 
@@ -878,7 +878,7 @@ class panopto_data {
         $creatorrolesraw = $DB->get_records(
             'block_panopto_creatormap',
             array('moodle_id' => $moodlecourseid),
-            'role_id'
+            'id,role_id'
         );
 
         if (isset($creatorrolesraw) && !empty($creatorrolesraw)) {
@@ -891,7 +891,7 @@ class panopto_data {
         $pubrolesraw = $DB->get_records(
             'block_panopto_publishermap',
             array('moodle_id' => $moodlecourseid),
-            'role_id'
+            'id,role_id'
         );
 
         if (isset($pubrolesraw) && !empty($pubrolesraw)) {

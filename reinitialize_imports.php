@@ -62,8 +62,7 @@ function reinitialize_all_imports() {
     $courseimports = $DB->get_records(
         'block_panopto_importmap',
         null,
-        null,
-        'import_moodle_id,target_moodle_id'
+        null
     );
 
     $coursepanoptoarray = array();

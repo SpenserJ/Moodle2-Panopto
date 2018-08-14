@@ -166,7 +166,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         $existingcoursemappings = $DB->get_records(
             'block_panopto_foldermap',
             null,
-            'moodleid, publisher_mapping, creator_mapping'
+            'id,moodleid,publisher_mapping,creator_mapping'
         );
 
         // Define table table where we will place all of our creator mappings.
