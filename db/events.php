@@ -47,5 +47,19 @@ $observers = array(
     array(
         'eventname' => '\core\event\user_enrolment_created',
         'callback' => 'block_panopto_rollingsync::userenrolmentcreated',
+    ),
+    // User Enrollment changed event.
+    array(
+        'eventname' => '\core\event\user_enrolment_updated',
+        'callback' => 'block_panopto_rollingsync::userenrolmentupdated',
+    ),
+    // User loggedin and loggedinas  events.
+    array(
+        'eventname' => '\core\event\user_loggedin',
+        'callback' => 'block_panopto_rollingsync::userloggedin',
+    ),
+    array(
+        'eventname' => '\core\event\user_loggedinas',
+        'callback' => 'block_panopto_rollingsync::userloggedinas',
     )
 );

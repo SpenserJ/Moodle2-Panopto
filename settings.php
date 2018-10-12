@@ -76,6 +76,14 @@ if ($ADMIN->fulltree) {
     }
     $settings->add(
         new admin_setting_configcheckbox(
+            'block_panopto/sync_after_login',
+            get_string('block_panopto_sync_after_login', 'block_panopto'),
+            get_string('block_panopto_sync_after_login_desc', 'block_panopto'),
+            0
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
             'block_panopto/sync_after_provisioning',
             get_string('block_panopto_sync_after_provisioning', 'block_panopto'),
             get_string('block_panopto_sync_after_provisioning_desc', 'block_panopto'),
@@ -95,7 +103,7 @@ if ($ADMIN->fulltree) {
             'block_panopto/async_tasks',
             get_string('block_panopto_async_tasks', 'block_panopto'),
             get_string('block_panopto_async_tasks_desc', 'block_panopto'),
-            1
+            0
         )
     );
 

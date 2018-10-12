@@ -91,7 +91,6 @@ class panopto_user_soap_client extends SoapClient {
      */
     public function sync_external_user($firstname, $lastname, $email, $externalgroupids, $sendemailnotifications = false) {
 
-
         if (!isset($this->usermanagementservicesync)) {
             $this->usermanagementservicesync = new UserManagementServiceSync($this->serviceparams);
         }

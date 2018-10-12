@@ -169,4 +169,82 @@ class block_panopto_rollingsync {
             }
         }
     }
+
+    /**
+     * Called when a user enrollment has been updated.
+     *
+     * @param \core\event\user_enrolment_updated $event
+     */
+    public static function userenrolmentupdated(\core\event\user_enrolment_updated $event) {
+        if (!\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()) {
+            return;
+        }
+
+        if (get_config('block_panopto', 'sync_on_enrolment')) {
+            $task = new \block_panopto\task\sync_user();
+            $task->set_custom_data(array(
+                'courseid' => $event->courseid,
+                'userid' => $event->relateduserid
+            ));
+
+            if (get_config('block_panopto', 'async_tasks')) {
+                \core\task\manager::queue_adhoc_task($task);
+            } else {
+                $task->execute();
+            }
+        }
+    }
+
+    /**
+     * Called when a user has logged in
+     *
+     * @param \core\event\user_loggedin $event
+     */
+    public static function userloggedin(\core\event\user_loggedin $event) {
+        if (!\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()) {
+            return;
+        }
+
+        if (get_config('block_panopto', 'sync_after_login')) {
+
+            $task = new \block_panopto\task\sync_user_all();
+            $task->set_custom_data(array(
+                'userid' => $event->userid
+            ));
+
+            if (get_config('block_panopto', 'async_tasks')) {
+                \core\task\manager::queue_adhoc_task($task);
+            } else {
+                $task->execute();
+            }
+        }
+    }
+
+    /**
+     * Called when a user has logged in as a different user, this will sync the sub user being logged in as, not the admin user performing the action.
+     *
+     * @param \core\event\user_loggedinas $event
+     */
+    public static function userloggedinas(\core\event\user_loggedinas $event) {
+        if (!\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()) {
+            return;
+        }
+
+        if (get_config('block_panopto', 'sync_after_login')) {
+
+            $task = new \block_panopto\task\sync_user_all();
+            $task->set_custom_data(array(
+                'userid' => $event->relateduserid
+            ));
+
+            if (get_config('block_panopto', 'async_tasks')) {
+                \core\task\manager::queue_adhoc_task($task);
+            } else {
+                $task->execute();
+            }
+        }
+    }
 }
