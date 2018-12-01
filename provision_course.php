@@ -21,10 +21,14 @@
  * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+global $CFG;
+if (empty($CFG)) {
+    require_once(dirname(__FILE__) . '/../../config.php');
+}
 
-require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->libdir . '/formslib.php');
-require_once('lib/panopto_data.php');
+require_once(dirname(__FILE__) . '/lib/panopto_data.php');
+require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 
 global $courses;
 
@@ -205,7 +209,7 @@ if ($mform->is_cancelled()) {
             } else {
                 // For some reason the server name or application key are invalid and we can't redirect to the form since there are multiple courses, let the user know.
                 echo "<div class='block_panopto'>" .
-                        "<div class='courseProvisionResult'>" .
+                        "<div class='panoptoProcessInformation'>" .
                             "<div class='errorMessage'>" . get_string('server_info_not_valid', 'block_panopto') . "</div>" .
                             "<div class='attribute'>" . get_string('server_name', 'block_panopto') . "</div>" .
                             "<div class='value'>" . format_string($panoptodata->servername, false) . "</div>" .
@@ -219,15 +223,6 @@ if ($mform->is_cancelled()) {
     }
 
     echo $OUTPUT->footer();
-}
-
-/**
- * Returns true if a string is null or empty, false otherwise
- *
- * @param string $name the string being checked for null or empty
- */
-function is_null_or_empty_string($name) {
-    return (!isset($name) || trim($name) === '');
 }
 
 /* End of file provision_course.php */

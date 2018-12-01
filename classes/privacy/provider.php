@@ -14,7 +14,7 @@ class provider implements
                 'firstname' => 'privacy:metadata:block_panopto:firstname',
                 'lastname' => 'privacy:metadata:block_panopto:lastname',
                 'email' => 'privacy:metadata:block_panopto:email',
-            ], 'privacy:metadata:bloack_panopto');
+            ], 'privacy:metadata:block_panopto');
 
         return $collection;
     }

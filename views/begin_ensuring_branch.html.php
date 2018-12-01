@@ -15,28 +15,26 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * contains the version information for Panopto
+ * the template used to display when we begin processing 
  *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2016 with contributions from Spenser Jones (sjones@ambrose.edu)
+ * @copyright  Panopto 2009 - 2017
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+?>
 
-defined('MOODLE_INTERNAL') || die();
-
-// Initialize $plugin object if it hasn't been already.
-$plugin = (isset($plugin) ? $plugin : new stdClass());
-
-// Plugin version should normally be the same as the internal version.
-// If an admin wants to install with an older version number, however, set that here.
-$plugin->version = 2018113000;
-
-// Requires this Moodle version - 2.7.
-$plugin->requires  = 2014051200;
-$plugin->cron = 0;
-$plugin->component = 'block_panopto';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->dependencies = array(
-    'mod_forum' => ANY_VERSION
-);
-/* End of file version.php */
+<div class='block_panopto'>
+    <div class='panoptoProcessInformation'>
+        <div class='value'>
+            <?php
+            if (isset($targetcategory->name) && !empty($targetcategory->name)) {
+            ?>
+                <div class='attribute'><?php echo get_string('attribute_target_branch_leaf', 'block_panopto') ?></div>
+                <div class='value'><?php echo $targetcategory->name ?></div>
+            <?php
+            } else {
+            ?>
+                <div class='errorMessage'><?php echo get_string('error_invalid_category_information', 'block_panopto') ?></div>
+            <?php
+            }
+            ?>

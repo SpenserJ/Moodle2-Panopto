@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once('lib/panopto_data.php');
+require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 require_once(dirname(__FILE__) . '/../../lib/accesslib.php');
 
 /**
@@ -119,35 +119,6 @@ class block_panopto extends block_base {
      * Cron function to provision all valid courses at once.
      */
     public function cron() {
-        global $DB;
-        $panoptodata = new panopto_data(null);
-
-        // Check Panopto Focus API Settings exist.
-        if (empty($panoptodata->servername) || empty($panoptodata->instancename) || empty($panoptodata->applicationkey)) {
-            mtrace(get_string('unconfigured', 'block_panopto'));
-            return true; // Exiting.
-        }
-        // Get only those courses that have Panopto folders mapped.
-        // For each course, provision the course.
-        $panoptocourses = $DB->get_records('block_panopto_foldermap');
-        foreach ($panoptocourses as $course) {
-
-            // Set the  course to retrieve info for / provision.
-            // Check if the course exists.
-            $moodlecourse = $DB->get_record('course', array('id' => $course->moodleid));
-            if (!$moodlecourse) {
-                continue;
-            }
-            $panoptodata->moodlecourseid = $course->moodleid;
-            $provisioningdata = $panoptodata->get_provisioning_info();
-            $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
-
-            if (!empty($provisioneddata)) {
-                mtrace("Successfully provisioned course for $provisioneddata->ExternalCourseID");
-            } else {
-                mtrace("+++ Error provisioning course for Moodle Course ID : $course->moodleid");
-            }
-        }
         return true;
     }
 

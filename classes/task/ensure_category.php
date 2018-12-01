@@ -13,54 +13,57 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
- * the provision course class for Panopto
+ * the ensure category class for Panopto, this will build a set of folders in panopto matching the given category and it's parent categories.
  *
  * @package block_panopto
- * @copyright Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu),
- * Skylar Kelty <S.Kelty@kent.ac.uk>
+ * @copyright Panopto 2009 - 2016
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 namespace block_panopto\task;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once(dirname(__FILE__) . '/../../lib/panopto_data.php');
-
+require_once(dirname(__FILE__) . '/../../lib/panopto_category_data.php');
 /**
- * Panopto "provision course" task.
- * @copyright Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu),
- * Skylar Kelty <S.Kelty@kent.ac.uk>
+ * Panopto "ensure category" task. This task will build a set of folders in panopto matching the given category and it's parent categories.
+ *
+ * @package block_panopto
+ * @copyright Panopto 2009 - 2016 /With contributions
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provision_course extends \core\task\adhoc_task {
+class ensure_category extends \core\task\adhoc_task {
     /**
      * the the parent component for this class
      */
     public function get_component() {
         return 'block_panopto';
     }
-
+    
     /**
      * the main execution function of the class
      */
     public function execute() {
+        global $DB;
+
         try {
             $eventdata = (array) $this->get_custom_data();
-
-            $panopto = new \panopto_data($eventdata['courseid']);
-
+            $categoryid = $eventdata['categoryid'];
+            
             $targetservers = get_target_panopto_servers();
             foreach ($targetservers as $targetserver) {
-                $panopto->servername = $targetserver->name;
-                $panopto->applicationkey = $targetserver->appkey;
-                $provisioninginfo = $panopto->get_provisioning_info();
-                $provisioneddata = $panopto->provision_course($provisioninginfo, false);
+                \panopto_data::print_log(print_r($targetserver, true));
+                
+                $serverpanopto = new \panopto_category_data($categoryid);
+                $serverpanopto->applicationkey = $targetserver->appkey;
+                $serverpanopto->servername = $targetserver->name;
+
+                // Sync the user to all courses mapped to the server.
+                $serverpanopto->ensure_category_branch(false, null);
             }
         } catch (Exception $e) {
-            panopto_data::print_log(print_r($e->getMessage(), true));
+            \panopto_data::print_log(print_r($e->getMessage(), true));
         }
     }
 }

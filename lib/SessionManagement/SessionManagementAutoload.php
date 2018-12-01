@@ -14,6 +14,11 @@
  */
 require_once dirname(__FILE__) . '/SessionManagementWsdlClass.php';
 require_once dirname(__FILE__) . '/Folder/Base/SessionManagementStructFolderBase.php';
+require_once dirname(__FILE__) . '/ExternalHierarchyInfo/SessionManagementStructExternalHierarchyInfo.php';
+require_once dirname(__FILE__) . '/Array/OfExternalHierarchyInfo/SessionManagementStructArrayOfExternalHierarchyInfo.php';
+require_once dirname(__FILE__) . '/Ensure/Branch/SessionManagementStructEnsureExternalHierarchyBranch.php';
+require_once dirname(__FILE__) . '/Ensure/Response/SessionManagementStructEnsureExternalHierarchyBranchResponse.php';
+require_once dirname(__FILE__) . '/Ensure/SessionManagementServiceEnsure.php';
 require_once dirname(__FILE__) . '/Provision/Course/SessionManagementStructProvisionExternalCourse.php';
 require_once dirname(__FILE__) . '/Provision/Response/SessionManagementStructProvisionExternalCourseResponse.php';
 require_once dirname(__FILE__) . '/Provision/Roles/SessionManagementStructProvisionExternalCourseWithRoles.php';

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the provisioned course template
+ * the imported course result template
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2017
@@ -24,7 +24,7 @@
 ?>
 
 <div class='block_panopto'>
-    <div class='courseProvisionResult'>
+    <div class='panoptoProcessInformation'>
         <div class='value'>
             <?php
             if (isset($targetpanoptodata) && !empty($targetpanoptodata)) {

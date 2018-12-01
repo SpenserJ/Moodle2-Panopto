@@ -24,7 +24,7 @@
 ?>
 
 <div class='block_panopto'>
-    <div class='courseProvisionResult'>
+    <div class='panoptoProcessInformation'>
         <div class='value'>
             <?php
             if (!empty($provisioneddata)) {

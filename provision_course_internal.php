@@ -22,9 +22,13 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../config.php');
+global $CFG;
+if (empty($CFG)) {
+    require_once(dirname(__FILE__) . '/../../config.php');
+}
 require_once($CFG->libdir . '/formslib.php');
-require_once('lib/panopto_data.php');
+require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
+require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
 global $courses;
 
@@ -197,14 +201,5 @@ if ($mform->is_cancelled()) {
 }
 
 echo $OUTPUT->footer();
-
-/**
- * Returns true if a string is null or empty, false otherwise
- *
- * @param string $name the string being checked for null or empty
- */
-function is_null_or_empty_string($name) {
-    return (!isset($name) || trim($name) === '');
-}
 
 /* End of file provision_course.php */

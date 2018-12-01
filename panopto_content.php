@@ -23,9 +23,12 @@
  */
 
 define('AJAX_SCRIPT', true);
+global $CFG;
+if (empty($CFG)) {
+    require_once(dirname(__FILE__) . '/../../config.php');
+}
 
-require('../../config.php');
-require_once('lib/panopto_data.php');
+require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
 try {
     require_login();

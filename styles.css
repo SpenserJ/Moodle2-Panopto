@@ -1,27 +1,27 @@
-.block_panopto .courseProvisionResult
+.block_panopto .panoptoProcessInformation
 {
     border: solid 1px #C0C0C0;
     padding: 5px;
     margin-bottom: 20px;
 }
 
-.block_panopto .courseProvisionResult .attribute
+.block_panopto .panoptoProcessInformation .attribute
 {
     font-weight: bold;
 }
 
-.block_panopto .courseProvisionResult .value
+.block_panopto .panoptoProcessInformation .value
 {
     margin-left: 15px;
     margin-bottom: 5px;
 }
 
-.block_panopto .courseProvisionResult .successMessage
+.block_panopto .panoptoProcessInformation .successMessage
 {
     color: green;
 }
 
-.block_panopto .courseProvisionResult .errorMessage
+.block_panopto .panoptoProcessInformation .errorMessage
 {
     color: red;
 }

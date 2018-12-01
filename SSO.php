@@ -27,10 +27,10 @@
 global $CFG, $USER;
 
 if (empty($CFG)) {
-    require_once('../../config.php');
+    require_once(dirname(__FILE__) . '/../../config.php');
 }
 require_once($CFG->libdir . '/weblib.php');
-require_once('lib/block_panopto_lib.php');
+require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 
 $servername = required_param('serverName', PARAM_HOST);
 $callbackurl = required_param('callbackURL', PARAM_URL);

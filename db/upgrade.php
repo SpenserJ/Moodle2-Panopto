@@ -193,8 +193,10 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
                     $creatorroles = explode(",", $existingmapping->creator_mapping);
 
                     foreach ($creatorroles as $creatorrole) {
-                        $row = (object) array('moodle_id' => $existingmapping->moodleid, 'role_id' => $creatorrole);
-                        $DB->insert_record('block_panopto_creatormap', $row);
+                        if (!empty($creatorrole)) {
+                            $row = (object) array('moodle_id' => $existingmapping->moodleid, 'role_id' => $creatorrole);
+                            $DB->insert_record('block_panopto_creatormap', $row);
+                        }
                     }
                 }
             }
@@ -223,8 +225,10 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
                     $pubroles = explode("," , $existingmapping->publisher_mapping);
 
                     foreach ($pubroles as $pubrole) {
-                        $row = (object) array('moodle_id' => $existingmapping->moodleid, 'role_id' => $pubrole);
-                        $DB->insert_record('block_panopto_publishermap', $row);
+                        if (!empty($pubrole)) {
+                            $row = (object) array('moodle_id' => $existingmapping->moodleid, 'role_id' => $pubrole);
+                            $DB->insert_record('block_panopto_publishermap', $row);
+                        }
                     }
                 }
             }
@@ -271,6 +275,28 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
 
         // Panopto savepoint reached.
         upgrade_block_savepoint(true, 2018030200, 'panopto');
+    }
+
+    if ($oldversion < 2018100500) {
+
+        // Define table table where we will place all of our old/broken folder mappings. So customers can keep the data if needed.
+        $categorymaptable = new xmldb_table('block_panopto_categorymap');
+        if (!$dbman->table_exists($categorymaptable)) {
+            $mappingfields = array();
+            $mappingfields[] = new xmldb_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, true);
+            $mappingfields[] = new xmldb_field('category_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'id');
+            $mappingfields[] = new xmldb_field('panopto_id', XMLDB_TYPE_CHAR, '36', null, XMLDB_NOTNULL, null, null, 'category_id');
+            $mappingfields[] = new xmldb_field('panopto_server', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, 'panopto_id');
+            $mappingkey = new xmldb_key('primary', XMLDB_KEY_PRIMARY, array('id'), null, null);
+            foreach ($mappingfields as $mappingfield) {
+                $categorymaptable->addField($mappingfield);
+            }
+            $categorymaptable->addKey($mappingkey);
+            $dbman->create_table($categorymaptable);
+        }
+        
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2018100500, 'panopto');
     }
 
     return true;

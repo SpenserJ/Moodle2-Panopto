@@ -25,7 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once(dirname(__FILE__) . '/../../../config.php');
+global $CFG;
+if (empty($CFG)) {
+    require_once(dirname(__FILE__) . '/../../../config.php');
+}
+
 require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
 
 /**
@@ -58,17 +62,12 @@ class block_panopto_rollingsync {
         $allowautoprovision = get_config('block_panopto', 'auto_provision_new_courses');
 
         if ($allowautoprovision) {
-            $selectedserver = get_config('block_panopto', 'server_name1');
-            $selectedkey = get_config('block_panopto', 'application_key1');
-
             $task = new \block_panopto\task\provision_course();
             $task->set_custom_data(array(
                 'courseid' => $event->courseid,
                 'relateduserid' => $event->relateduserid,
                 'contextid' => $event->contextid,
-                'eventtype' => 'role',
-                'servername' => $selectedserver,
-                'appkey' => $selectedkey
+                'eventtype' => 'role'
             ));
             $task->execute();
         }
@@ -145,11 +144,35 @@ class block_panopto_rollingsync {
     }
 
     /**
+     * Called when a user has been updated.
+     *
+     * @param \core\event\user_enrolment_updated $event
+     */
+    public static function userenrolmentupdated(\core\event\user_enrolment_updated $event) {
+        if (!\panopto_data::is_main_block_configured() ||
+            !\panopto_data::has_minimum_version()) {
+            return;
+        }
+
+        $task = new \block_panopto\task\sync_user();
+        $task->set_custom_data(array(
+            'courseid' => $event->courseid,
+            'userid' => $event->relateduserid
+        ));
+
+        if (get_config('block_panopto', 'async_tasks')) {
+            \core\task\manager::queue_adhoc_task($task);
+        } else {
+            $task->execute();
+        }
+    }
+
+    /**
      * Called when a user has been enrolled.
      *
      * @param \core\event\user_enrolment_created $event
      */
-    public static function userenrolmentcreated(\core\event\user_enrolment_created $event) {
+    public static function roleassigned(core\event\role_assigned $event) {
         if (!\panopto_data::is_main_block_configured() ||
             !\panopto_data::has_minimum_version()) {
             return;
@@ -175,7 +198,7 @@ class block_panopto_rollingsync {
      *
      * @param \core\event\user_enrolment_updated $event
      */
-    public static function userenrolmentupdated(\core\event\user_enrolment_updated $event) {
+    public static function roleunassigned(core\event\role_unassigned $event) {
         if (!\panopto_data::is_main_block_configured() ||
             !\panopto_data::has_minimum_version()) {
             return;
@@ -209,7 +232,7 @@ class block_panopto_rollingsync {
 
         if (get_config('block_panopto', 'sync_after_login')) {
 
-            $task = new \block_panopto\task\sync_user_all();
+            $task = new \block_panopto\task\sync_user_login();
             $task->set_custom_data(array(
                 'userid' => $event->userid
             ));
@@ -235,7 +258,7 @@ class block_panopto_rollingsync {
 
         if (get_config('block_panopto', 'sync_after_login')) {
 
-            $task = new \block_panopto\task\sync_user_all();
+            $task = new \block_panopto\task\sync_user_login();
             $task->set_custom_data(array(
                 'userid' => $event->relateduserid
             ));

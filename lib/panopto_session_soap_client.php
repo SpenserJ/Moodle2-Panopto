@@ -411,6 +411,50 @@ class panopto_session_soap_client extends SoapClient {
         return $ret;
     }
 
+    public function ensure_category_branch($categorybranchinfo) {
+        $ret = false;
+
+        if (!isset($this->sessionmanagementserviceensure)) {
+            $this->sessionmanagementserviceensure = new SessionManagementServiceEnsure($this->serviceparams);
+        }
+
+        $brancharrayofcategoryinfos = new SessionManagementStructArrayOfExternalHierarchyInfo($categorybranchinfo);
+        $ensurecategorybranchparams = new SessionManagementStructEnsureExternalHierarchyBranch(
+            $this->authparam, 
+            $brancharrayofcategoryinfos
+        );
+
+        if ($this->sessionmanagementserviceensure->EnsureExternalHierarchyBranch($ensurecategorybranchparams)) {
+            $ret = $this->sessionmanagementserviceensure->getResult()->EnsureExternalHierarchyBranchResult;
+        } else {
+            panopto_data::print_log(print_r($this->sessionmanagementserviceensure->getLastError(), true));
+        }
+
+        return $ret;
+    }
+
+    public function update_folder_parent($folderid, $newparentid) {
+        $ret = false;
+
+        if (!isset($this->sessionmanagementserviceupdate)) {
+            $this->sessionmanagementserviceupdate = new SessionManagementServiceUpdate($this->serviceparams);
+        }
+
+        $updatefolderparentparams = new SessionManagementStructUpdateFolderParent(
+            $this->authparam, 
+            $folderid, 
+            $newparentid
+        );
+
+        if ($this->sessionmanagementserviceupdate->UpdateFolderParent($updatefolderparentparams)) {
+            $ret = true;
+        } else {
+            panopto_data::print_log(print_r($this->sessionmanagementserviceupdate->getLastError(), true));
+        }
+
+        return $ret;
+    }
+
     public function get_recorder_download_urls() {
         $ret = false;
 
