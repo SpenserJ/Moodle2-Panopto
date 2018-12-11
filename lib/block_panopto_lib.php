@@ -114,12 +114,12 @@ function generate_wsdl_service_params($apiurl) {
 }
 
 /**
- * Returns a list of objects containing valid servername/appkey pairs we are targeting
+ * Returns a list of objects containing valid servername/appkey pairs we are targeting.
  *
  */
 function get_target_panopto_servers() {
     $ret = array();
-    $targetservers = explode(",", get_config('block_panopto', 'automatic_operation_target_servers'));
+    $targetservers = explode(",", get_config('block_panopto', 'automatic_operation_target_server'));
 
     $numservers = get_config('block_panopto', 'server_number');
     $numservers = isset($numservers) ? $numservers : 0;
@@ -174,6 +174,52 @@ function get_panopto_app_key($panoptoservername) {
     }
     
     return null;
+}
+
+/**
+ * Used to instantiate a user soap client for a given instance of panopto_data.
+ * Should be called only the first time a soap client is needed for an instance.
+ *
+ * @param string $username the name of the current user
+ * @param string $servername the name of the active server
+ * @param string $applicationkey the key need for the user to be authenticated
+ */
+function instantiate_panopto_user_soap_client($username, $servername, $applicationkey) {
+    // Compute web service credentials for given user.
+    $apiuseruserkey = panopto_decorate_username($username);
+    $apiuserauthcode = panopto_generate_auth_code($apiuseruserkey . '@' . $servername, $applicationkey);
+
+    // Instantiate our SOAP client.
+    return new panopto_user_soap_client($servername, $apiuseruserkey, $apiuserauthcode);
+}
+
+/**
+ * Used to instantiate a session soap client for a given instance of panopto_data.
+ *
+ * @param string $username the name of the current user
+ * @param string $servername the name of the active server
+ * @param string $applicationkey the key need for the user to be authenticated
+ */
+function instantiate_panopto_session_soap_client($username, $servername, $applicationkey) {
+    // Compute web service credentials for given user.
+    $apiuseruserkey = panopto_decorate_username($username);
+    $apiuserauthcode = panopto_generate_auth_code($apiuseruserkey . '@' . $servername, $applicationkey);
+
+    // Instantiate our SOAP client.
+    return new panopto_session_soap_client($servername, $apiuseruserkey, $apiuserauthcode);
+}
+
+/**
+ * Used to instantiate a soap client for calling Panopto's iAuth service.
+ * Should be called only the first time an  auth soap client is needed for an instance.
+ */
+function instantiate_panopto_auth_soap_client($username, $servername, $applicationkey) {
+    // Compute web service credentials for given user.
+    $apiuseruserkey = panopto_decorate_username($username);
+    $apiuserauthcode = panopto_generate_auth_code($apiuseruserkey . '@' . $servername, $applicationkey);
+
+    // Instantiate our SOAP client.
+    return new panopto_auth_soap_client($servername, $apiuseruserkey, $apiuserauthcode);
 }
 
 /**

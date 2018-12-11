@@ -46,7 +46,7 @@ class sync_user_login extends \core\task\adhoc_task {
             
             $targetservers = get_target_panopto_servers();
             foreach ($targetservers as $targetserver) {
-                $serverpanopto = new \panopto_data();
+                $serverpanopto = new \panopto_data(null);
                 $serverpanopto->applicationkey = $targetserver->appkey;
                 $serverpanopto->servername = $targetserver->name;
 

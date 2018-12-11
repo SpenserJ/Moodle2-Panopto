@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['add_a_panopto_server'] = 'None - Please add a Panopto server/appkey to continue';
 $string['add_to_panopto'] = 'Sync this course to Panopto';
 $string['api_manager_unavailable'] = 'Unable to create the {$a} manager api client! (Is the Panopto server available, if so are the instance name and application key correct?)';
 $string['application_key'] = 'Application key';
@@ -68,8 +69,8 @@ $string['block_panopto_auto_provision'] = 'Automatically provision newly created
 $string['block_panopto_auto_provision_desc'] = 'Enable this option to automatically provision a Panopto course folder when a course is created.';
 $string['block_panopto_auto_sync_imports'] = 'Automatically grant permissions when importing a course';
 $string['block_panopto_auto_sync_imports_desc'] = 'Enable this option to allow Panopto to automatically grant viewer permissions when importing a course.';
-$string['block_panopto_automatic_operation_target_servers'] = 'Automatic operation target servers';
-$string['block_panopto_automatic_operation_target_servers_desc'] = 'These are the Panopto servers that will be targeted for the \'Automatically provision new courses\', \'Sync user on login\' and \'Enforce category structure\' tasks';
+$string['block_panopto_automatic_operation_target_server'] = 'Automatic operation target server';
+$string['block_panopto_automatic_operation_target_server_desc'] = 'This is the Panopto server that will be targeted for the \'Automatically provision new courses\', \'Sync user on login\' and \'Enforce category structure\' tasks';
 $string['block_panopto_check_server_status'] = 'Check server health before loading block';
 $string['block_panopto_check_server_status_desc'] = 'This checks if the target Panopto server is up at the beginning to avoid possible long timeout calls when the server is unreachable. This is set to false by default because it uses platform / OS dependent feature. It should be set to true only when Panopto support recommends it.';
 $string['block_panopto_creator_mapping'] = 'Creator role mapping';
@@ -105,6 +106,8 @@ $string['block_panopto_wsdl_proxy_host_desc'] = 'The host address used as a prox
 $string['block_panopto_wsdl_proxy_port'] = 'WSDL proxy port';
 $string['block_panopto_wsdl_proxy_port_desc'] = 'The port used as a proxy for any Panopto service WSDL. (Optional)';
 $string['category_branch_ensured'] = 'Categrory branch ensured with the following structure: \n {$a}';
+$string['categories_need_newer_panopto'] = 'Category calls need a Panopto server version of {$a->requiredpanoptoversion} to succeed, the targeted Panopto server\'s version is {$a->activepanoptoversion}.';
+
 $string['cli_category_invalid_arguments'] = 'Please run the command with the following arguments \'build_category_structure.php <panoptoservername> <applicationkey>\'';
 $string['cli_heading_build_category_structure'] = 'Sync all Moodle categories to Panopto';
 $string['completed_recordings'] = 'Completed Recordings';

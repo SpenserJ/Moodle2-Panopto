@@ -53,8 +53,6 @@ class ensure_category extends \core\task\adhoc_task {
             
             $targetservers = get_target_panopto_servers();
             foreach ($targetservers as $targetserver) {
-                \panopto_data::print_log(print_r($targetserver, true));
-                
                 $serverpanopto = new \panopto_category_data($categoryid);
                 $serverpanopto->applicationkey = $targetserver->appkey;
                 $serverpanopto->servername = $targetserver->name;

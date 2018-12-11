@@ -62,5 +62,16 @@
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for test"/>
         </KEYS>
     </TABLE>
+    <TABLE NAME="block_panopto_categorymap" COMMENT="A list of mapped category folders in Panopto">
+        <FIELDS>
+            <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="id of the table"/>
+            <FIELD NAME="category_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="ID of Moodle category."/>
+            <FIELD NAME="panopto_id" TYPE="char" LENGTH="36" NOTNULL="true" SEQUENCE="false" COMMENT="Public ID of Panopto folder."/>
+            <FIELD NAME="panopto_server" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Panopto server name for that contains folder that matches to this category."/>
+        </FIELDS>
+        <KEYS>
+            <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for test"/>
+        </KEYS>
+    </TABLE>
   </TABLES>
 </XMLDB>

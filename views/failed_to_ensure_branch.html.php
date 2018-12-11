@@ -22,8 +22,15 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 ?>
+            <?php if (!$hasvalidpanoptoversion) { ?>
+<div class='block_panopto'>
+    <div class='panoptoProcessInformation'>
+        <div class='value'>
+            <div class='errorMessage'><?php echo get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo) ?></div>
+            <?php } else { ?>
             <div class='attribute'><?php echo get_string('attribute_ensure_branch_failed', 'block_panopto') ?></div>
             <div class='value'><?php echo get_string('failed_to_ensure_category_branch', 'block_panopto') ?></div>
+            <?php } ?>
         </div>
     </div>
 </div>

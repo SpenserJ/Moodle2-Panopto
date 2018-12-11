@@ -202,7 +202,7 @@ class panopto_data {
     public function ensure_session_manager() {
         // If no session soap client exists instantiate one.
         if (!isset($this->sessionmanager)) {
-            $this->sessionmanager = self::instantiate_session_soap_client(
+            $this->sessionmanager = instantiate_panopto_session_soap_client(
                 $this->uname,
                 $this->servername,
                 $this->applicationkey
@@ -221,7 +221,7 @@ class panopto_data {
         // If no session soap client exists instantiate one.
         if (!isset($this->authmanager)) {
             // If no auth soap client for this instance, instantiate one.
-            $this->authmanager = self::instantiate_auth_soap_client(
+            $this->authmanager = instantiate_panopto_auth_soap_client(
                 $this->uname,
                 $this->servername,
                 $this->applicationkey
@@ -243,7 +243,7 @@ class panopto_data {
         if (!isset($this->usermanager) || ($this->usermanager->authparam->UserKey !== $this->panopto_decorate_username($usertomanage))) {
 
             // If no auth soap client for this instance, instantiate one.
-            $this->usermanager = self::instantiate_user_soap_client(
+            $this->usermanager = instantiate_panopto_user_soap_client(
                 $usertomanage,
                 $this->servername,
                 $this->applicationkey
@@ -1104,52 +1104,6 @@ class panopto_data {
         }
 
         return array('courses' => $options, 'selected' => $this->sessiongroupid);
-    }
-
-    /**
-     * Used to instantiate a user soap client for a given instance of panopto_data.
-     * Should be called only the first time a soap client is needed for an instance.
-     *
-     * @param string $username the name of the current user
-     * @param string $servername the name of the active server
-     * @param string $applicationkey the key need for the user to be authenticated
-     */
-    public static function instantiate_user_soap_client($username, $servername, $applicationkey) {
-        // Compute web service credentials for given user.
-        $apiuseruserkey = panopto_decorate_username($username);
-        $apiuserauthcode = panopto_generate_auth_code($apiuseruserkey . '@' . $servername, $applicationkey);
-
-        // Instantiate our SOAP client.
-        return new panopto_user_soap_client($servername, $apiuseruserkey, $apiuserauthcode);
-    }
-
-    /**
-     * Used to instantiate a session soap client for a given instance of panopto_data.
-     *
-     * @param string $username the name of the current user
-     * @param string $servername the name of the active server
-     * @param string $applicationkey the key need for the user to be authenticated
-     */
-    public static function instantiate_session_soap_client($username, $servername, $applicationkey) {
-        // Compute web service credentials for given user.
-        $apiuseruserkey = panopto_decorate_username($username);
-        $apiuserauthcode = panopto_generate_auth_code($apiuseruserkey . '@' . $servername, $applicationkey);
-
-        // Instantiate our SOAP client.
-        return new panopto_session_soap_client($servername, $apiuseruserkey, $apiuserauthcode);
-    }
-
-    /**
-     * Used to instantiate a soap client for calling Panopto's iAuth service.
-     * Should be called only the first time an  auth soap client is needed for an instance.
-     */
-    public static function instantiate_auth_soap_client($username, $servername, $applicationkey) {
-        // Compute web service credentials for given user.
-        $apiuseruserkey = panopto_decorate_username($username);
-        $apiuserauthcode = panopto_generate_auth_code($apiuseruserkey . '@' . $servername, $applicationkey);
-
-        // Instantiate our SOAP client.
-        return new panopto_auth_soap_client($servername, $apiuseruserkey, $apiuserauthcode);
     }
 
     /**

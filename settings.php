@@ -99,28 +99,20 @@ if ($ADMIN->fulltree) {
         );
     }
 
-    // If no Panopto servers are set just make the default value of the target server an empty array with no choices.
-    if (isset($targetserverarray) && !empty($targetserverarray)) {
-        $settings->add(
-            new admin_setting_configmultiselect(
-                'block_panopto/automatic_operation_target_servers',
-                get_string('block_panopto_automatic_operation_target_servers', 'block_panopto'),
-                get_string('block_panopto_automatic_operation_target_servers_desc', 'block_panopto'),
-                array($targetserverarray[0]),
-                $targetserverarray
-            )
-        );
-    } else {
-        $settings->add(
-            new admin_setting_configmultiselect(
-                'block_panopto/automatic_operation_target_servers',
-                get_string('block_panopto_automatic_operation_target_servers', 'block_panopto'),
-                get_string('block_panopto_automatic_operation_target_servers_desc', 'block_panopto'),
-                array(),
-                array()
-            )
-        );
+    // The next setting requires a Panopto server and appkey combo to be properly set.
+    if (!isset($targetserverarray) || empty($targetserverarray)) {
+        $targetserverarray = array(get_string('add_a_panopto_server', 'block_panopto'));
     }
+
+    $settings->add(
+        new admin_setting_configselect(
+            'block_panopto/automatic_operation_target_server',
+            get_string('block_panopto_automatic_operation_target_server', 'block_panopto'),
+            get_string('block_panopto_automatic_operation_target_server_desc', 'block_panopto'),
+            0,
+            $targetserverarray
+        )
+    );
 
     $settings->add(
         new admin_setting_configcheckbox(

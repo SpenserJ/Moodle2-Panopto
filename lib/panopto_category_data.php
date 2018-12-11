@@ -65,6 +65,17 @@ class panopto_category_data {
      * @var object $sessionmanager instance of the session soap client
      */
     public $sessionmanager;
+
+    /**
+     * @var object $authmanager instance of the auth soap client
+     */
+    public static $authmanager;
+
+    /**
+     * @var string $categoriesrequiredpanoptoversion Any block_panopto newer than 2018120700 will require a Panopto server to be at least this version to be able to make any category structure calls
+     */
+    public static $categoriesrequiredpanoptoversion = '6.0.0';
+
     /**
      * main constructor
      *
@@ -103,28 +114,12 @@ class panopto_category_data {
     }
 
     /**
-     * Used to instantiate a session soap client for a given instance of panopto_data.
-     *
-     * @param string $username the name of the current user
-     * @param string $servername the name of the active server
-     * @param string $applicationkey the key need for the user to be authenticated
-     */
-    public static function instantiate_session_soap_client($username, $servername, $applicationkey) {
-        // Compute web service credentials for given user.
-        $apiuseruserkey = panopto_decorate_username($username);
-        $apiuserauthcode = panopto_generate_auth_code($apiuseruserkey . '@' . $servername, $applicationkey);
-
-        // Instantiate our SOAP client.
-        return new panopto_session_soap_client($servername, $apiuseruserkey, $apiuserauthcode);
-    }
-
-    /**
      * Return the session manager, if it does not yet exist try to create it.
      */
     public function ensure_session_manager() {
         // If no session soap client exists instantiate one.
         if (!isset($this->sessionmanager)) {
-            $this->sessionmanager = self::instantiate_session_soap_client(
+            $this->sessionmanager = instantiate_panopto_session_soap_client(
                 $this->uname,
                 $this->servername,
                 $this->applicationkey
@@ -132,6 +127,25 @@ class panopto_category_data {
 
             if (!isset($this->sessionmanager)) {
                 self::print_log(get_string('api_manager_unavailable', 'block_panopto', 'session'));
+            }
+        }
+    }
+
+    /**
+     * Return the auth manager, if it does not yet exist try to create it.
+     */
+    public function ensure_auth_manager() {
+        // If no session soap client exists instantiate one.
+        if (!isset($this->authmanager)) {
+            // If no auth soap client for this instance, instantiate one.
+            $this->authmanager = instantiate_panopto_auth_soap_client(
+                $this->uname,
+                $this->servername,
+                $this->applicationkey
+            );
+
+            if (!isset($this->authmanager)) {
+                self::print_log(get_string('api_manager_unavailable', 'block_panopto', 'auth'));
             }
         }
     }
@@ -164,59 +178,79 @@ class panopto_category_data {
     public function ensure_category_branch($usehtmloutput, $leafcoursedata) {
         global $DB;
 
-        try {
+        $this->ensure_auth_manager();
+        $activepanoptoserverversion = $this->authmanager->get_server_version();
+        $hasvalidpanoptoversion = version_compare(
+            $activepanoptoserverversion, 
+            \panopto_category_data::$categoriesrequiredpanoptoversion, 
+            '>='
+        );
+        $panoptoversioninfo = ['activepanoptoversion' => $activepanoptoserverversion,
+                             'requiredpanoptoversion' => \panopto_category_data::$categoriesrequiredpanoptoversion];
 
-            $targetcategory = $DB->get_record('course_categories', array('id' => $this->moodlecategoryid));
+        if (!$hasvalidpanoptoversion) {
 
-            if ($usehtmloutput) {
-                include('views/begin_ensuring_branch.html.php');
-            } else {
-                panopto_data::print_log(get_string('begin_ensuring_branch', 'block_panopto', $targetcategory->name));
-            }
-            
-            $categoryheirarchy = array();
+                if ($usehtmloutput) {
+                    include('views/failed_to_ensure_branch.html.php');
+                } else {
+                    panopto_data::print_log(get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo));
+                }
+        } 
+        else {
+            try {
 
-            if (isset($leafcoursedata) && !empty($leafcoursedata)) {
-                // We don't need to pass a name into this constructor since we can assume course folders exist.
+                $targetcategory = $DB->get_record('course_categories', array('id' => $this->moodlecategoryid));
+
+                if ($usehtmloutput) {
+                    include('views/begin_ensuring_branch.html.php');
+                } else {
+                    panopto_data::print_log(get_string('begin_ensuring_branch', 'block_panopto', $targetcategory->name));
+                }
+                
+                $categoryheirarchy = array();
+
+                if (isset($leafcoursedata) && !empty($leafcoursedata)) {
+                    // We don't need to pass a name into this constructor since we can assume course folders exist.
+                    $categoryheirarchy[] = new SessionManagementStructExternalHierarchyInfo(
+                        null, 
+                        $leafcoursedata->moodlecourseid,
+                        true
+                    );
+                }
+                
                 $categoryheirarchy[] = new SessionManagementStructExternalHierarchyInfo(
-                    null, 
-                    $leafcoursedata->moodlecourseid,
-                    true
+                    $targetcategory->name, 
+                    $targetcategory->id
                 );
+                
+                $currentcategory = $DB->get_record('course_categories', array('id' => $targetcategory->parent));
+
+                while(isset($currentcategory) && !empty($currentcategory)) {
+                    $categoryheirarchy[] = new SessionManagementStructExternalHierarchyInfo(
+                        $currentcategory->name, 
+                        $currentcategory->id,
+                        false
+                    );
+
+                    $currentcategory = $DB->get_record('course_categories', array('id' => $currentcategory->parent));
+                }
+
+                // reverse $categoryheirarchy so the root node of the Moodle category tree is the first element, and the target category is the last element.
+                $this->ensure_session_manager();
+                $categorydata = $this->sessionmanager->ensure_category_branch(array_reverse($categoryheirarchy))->Results->FolderWithExternalContext;
+
+                if ($categorydata !== null && $categorydata !== false) {
+                  $this->save_category_data_to_table($categorydata, $usehtmloutput, $leafcoursedata);
+                } else if (!$usehtmloutput) {
+                    panopto_data::print_log(get_string('failed_to_ensure_category_branch', 'block_panopto'));
+                } else {
+                    include('views/failed_to_ensure_branch.html.php');
+                }
+
+                return $categorydata;
+            } catch (Exception $e) {
+                panopto_data::print_log(print_r($e->getMessage(), true));
             }
-            
-            $categoryheirarchy[] = new SessionManagementStructExternalHierarchyInfo(
-                $targetcategory->name, 
-                $targetcategory->id
-            );
-            
-            $currentcategory = $DB->get_record('course_categories', array('id' => $targetcategory->parent));
-
-            while(isset($currentcategory) && !empty($currentcategory)) {
-                $categoryheirarchy[] = new SessionManagementStructExternalHierarchyInfo(
-                    $currentcategory->name, 
-                    $currentcategory->id,
-                    false
-                );
-
-                $currentcategory = $DB->get_record('course_categories', array('id' => $currentcategory->parent));
-            }
-
-            // reverse $categoryheirarchy so the root node of the Moodle category tree is the first element, and the target category is the last element.
-            $this->ensure_session_manager();
-            $categorydata = $this->sessionmanager->ensure_category_branch(array_reverse($categoryheirarchy))->Results->FolderWithExternalContext;
-
-            if ($categorydata !== null && $categorydata !== false) {
-              $this->save_category_data_to_table($categorydata, $usehtmloutput, $leafcoursedata);
-            } else if (!$usehtmloutput) {
-                panopto_data::print_log(get_string('failed_to_ensure_category_branch', 'block_panopto'));
-            } else {
-                include('views/failed_to_ensure_branch.html.php');
-            }
-
-            return $categorydata;
-        } catch (Exception $e) {
-            panopto_data::print_log(print_r($e->getMessage(), true));
         }
     }
 
@@ -262,21 +296,50 @@ class panopto_category_data {
     public static function build_category_structure($usehtmloutput, $selectedserver, $selectedkey) {
         global $DB;
 
-        // Get all categories with no children (all leaf nodes)
-        $leafcategories = $DB->get_records_sql(
-            'SELECT id,depth FROM mdl_course_categories WHERE id NOT IN (SELECT parent FROM mdl_course_categories)'
-        );
+        $panoptoservercheck = new panopto_category_data(null, $selectedserver, $selectedkey);
+        $panoptoservercheck->ensure_auth_manager();
 
-        foreach($leafcategories as $leafcategory) {
-            $currentcategory = new panopto_category_data($leafcategory->id, $selectedserver, $selectedkey);
-            $currentcategory->ensure_category_branch($usehtmloutput, null);
+        $activepanoptoserverversion = $panoptoservercheck->authmanager->get_server_version();
+        $hasvalidpanoptoversion = version_compare(
+            $activepanoptoserverversion, 
+            \panopto_category_data::$categoriesrequiredpanoptoversion, 
+            '>='
+        );
+        $panoptoversioninfo = ['activepanoptoversion' => $activepanoptoserverversion,
+                             'requiredpanoptoversion' => \panopto_category_data::$categoriesrequiredpanoptoversion];
+
+        if (!$hasvalidpanoptoversion) {
+
+                if ($usehtmloutput) {
+                    include('views/failed_to_ensure_branch.html.php');
+                } else {
+                    panopto_data::print_log(get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo));
+                }
+        } 
+        else {
+            // Get all categories with no children (all leaf nodes)
+            $leafcategories = $DB->get_records_sql(
+                'SELECT id,depth FROM mdl_course_categories WHERE id NOT IN (SELECT parent FROM mdl_course_categories)'
+            );
+
+            foreach($leafcategories as $leafcategory) {
+                $currentcategory = new panopto_category_data($leafcategory->id, $selectedserver, $selectedkey);
+                $currentcategory->ensure_category_branch($usehtmloutput, null);
+            }
         }
     }
 
     private static function update_category_row($row) {
         global $DB;
 
-        $oldrow = $DB->get_record('block_panopto_categorymap', array('category_id' => $row->category_id));
+        $oldrow = $DB->get_record(
+            'block_panopto_categorymap', 
+            array(
+                'category_id' => $row->category_id, 
+                'panopto_server' => $row->panopto_server
+            )
+        );
+        
         if ($oldrow) {
             $row->id = $oldrow->id;
             return $DB->update_record('block_panopto_categorymap', $row);
