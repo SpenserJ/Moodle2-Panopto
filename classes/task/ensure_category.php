@@ -53,9 +53,7 @@ class ensure_category extends \core\task\adhoc_task {
             
             $targetservers = get_target_panopto_servers();
             foreach ($targetservers as $targetserver) {
-                $serverpanopto = new \panopto_category_data($categoryid);
-                $serverpanopto->applicationkey = $targetserver->appkey;
-                $serverpanopto->servername = $targetserver->name;
+                $serverpanopto = new \panopto_category_data($categoryid, $targetserver->name, $targetserver->appkey);
 
                 // Sync the user to all courses mapped to the server.
                 $serverpanopto->ensure_category_branch(false, null);

@@ -471,9 +471,7 @@ class panopto_session_soap_client extends SoapClient {
         return $ret;
     }
 
-    private function handle_provisioning_error($functionkey) {
-        $lasterror = $this->sessionmanagementserviceset->getLastError()[$functionkey];
-
+    private function handle_provisioning_error($lasterror) {
         $lasterrormessage = $lasterror->getMessage();
 
         // Parsing error message to see if the target was a personal.

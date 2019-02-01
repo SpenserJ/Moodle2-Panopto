@@ -74,8 +74,9 @@ class block_panopto_edit_form extends block_edit_form {
             $currentmappings = $panoptodata->get_course_role_mappings($COURSE->id);
 
             // Get roles that current user may assign in this course.
-            $currentcourseroles = get_assignable_roles($context, $rolenamedisplay = ROLENAME_ALIAS,
-                $withusercounts = false, $user = null);
+            $currentcourseroles = get_all_roles($context);
+
+            $currentcourseroles = role_fix_names($currentcourseroles, $context, ROLENAME_ALIAS, true);
 
             while ($role = current($currentcourseroles)) {
                 $rolearray[key($currentcourseroles)] = $currentcourseroles[key($currentcourseroles)];

@@ -73,8 +73,45 @@
                 ?>
                     <div class='attribute'><?php echo get_string('course_name', 'block_panopto') ?></div>
                     <div class='value'><?php echo $provisioningdata->fullname ?></div>
-                    <div class='attribute'><?php echo get_string('no_users_synced', 'block_panopto') ?></div>
-                    <div class='value'><?php echo get_string('no_users_synced_desc', 'block_panopto') ?></div>
+
+                    <div class='attribute'><?php echo get_string('synced_user_info', 'block_panopto') ?></div>
+                    <?php if (!get_config('block_panopto', 'sync_after_provisioning')) { ?>
+                        <div class='value'><?php echo get_string('no_users_synced_desc', 'block_panopto') ?></div>
+                    <?php } else if(get_config('block_panopto', 'async_tasks')) { ?>
+                        <div class='value'><?php echo get_string('async_wait_warning', 'block_panopto'); ?></div>
+                    <?php } else { ?>
+                        <div class='value'><?php echo get_string('users_have_been_synced', 'block_panopto'); ?></div>
+                    <?php } ?>
+                    <div class='attribute'><?php echo get_string('publishers', 'block_panopto') ?></div>
+                    <div class='value'>
+                        <?php
+                            if (!empty($provisioneddata->publishers)) {
+                                echo join(', ', $provisioneddata->publishers);
+                            } else {
+                                ?><div class='errorMessage'><?php echo get_string('no_publishers', 'block_panopto') ?></div><?php
+                            }
+                        ?>
+                    </div>
+                    <div class='attribute'><?php echo get_string('creators', 'block_panopto') ?></div>
+                    <div class='value'>
+                        <?php
+                            if (!empty($provisioneddata->creators)) {
+                                echo join(', ', $provisioneddata->creators);
+                            } else {
+                                ?><div class='errorMessage'><?php echo get_string('no_creators', 'block_panopto') ?></div><?php
+                            }
+                        ?>
+                    </div>
+                    <div class='attribute'><?php echo get_string('viewers', 'block_panopto') ?></div>
+                    <div class='value'>
+                        <?php
+                            if (!empty($provisioneddata->viewers)) {
+                                echo join(', ', $provisioneddata->viewers);
+                            } else {
+                                ?><div class='errorMessage'><?php echo get_string('no_viewers', 'block_panopto') ?></div><?php
+                            }
+                        ?>
+                    </div>
                     <div class='attribute'><?php echo get_string('result', 'block_panopto') ?></div>
                     <div class="value">
                         <div class='successMessage'>

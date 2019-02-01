@@ -150,6 +150,38 @@ function get_target_panopto_servers() {
 }
 
 /**
+ * Returns a list of objects containing valid servername/appkey pairs.
+ *
+ */
+function get_valid_panopto_servers() {
+    $ret = array();
+
+    $numservers = get_config('block_panopto', 'server_number');
+    $numservers = isset($numservers) ? $numservers : 0;
+
+    // Increment numservers by 1 to take into account starting at 0.
+    ++$numservers;
+
+    for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
+
+        // Generate strings corresponding to potential servernames in the config.
+        $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
+        $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
+        $hasvaliddata = isset($thisappkey) && !empty($thisappkey);
+
+        // If we have valid data for the server then try to ensure the category branch
+        if ($hasvaliddata) {
+
+            $targetserver = new stdClass();
+            $targetserver->name = $thisservername;
+            $targetserver->appkey = $thisappkey;
+            $ret[] = $targetserver;
+        }
+    }
+    return $ret;
+}
+
+/**
  *  Retrieve the app key for the target panopto server
  *
  * @param string $panoptoservername the server we are trying to get the application key for
@@ -231,4 +263,38 @@ function is_null_or_empty_string($name) {
     return (!isset($name) || trim($name) === '');
 }
 
+/**
+ * Returns true if the test guid is empty (all values in guid add to 0)
+ *
+ * @param string $guidstring the uid being tested in string format.
+ */
+function is_guid_empty($guidstring) {
+    // Assuming the guid is valid
+    $retVal = false;
+    $val = array_sum(explode("-", $guidstring));
+
+    if ($val == 0) {
+        // Guid is empty
+        $retVal = true;
+    }
+
+    return $retVal;
+}
+
+/**
+ * Returns true if the user info has not been cleared
+ *
+ * @param string $userinfostring information to check
+ */
+function user_info_valid($userinfostring) {
+    // Assuming the guid is valid
+    $retVal = true;
+
+    if (strcmp($userinfostring, '--Deleted--') === 0) {
+        // Guid is empty
+        $retVal = false;
+    }
+
+    return $retVal;
+}
 /* End of file block_panopto_lib.php */

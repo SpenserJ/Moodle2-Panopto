@@ -228,7 +228,8 @@ if ($ADMIN->fulltree) {
     );
 
     $coursecontext = context_course::instance(SITEID);
-    $courserolearray = get_assignable_roles($coursecontext, ROLENAME_BOTH);
+    $courserolearray = get_all_roles($coursecontext);
+    $courserolearray = role_fix_names($courserolearray, $coursecontext, ROLENAME_ALIAS, true);
 
     $settings->add(
         new admin_setting_configmultiselect(

@@ -288,6 +288,11 @@ class panopto_data {
 
             if (isset($courseinfo) && isset($courseinfo->Id)) {
 
+                // If sync on provisioning is set we should keep a list of who was synced and display that
+                $courseinfo->viewers = array();
+                $courseinfo->creators = array();
+                $courseinfo->publishers = array();
+
                 self::print_log_verbose(get_string('provision_successful', 'block_panopto', $this->sessiongroupid));
 
                 // Store the Panopto folder Id in the foldermap table so we know it exists.
@@ -317,22 +322,38 @@ class panopto_data {
                 );
 
                 $coursecontext = context_course::instance($this->moodlecourseid);
-                if (!$skipusersync) {
-                    // syncs every user enrolled in the course, this is fairly expensive so it should be normally turned off.
-                    if (get_config('block_panopto', 'sync_after_provisioning')) {
-                        $enrolledusers = get_enrolled_users($coursecontext);
+                $syncafterprovisioning = get_config('block_panopto', 'sync_after_provisioning');
+                
+                $enrolledusers = get_enrolled_users($coursecontext);
+                // sync every user enrolled in the course
+                foreach ($enrolledusers as $enrolleduser) {
+                    $userrole = self::get_role_from_context($coursecontext, $enrolleduser->id);
+                    $panoptousername =  $this->instancename . '\\' . $enrolleduser->username;
 
-                        // sync every user enrolled in the course
-                        foreach ($enrolledusers as $enrolleduser) {
-                            $this->sync_external_user($enrolleduser->id);
+                    if(strpos($userrole, 'Publisher') !== FALSE) {
+                        $courseinfo->publishers[] = $panoptousername;
+                        if(strpos($userrole, 'Creator') !== FALSE) {
+                            $courseinfo->creators[] = $panoptousername;
                         }
-                    } else if ($this->uname !== 'guest') {
-                        // uname will be guest is provisioning/upgrading through cli, no need to sync this 'user'.
-                        // This is intended to make sure provisioning teachers get access without relogging, so we only need to perform this if we aren't syncing all enrolled users.
-
-                        // Update permissions so user can see everything they should.
-                        $this->sync_external_user($USER->id);
+                    } else if(strpos($userrole, 'Creator') !== FALSE) {
+                        $courseinfo->creators[] = $panoptousername;
+                    } else {
+                        $courseinfo->viewers[] = $panoptousername;
                     }
+
+
+                    // syncs every user enrolled in the course, this is fairly expensive so it should be normally turned off.
+                    if ($syncafterprovisioning) {
+                        $this->sync_external_user($enrolleduser->id);
+                    }
+                }
+
+                if (!$skipusersync && $this->uname !== 'guest') {
+                    // uname will be guest is provisioning/upgrading through cli, no need to sync this 'user'.
+                    // This is intended to make sure provisioning teachers get access without relogging, so we only need to perform this if we aren't syncing all enrolled users.
+
+                    // Update permissions so user can see everything they should.
+                    $this->sync_external_user($USER->id);
                 }
 
                 if (get_config('block_panopto', 'sync_category_after_course_provision')) {
@@ -743,6 +764,64 @@ class panopto_data {
     }
 
     /**
+     * Get a Panopto user by their user key
+     * @param string $userkey the username/key for the user being searched.
+     */
+    public function get_user_by_key($userkey) {
+        global $USER;
+
+        if (!empty($this->servername) && !empty($this->applicationkey)) {
+            $this->ensure_user_manager($USER->username);
+        }
+
+        $panoptouser = $this->usermanager->get_user_by_key($userkey);
+
+        return $panoptouser;
+    }
+
+    /**
+     * Sends a request to Panopto to delete a user, requires the calling user to be an Admin in Panopto.
+     * @param array $userids the Guid user Ids for the users being deleted.
+     */
+    public function delete_users_from_panopto($userids) {
+        global $USER;
+        
+        if (!empty($this->servername) && !empty($this->applicationkey)) {
+            $this->ensure_user_manager($USER->username);
+        }
+
+        $result = $this->usermanager->delete_users($userids);
+
+        return $result;
+    }
+
+    /**
+     * Sends a request to Panopto to update the information of a user, assumes the user manager has already been ensured
+     * @param string $userid the id of the target user;
+     * @param string $firstname the new first name of the user
+     * @param string $lastname the new last name of the user
+     * @param string $email the new user email
+     * @param boolean $sendemailnotifications Tells panopto if the user wants email notifications sent to them.
+     */
+    public function update_contact_info($userid, $firstname, $lastname, $email, $sendemailnotifications) {
+        global $USER;
+        
+        if (!empty($this->servername) && !empty($this->applicationkey)) {
+            $this->ensure_user_manager($USER->username);
+        }
+
+        $result = $this->usermanager->update_contact_info(
+            $userid,
+            $firstname,
+            $lastname, 
+            $email,
+            $sendemailnotifications
+        );
+
+        return $result;
+    }
+
+    /**
      * Instance method caches Moodle instance name from DB (vs. block_panopto_lib version).
      *
      * @param string $moodleusername name of the Moodle user
@@ -1080,6 +1159,12 @@ class panopto_data {
         }
 
         return $deletedrecords;
+    }
+
+    public function has_valid_panopto() {
+        return isset($this->sessiongroupid) && !empty($this->sessiongroupid) && 
+               isset($this->servername) && !empty($this->servername) && 
+               isset($this->applicationkey) && !empty($this->applicationkey);
     }
 
     /**
