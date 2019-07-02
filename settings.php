@@ -309,6 +309,10 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_heading('block_panopto_add_courses', '', $link));
 
+    $unprovisionlink = '<a id="panopto_unprovision_course_btn" href="' . $CFG->wwwroot . '/blocks/panopto/unprovision_course.php">' .
+        get_string('block_global_unprovision_courses', 'block_panopto') . '</a>';
+    $settings->add(new admin_setting_heading('block_panopto_unprovision_courses', '', $unprovisionlink));
+
     $importlink = '<a id="panopto_reinitialize_imports_btn" href="' . $CFG->wwwroot . '/blocks/panopto/reinitialize_imports.php">' .
         get_string('block_global_reinitialize_all_imports', 'block_panopto') . '</a>';
 

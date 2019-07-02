@@ -114,6 +114,30 @@ class panopto_session_soap_client extends SoapClient {
         return $ret;
     }
 
+    /* 
+     * This function wraps the API call to unprovision a course from Panopto 
+     *
+     * @param int $externalid string the externalId we are finding in Panopto to unmap
+     */ 
+    public function unprovision_external_course($externalid) {
+        $ret = false;
+        if (!isset($this->sessionmanagementserviceunprovision)) {
+            $this->sessionmanagementserviceunprovision = new SessionManagementServiceUnprovision($this->serviceparams);
+        }
+
+        $unprovisionexternalcourseparams = new SessionManagementStructUnprovisionExternalCourse(
+            $this->authparam,
+            $externalid
+        );
+        
+        if ($this->sessionmanagementserviceunprovision->UnprovisionExternalCourse($unprovisionexternalcourseparams)) {
+            $ret = $this->sessionmanagementserviceunprovision->getResult()->UnprovisionExternalCourseResult;
+        } else {
+            panopto_data::print_log(print_r($this->sessionmanagementserviceunprovision->getLastError(), true));
+        }
+         return $ret;
+    }
+
     public function provision_external_course_with_roles($fullname, $externalcourseid) {
         $ret = false;
 

@@ -119,6 +119,8 @@ class SessionManagementClassMap
   'ProvisionExternalCourseResponse' => 'SessionManagementStructProvisionExternalCourseResponse',
   'ProvisionExternalCourseWithRoles' => 'SessionManagementStructProvisionExternalCourseWithRoles',
   'ProvisionExternalCourseWithRolesResponse' => 'SessionManagementStructProvisionExternalCourseWithRolesResponse',
+  'UnprovisionExternalCourse' => 'SessionManagementStructUnprovisionExternalCourse',
+  'UnprovisionExternalCourseResponse' => 'SessionManagementStructUnprovisionExternalCourseResponse',
   'RecorderDownloadUrlResponse' => 'SessionManagementStructRecorderDownloadUrlResponse',
   'Session' => 'SessionManagementStructSession',
   'SessionAvailabilitySettings' => 'SessionManagementStructSessionAvailabilitySettings',

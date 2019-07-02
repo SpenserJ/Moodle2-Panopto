@@ -277,9 +277,9 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2018030200, 'panopto');
     }
 
-    if ($oldversion < 2018100500) {
+    if ($oldversion < 2019070100) {
 
-        // Define table table where we will place all of our old/broken folder mappings. So customers can keep the data if needed.
+        // Define table table where we will place all of our category mappings. So we can know which categories are linked to Panopto folders.
         $categorymaptable = new xmldb_table('block_panopto_categorymap');
         if (!$dbman->table_exists($categorymaptable)) {
             $mappingfields = array();
@@ -296,7 +296,7 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         }
         
         // Panopto savepoint reached.
-        upgrade_block_savepoint(true, 2018100500, 'panopto');
+        upgrade_block_savepoint(true, 2019070100, 'panopto');
     }
 
     return true;

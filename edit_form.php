@@ -55,11 +55,13 @@ class block_panopto_edit_form extends block_edit_form {
             $params->course_id = $COURSE->id;
             $params->return_url = $_SERVER['REQUEST_URI'];
             $querystring = http_build_query($params, '', '&');
-            $provisionurl = "$CFG->wwwroot/blocks/panopto/provision_course.php?" . $querystring;
 
+            $provisionurl = "$CFG->wwwroot/blocks/panopto/provision_course.php?" . $querystring;
             $addtopanopto = get_string('add_to_panopto', 'block_panopto');
+            $unprovisionurl = "$CFG->wwwroot/blocks/panopto/unprovision_course_internal.php?id=" . $COURSE->id;
+            $unprovisionfrommoodle = get_string('unprovision_from_moodle', 'block_panopto');
             $or = get_string('or', 'block_panopto');
-            $mform->addElement('html', "<a href='$provisionurl'>$addtopanopto</a><br><br>-- $or --<br><br>");
+            $mform->addElement('html', "<a href='$unprovisionurl'>$unprovisionfrommoodle</a><br><br>-- $or --<br><br><a href='$provisionurl'>$addtopanopto</a><br><br>-- $or --<br><br>");
 
             $courselist = $panoptodata->get_course_options();
 

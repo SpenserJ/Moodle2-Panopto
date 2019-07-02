@@ -27,6 +27,9 @@ require_once dirname(__FILE__) . '/Delete/Folders/SessionManagementStructDeleteF
 require_once dirname(__FILE__) . '/Delete/Sessions/SessionManagementStructDeleteSessions.php';
 require_once dirname(__FILE__) . '/Delete/Response/SessionManagementStructDeleteSessionsResponse.php';
 require_once dirname(__FILE__) . '/Provision/Response/SessionManagementStructProvisionExternalCourseWithRolesResponse.php';
+require_once dirname(__FILE__) . '/Unprovision/Course/SessionManagementStructUnprovisionExternalCourse.php';
+require_once dirname(__FILE__) . '/Unprovision/Response/SessionManagementStructUnprovisionExternalCourseResponse.php';
+require_once dirname(__FILE__) . '/Unprovision/SessionManagementServiceUnprovision.php';
 require_once dirname(__FILE__) . '/Set/Access/SessionManagementStructSetExternalCourseAccess.php';
 require_once dirname(__FILE__) . '/Set/Roles/SessionManagementStructSetCopiedExternalCourseAccessForRoles.php';
 require_once dirname(__FILE__) . '/Set/Response/SessionManagementStructSetCopiedExternalCourseAccessForRolesResponse.php';

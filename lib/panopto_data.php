@@ -100,6 +100,12 @@ class panopto_data {
     public static $requiredpanoptoversion = '5.4.0';
 
     /**
+     * @var string $unprovisionrequiredpanoptoversion The UnprovisionExternalCourse endpoint was only added in 7.0.0 so 
+     * anyone using an older Panopto server should not be able to attempt to use this endpoint.
+     */
+    public static $unprovisionrequiredpanoptoversion = '7.0.0';
+
+    /**
      * @var string $requiredpanoptoversion Any block_panopto newer than 2017061000 will require a Panopto server to be at least this version to succeed.
      */
     public static function getpossiblefoldernamestyles() {
@@ -403,6 +409,47 @@ class panopto_data {
 
         return $courseinfo;
     }
+
+
+    /**
+     * Removes the external context and group mappings from a folder in Panopto
+     *
+     */
+    public function unprovision_course() {
+        global $CFG, $USER, $DB;
+
+        $this->ensure_auth_manager();
+        
+        $activepanoptoserverversion = $this->authmanager->get_server_version();
+        $hasvalidpanoptoversion = version_compare(
+            $activepanoptoserverversion, 
+            self::$unprovisionrequiredpanoptoversion, 
+            '>='
+        );
+
+        if (!$hasvalidpanoptoversion) {
+            self::print_log(get_string('unprovision_requires_newer_server', 'block_panopto'));
+            return false;
+        } else {
+            self::print_log_verbose(get_string('attempt_unprovision_course', 'block_panopto', $this->moodlecourseid));
+
+            try {
+                if (!empty($this->moodlecourseid)) {
+                    $this->ensure_session_manager();
+                    $this->sessionmanager->unprovision_external_course(
+                        $this->moodlecourseid
+                    );
+                }
+            } catch (Exception $e) {
+                self::print_log(print_r($e->getMessage(), true));
+                return false;
+            }
+
+            // Delete the relation on Moodle if the Panopto side link was succesfully removed.
+            self::delete_panopto_relation($this->moodlecourseid, true);
+            return true;
+        }
+     }
 
     /**
      *  Fetch course name and membership info from DB in preparation for provisioning operation.

@@ -294,7 +294,7 @@ class panopto_category_data {
     }
 
     public static function build_category_structure($usehtmloutput, $selectedserver, $selectedkey) {
-        global $DB;
+        global $DB, $CFG;
 
         $panoptoservercheck = new panopto_category_data(null, $selectedserver, $selectedkey);
         $panoptoservercheck->ensure_auth_manager();
@@ -319,7 +319,7 @@ class panopto_category_data {
         else {
             // Get all categories with no children (all leaf nodes)
             $leafcategories = $DB->get_records_sql(
-                'SELECT id,depth FROM mdl_course_categories WHERE id NOT IN (SELECT parent FROM mdl_course_categories)'
+                'SELECT id,depth FROM ' . $CFG->prefix . 'course_categories WHERE id NOT IN (SELECT parent FROM ' . $CFG->prefix . 'course_categories)'
             );
 
             foreach($leafcategories as $leafcategory) {
