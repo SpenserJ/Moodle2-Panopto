@@ -163,7 +163,7 @@ class panopto_session_soap_client extends SoapClient {
             $retobj = $this->sessionmanagementserviceprovision->getResult();
             $ret = $retobj->ProvisionExternalCourseWithRolesResult;
         } else {
-            $this->handle_provisioning_error('SessionManagementServiceProvision::ProvisionExternalCourseWithRoles');
+            $this->handle_provisioning_error($this->sessionmanagementserviceprovision->getLastError()['SessionManagementServiceProvision::ProvisionExternalCourseWithRoles']);
         }
 
         return $ret;
@@ -202,7 +202,7 @@ class panopto_session_soap_client extends SoapClient {
             // We do not support multiple folders per course in Moodle atm so we can assume 1 result.
             $ret = $retobj->SetExternalCourseAccessForRolesResult->Folder[0];
         } else {
-            $this->handle_provisioning_error('SessionManagementServiceSet::SetExternalCourseAccessForRoles');
+            $this->handle_provisioning_error($this->sessionmanagementserviceset->getLastError()['SessionManagementServiceSet::SetExternalCourseAccessForRoles']);
         }
 
         return $ret;

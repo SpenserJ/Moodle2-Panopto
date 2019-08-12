@@ -10,6 +10,12 @@ if (interface_exists('\core_privacy\local\request\userlist')) {
     interface my_userlist extends \core_privacy\local\request\userlist{}
 } else {
     interface my_userlist {};
+} 
+
+if (interface_exists('\core_privacy\local\request\core_userlist_provider')) {
+    interface my_userlist_provider extends \core_privacy\local\request\core_userlist_provider{}
+} else {
+    interface my_userlist_provider {};
 }
 
 if (interface_exists('\core_privacy\local\request\core_user_data_provider')) {
@@ -17,13 +23,14 @@ if (interface_exists('\core_privacy\local\request\core_user_data_provider')) {
 } else {
     interface my_userdataprovider {};
 }
- 
+
 class provider implements 
         // This plugin does store personal user data.
         \core_privacy\local\metadata\provider,
         \core_privacy\local\request\data_provider,
         \core_privacy\local\request\plugin\provider,
         my_userdataprovider,
+        my_userlist_provider,
         my_userlist {
     
     public static function get_metadata(collection $collection) : collection {

@@ -33,7 +33,12 @@ require_once($CFG->libdir . '/weblib.php');
 require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 
 $servername = required_param('serverName', PARAM_HOST);
-$callbackurl = urldecode(required_param('callbackURL', PARAM_URL));
+$callbackurl = required_param('callbackURL', PARAM_URL);
+
+if (strpos($callbackurl, 'http%') !== false 
+ || strpos($callbackurl, 'https%') !== false) {
+    $callbackurl = urldecode($callbackurl);
+}
 
 // A float doesn't have the required precision.
 $expiration = preg_replace('/[^0-9\.]/', '', required_param('expiration', PARAM_RAW));

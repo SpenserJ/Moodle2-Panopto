@@ -90,6 +90,11 @@ class panopto_data {
     public $uname;
 
     /**
+     * @var int $maxloglength the maximum length we will allow logs to be when adding a log to Panopto.
+     */
+    private static $maxloglength = 1500;
+
+    /**
      * @var int $requireversion Panopto only supports versions of Moodle newer than v2.7(2014051200).
      */
     private static $requiredversion = 2014051200;
@@ -1390,6 +1395,8 @@ class panopto_data {
 
     public static function print_log($logmessage) {
         global $CFG;
+
+        $logmessage = substr($logmessage, 0, self::$maxloglength);
 
         if (get_config('block_panopto', 'print_log_to_file')) {
             file_put_contents($CFG->dirroot . '/PanoptoLogs.txt', $logmessage . "\n", FILE_APPEND);
