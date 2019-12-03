@@ -92,7 +92,7 @@ class panopto_auth_soap_client extends SoapClient {
         if ($this->authmanagementserviceget->GetServerVersion()) {
             $returnvalue = $this->authmanagementserviceget->getResult()->GetServerVersionResult;
         } else {
-            panopto_data::print_log(print_r($this->authmanagementserviceget->getLastError(), true));
+            \panopto_data::print_log(print_r($this->authmanagementserviceget->getLastError(), true));
         }
         return $returnvalue;
     }
@@ -121,7 +121,7 @@ class panopto_auth_soap_client extends SoapClient {
             $returnvalue = true;
         } else {
             $lasterror = $this->authmanagementservicereport->getLastError()['AuthManagementServiceReport::ReportIntegrationInfo'];
-            panopto_data::print_log(print_r($lasterror, true));
+            \panopto_data::print_log(print_r($lasterror, true));
         }
 
         return $returnvalue;

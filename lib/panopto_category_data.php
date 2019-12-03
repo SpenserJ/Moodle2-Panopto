@@ -192,7 +192,7 @@ class panopto_category_data {
                 if ($usehtmloutput) {
                     include('views/failed_to_ensure_branch.html.php');
                 } else {
-                    panopto_data::print_log(get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo));
+                    \panopto_data::print_log(get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo));
                 }
         } 
         else {
@@ -203,7 +203,7 @@ class panopto_category_data {
                 if ($usehtmloutput) {
                     include('views/begin_ensuring_branch.html.php');
                 } else {
-                    panopto_data::print_log_verbose(get_string('begin_ensuring_branch', 'block_panopto', $targetcategory->name));
+                    \panopto_data::print_log_verbose(get_string('begin_ensuring_branch', 'block_panopto', $targetcategory->name));
                 }
                 
                 $categoryheirarchy = array();
@@ -242,14 +242,14 @@ class panopto_category_data {
                 if ($categorydata !== null && $categorydata !== false) {
                   $this->save_category_data_to_table($categorydata, $usehtmloutput, $leafcoursedata);
                 } else if (!$usehtmloutput) {
-                    panopto_data::print_log(get_string('failed_to_ensure_category_branch', 'block_panopto'));
+                    \panopto_data::print_log(get_string('failed_to_ensure_category_branch', 'block_panopto'));
                 } else {
                     include('views/failed_to_ensure_branch.html.php');
                 }
 
                 return $categorydata;
             } catch (Exception $e) {
-                panopto_data::print_log(print_r($e->getMessage(), true));
+                \panopto_data::print_log(print_r($e->getMessage(), true));
             }
         }
     }
@@ -289,14 +289,14 @@ class panopto_category_data {
         if ($usehtmloutput) {
             include('views/ensured_branch.html.php');
         } else {
-            panopto_data::print_log_verbose(get_string('category_branch_ensured', 'block_panopto', $ensuredbranch));
+            \panopto_data::print_log_verbose(get_string('category_branch_ensured', 'block_panopto', $ensuredbranch));
         }
     }
 
     public static function build_category_structure($usehtmloutput, $selectedserver, $selectedkey) {
         global $DB, $CFG;
 
-        $panoptoservercheck = new panopto_category_data(null, $selectedserver, $selectedkey);
+        $panoptoservercheck = new \panopto_category_data(null, $selectedserver, $selectedkey);
         $panoptoservercheck->ensure_auth_manager();
 
         $activepanoptoserverversion = $panoptoservercheck->authmanager->get_server_version();
@@ -313,7 +313,7 @@ class panopto_category_data {
                 if ($usehtmloutput) {
                     include('views/failed_to_ensure_branch.html.php');
                 } else {
-                    panopto_data::print_log(get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo));
+                    \panopto_data::print_log(get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo));
                 }
         } 
         else {
@@ -323,7 +323,7 @@ class panopto_category_data {
             );
 
             foreach($leafcategories as $leafcategory) {
-                $currentcategory = new panopto_category_data($leafcategory->id, $selectedserver, $selectedkey);
+                $currentcategory = new \panopto_category_data($leafcategory->id, $selectedserver, $selectedkey);
                 $currentcategory->ensure_category_branch($usehtmloutput, null);
             }
         }

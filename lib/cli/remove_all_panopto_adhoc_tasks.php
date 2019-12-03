@@ -41,7 +41,7 @@ if (!$admin) {
 cli_heading('Removing all queued Panopto adhoc tasks');
 
 function remove_panopto_adhoc_tasks() {
-    panopto_data::remove_all_panopto_adhoc_tasks();
+    \panopto_data::remove_all_panopto_adhoc_tasks();
 
     cli_writeln(get_string('removed_panopto_adhoc_tasks', 'block_panopto'));
 }

@@ -208,7 +208,7 @@ class provider implements
             return;
         }
 
-        $coursepanopto = new panopto_data($context->instanceid);
+        $coursepanopto = new \panopto_data($context->instanceid);
 
         if ($coursepanopto->has_valid_panopto()) {
             $enrolledusers = \get_enrolled_users($context);

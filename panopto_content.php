@@ -45,7 +45,7 @@ try {
     $content->text = '';
 
     // Construct the Panopto data proxy object.
-    $panoptodata = new panopto_data($courseid);
+    $panoptodata = new \panopto_data($courseid);
 
     if (empty($panoptodata->servername) || empty($panoptodata->instancename) || empty($panoptodata->applicationkey)) {
         $content->text = get_string('unprovisioned', 'block_panopto');

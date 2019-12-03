@@ -375,7 +375,7 @@ class panopto_data {
                     );
 
                     if (isset($targetcategory) && !empty($targetcategory)) {
-                        $categorydata = new panopto_category_data($targetcategory, $this->servername, $this->applicationkey);
+                        $categorydata = new \panopto_category_data($targetcategory, $this->servername, $this->applicationkey);
 
                         $newcategories = $categorydata->ensure_category_branch(false, $this);
                     }
@@ -563,7 +563,7 @@ class panopto_data {
             self::add_new_course_import($this->moodlecourseid, $newimportid);
         }
 
-        $importpanopto = new panopto_data($newimportid);
+        $importpanopto = new \panopto_data($newimportid);
         $provisioninginfo = $this->get_provisioning_info();
 
         if (!isset($importpanopto->sessiongroupid)) {
@@ -686,7 +686,7 @@ class panopto_data {
             foreach ($currentcourses as $course) {
                 $coursecontext = context_course::instance($course->id);
 
-                $coursepanopto = new panopto_data($course->id);
+                $coursepanopto = new \panopto_data($course->id);
 
                 // Check to see if we are already going to provision a specific Panopto server, if we are just add the groups to the already made array
                 // If not add the server to the list of servers.

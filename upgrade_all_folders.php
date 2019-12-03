@@ -65,11 +65,11 @@ require_login();
  */
 function update_upgrade_progress($currentprogress, $totalitems, $progressstep = null) {
     if (isset($progressstep) && !empty($progressstep)) {
-        panopto_data::print_log('Now beginning the step: ' . $progressstep);
+        \panopto_data::print_log('Now beginning the step: ' . $progressstep);
     }
 
     if ($currentprogress > 0) {
-        panopto_data::print_log('Processing folder ' . $currentprogress . ' out of ' . $totalitems);
+        \panopto_data::print_log('Processing folder ' . $currentprogress . ' out of ' . $totalitems);
     }
 }
 
@@ -81,7 +81,7 @@ function upgrade_all_panopto_folders() {
     global $DB;
 
     $defaultmaxtime = ini_get('max_execution_time');
-    panopto_data::print_log(print_r($defaultmaxtime, true));
+    \panopto_data::print_log(print_r($defaultmaxtime, true));
 
     $twohoursinseconds = 7200;
 
@@ -102,7 +102,7 @@ function upgrade_all_panopto_folders() {
 
     $panoptocourseobjects = array();
 
-    $getunamepanopto = new panopto_data(null);
+    $getunamepanopto = new \panopto_data(null);
     $errorstring = get_string('upgrade_provision_access_error', 'block_panopto', $getunamepanopto->panopto_decorate_username($getunamepanopto->uname));
     $versionerrorstring = get_string('upgrade_panopto_required_version', 'block_panopto');
 
@@ -111,7 +111,7 @@ function upgrade_all_panopto_folders() {
         update_upgrade_progress($currindex, $totalupgradesteps);
 
         $oldpanoptocourse = new stdClass;
-        $oldpanoptocourse->panopto = new panopto_data($oldcourse->moodleid);
+        $oldpanoptocourse->panopto = new \panopto_data($oldcourse->moodleid);
 
         $existingmoodlecourse = $DB->get_record('course', array('id' => $oldcourse->moodleid));
 
@@ -146,8 +146,8 @@ function upgrade_all_panopto_folders() {
             }
         } else {
             // Shouldn't hit this case, but in the case a row in the DB has invalid data move it to the old_foldermap.
-            panopto_data::print_log(get_string('removing_corrupt_folder_row', 'block_panopto', $oldcourse->moodleid));
-            panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
+            \panopto_data::print_log(get_string('removing_corrupt_folder_row', 'block_panopto', $oldcourse->moodleid));
+            \panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
             // Continue to the next entry assuming this one was cleanup.
             continue;
         }
@@ -167,16 +167,16 @@ function upgrade_all_panopto_folders() {
                $oldpanoptocourse->provisioninginfo->couldnotfindmappedfolder === true) {
                 // Course was mapped to a folder but that folder was not found, most likely folder was deleted on Panopto side.
                 // The true parameter moves the row to the old_foldermap instead of deleting it.
-                panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
+                \panopto_data::delete_panopto_relation($oldcourse->moodleid, true);
 
                 //Recreate the default role mappings that were deleted by the above line.
                 $oldpanoptocourse->panopto->check_course_role_mappings();
 
                 // Imports SHOULD still work for this case, so continue to below code.
             }
-            $courseimports = panopto_data::get_import_list($oldpanoptocourse->panopto->moodlecourseid);
+            $courseimports = \panopto_data::get_import_list($oldpanoptocourse->panopto->moodlecourseid);
             foreach ($courseimports as $courseimport) {
-                $importpanopto = new panopto_data($courseimport);
+                $importpanopto = new \panopto_data($courseimport);
 
 
                 $existingmoodlecourse = $DB->get_record('course', array('id' => $courseimport));
@@ -194,12 +194,12 @@ function upgrade_all_panopto_folders() {
                     } else if (!isset($importpanoptofolder) || $importpanoptofolder === -1) {
                         // In this case the folder was not found, not an access issue. Most likely the folder was deleted and this is an old entry.
                         // Move the entry to the old_foldermap so user still has a reference.
-                        panopto_data::delete_panopto_relation($courseimport, true);
+                        \panopto_data::delete_panopto_relation($courseimport, true);
                         // We can still continue on with the upgrade, assume this was an old entry that was deleted from Panopto side.
                     }
                 } else {
-                    panopto_data::print_log(get_string('removing_corrupt_folder_row', 'block_panopto', $courseimport));
-                    panopto_data::delete_panopto_relation($courseimport, true);
+                    \panopto_data::print_log(get_string('removing_corrupt_folder_row', 'block_panopto', $courseimport));
+                    \panopto_data::delete_panopto_relation($courseimport, true);
                     // Continue to the next entry assuming this one was cleanup.
                     continue;
                 }
@@ -221,7 +221,7 @@ function upgrade_all_panopto_folders() {
         $provisioneddata = $mappablecourse->panopto->provision_course($provisioningdata, true);
         include('views/provisioned_course.html.php');
 
-        $courseimports = panopto_data::get_import_list($mappablecourse->panopto->moodlecourseid);
+        $courseimports = \panopto_data::get_import_list($mappablecourse->panopto->moodlecourseid);
         foreach ($courseimports as $importedcourse) {
             $mappablecourse->panopto->init_and_sync_import($importedcourse);
         }

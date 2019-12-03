@@ -61,7 +61,7 @@ class panopto_unprovision_form extends moodleform {
         
         // Get all categories with no children (all leaf nodes)
         $coursesraw = $DB->get_records_sql(
-            'SELECT id, shortname, fullname FROM mdl_course WHERE id IN (SELECT moodleid FROM mdl_block_panopto_foldermap)'
+            'SELECT id, shortname, fullname FROM {course} WHERE id IN (SELECT moodleid FROM {block_panopto_foldermap})'
         );
         $courses = array();
         if ($coursesraw) {
@@ -146,7 +146,7 @@ if ($mform->is_cancelled()) {
             }
 
             // Set the current Moodle course to retrieve info for / unprovision.
-            $panoptodata = new panopto_data($courseid);
+            $panoptodata = new \panopto_data($courseid);
             $unprovisioninginfo = $panoptodata->get_provisioning_info();
             $unprovisionwassuccess = $panoptodata->unprovision_course();
             

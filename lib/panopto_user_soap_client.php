@@ -109,7 +109,7 @@ class panopto_user_soap_client extends SoapClient {
 
         // Returns false if the call failed.
         if (!$this->usermanagementservicesync->SyncExternalUser($syncparamsobject)) {
-            panopto_data::print_log(print_r($this->usermanagementservicesync->getLastError(), true));
+            \panopto_data::print_log(print_r($this->usermanagementservicesync->getLastError(), true));
         }
     }
 
@@ -135,7 +135,7 @@ class panopto_user_soap_client extends SoapClient {
             $result = $this->usermanagementserviceget->getResult()->GetUserByKeyResult;
         } else {
             $lasterror = $this->usermanagementserviceget->getLastError()['UserManagementServiceGet::GetUserByKey'];
-            panopto_data::print_log(print_r($lasterror, true));
+            \panopto_data::print_log(print_r($lasterror, true));
             throw $lasterror;
         }
         return $result;
@@ -188,7 +188,7 @@ class panopto_user_soap_client extends SoapClient {
         if ($this->usermanagementservicecreate->CreateUser($createuserparams)) {
             $result = $this->usermanagementservicecreate->getResult();
         } else {
-            panopto_data::print_log(print_r($this->usermanagementservicecreate->getLastError(), true));
+            \panopto_data::print_log(print_r($this->usermanagementservicecreate->getLastError(), true));
         }
 
         return $result;
@@ -224,7 +224,7 @@ class panopto_user_soap_client extends SoapClient {
             $result = $this->usermanagementserviceupdate->getResult();
         } else {
             $lasterror = $this->usermanagementserviceupdate->getLastError()['UserManagementServiceUpdate::UpdateContactInfo'];
-            panopto_data::print_log(print_r($lasterror, true));
+            \panopto_data::print_log(print_r($lasterror, true));
             throw $lasterror;
         }
 
@@ -252,7 +252,7 @@ class panopto_user_soap_client extends SoapClient {
         if ($this->usermanagementservicedelete->DeleteUsers($deleteusersparams)) {
             $result = $this->usermanagementservicedelete->getResult();
         } else {
-            panopto_data::print_log(print_r($this->usermanagementservicedelete->getLastError(), true));
+            \panopto_data::print_log(print_r($this->usermanagementservicedelete->getLastError(), true));
         }
 
         return $result;

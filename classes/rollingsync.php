@@ -103,8 +103,8 @@ class block_panopto_rollingsync {
             $newcourseid = intval($event->courseid);
             $originalcourseid = intval($event->other['originalcourseid']);
 
-            $panoptodata = new panopto_data($newcourseid);
-            $originalpanoptodata = new panopto_data($originalcourseid);
+            $panoptodata = new \panopto_data($newcourseid);
+            $originalpanoptodata = new \panopto_data($originalcourseid);
 
             // We should only perform the import if both the target and the source course are provisioned in panopto
             if (isset($panoptodata->servername) && !empty($panoptodata->servername) &&

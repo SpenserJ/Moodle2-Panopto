@@ -103,7 +103,7 @@ if ($mform->is_cancelled()) {
     redirect(new moodle_url($returnurl));
 } else {
 
-    $panoptodata = new panopto_data($courseid);
+    $panoptodata = new \panopto_data($courseid);
     $unprovisioninginfo = $panoptodata->get_provisioning_info();
     $unprovisionwassuccess = $panoptodata->unprovision_course();
 

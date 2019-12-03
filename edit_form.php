@@ -45,7 +45,7 @@ class block_panopto_edit_form extends block_edit_form {
         global $COURSE, $CFG;
 
         // Construct the Panopto data proxy object.
-        $panoptodata = new panopto_data($COURSE->id);
+        $panoptodata = new \panopto_data($COURSE->id);
 
         if (!empty($panoptodata->servername) && !empty($panoptodata->instancename) && !empty($panoptodata->applicationkey)) {
             $mform->addElement('header', 'configheader', get_string('block_edit_header', 'block_panopto'));

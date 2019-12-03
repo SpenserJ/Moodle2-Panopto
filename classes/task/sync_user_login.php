@@ -54,7 +54,7 @@ class sync_user_login extends \core\task\adhoc_task {
                 $serverpanopto->sync_external_user($eventdata['userid']);
             }
         } catch (Exception $e) {
-            panopto_data::print_log(print_r($e->getMessage(), true));
+            \panopto_data::print_log(print_r($e->getMessage(), true));
         }
     }
 }

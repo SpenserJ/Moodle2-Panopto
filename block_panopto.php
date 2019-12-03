@@ -83,25 +83,25 @@ class block_panopto extends block_base {
             $creatorroles = (isset($data->creator)) ? $data->creator : array();
 
             // Get the current role mappings set for the current course from the db.
-            $mappings = panopto_data::get_course_role_mappings($this->page->course->id);
+            $mappings = \panopto_data::get_course_role_mappings($this->page->course->id);
 
             $oldcreators = array_diff($mappings['creator'], $creatorroles);
             $oldpublishers = array_diff($mappings['publisher'], $publisherroles);
 
             // Make sure the old unassigned roles get unset.
-            panopto_data::unset_course_role_permissions(
+            \panopto_data::unset_course_role_permissions(
                 $this->page->course->id,
                 $oldpublishers,
                 $oldcreators
             );
 
-            panopto_data::set_course_role_permissions(
+            \panopto_data::set_course_role_permissions(
                 $this->page->course->id,
                 $publisherroles,
                 $creatorroles
             );
 
-            $panoptodata = new panopto_data($this->page->course->id);
+            $panoptodata = new \panopto_data($this->page->course->id);
 
             // Manually overwrite the sessiongroupid on this Panopto_Data instance so we can test provision the attempted new mapping. If the provision fails do not allow it.
             //  Provision could fail if the user attempts to provision a personal folder.
@@ -110,7 +110,7 @@ class block_panopto extends block_base {
             $provisioninginfo = $panoptodata->get_provisioning_info();
             $provisioneddata = $panoptodata->provision_course($provisioninginfo, false);
             if (isset($provisioneddata->Id) && !empty($provisioneddata->Id)) {
-                panopto_data::set_panopto_course_id($this->page->course->id, $data->course);
+                \panopto_data::set_panopto_course_id($this->page->course->id, $data->course);
             }
         }
     }

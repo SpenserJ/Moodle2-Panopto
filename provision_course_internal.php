@@ -137,7 +137,7 @@ if ($mform->is_cancelled()) {
     if (isset($selectedserver) && !empty($selectedserver) &&
         isset($selectedkey) && !empty($selectedkey)) {
 
-        $panoptodata = new panopto_data($courseid);
+        $panoptodata = new \panopto_data($courseid);
 
         if (!isset($panoptodata->servername) || empty($panoptodata->servername) ||
             ($panoptodata->servername !== $selectedserver)) {
@@ -168,7 +168,7 @@ if ($mform->is_cancelled()) {
         $selectedserver = trim($aserverarray[$key[0]]);
         $selectedkey = trim($appkeyarray[$key[0]]);
 
-        $panoptodata = new panopto_data($courseid);
+        $panoptodata = new \panopto_data($courseid);
 
         // If we are not using the same server remove the folder ID reference.
         // NOTE: A Moodle course can only point to one Panopto server at a time.
@@ -187,7 +187,7 @@ if ($mform->is_cancelled()) {
         include('views/provisioned_course.html.php');
         echo "<a href='$returnurl'>" . get_string('back_to_course', 'block_panopto') . '</a>';
     } else {
-        $panoptodata = new panopto_data($courseid);
+        $panoptodata = new \panopto_data($courseid);
         if (in_array($panoptodata->servername, $aserverarray)) {
             $provisioningdata = $panoptodata->get_provisioning_info();
             $provisioneddata = $panoptodata->provision_course($provisioningdata, false);
