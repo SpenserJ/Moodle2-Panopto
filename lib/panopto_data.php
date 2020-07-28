@@ -28,7 +28,9 @@ if (empty($CFG)) {
     require_once('../../config.php');
 }
 
+require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->libdir . '/dmllib.php');
+require_once($CFG->libdir .'/filelib.php');
 require_once(dirname(__FILE__) . '/block_panopto_lib.php');
 require_once(dirname(__FILE__) . '/panopto_category_data.php');
 require_once(dirname(__FILE__) . '/panopto_auth_soap_client.php');
@@ -90,6 +92,11 @@ class panopto_data {
     public $uname;
 
     /**
+     * @var string $currentcoursename The name of the current course in Panopto folder name format 
+     */
+    public $currentcoursename;
+
+    /**
      * @var int $maxloglength the maximum length we will allow logs to be when adding a log to Panopto.
      */
     private static $maxloglength = 1500;
@@ -111,13 +118,23 @@ class panopto_data {
     public static $unprovisionrequiredpanoptoversion = '7.0.0';
 
     /**
-     * @var string $requiredpanoptoversion Any block_panopto newer than 2017061000 will require a Panopto server to be at least this version to succeed.
+     * @return returns an array of possible values for the Panopt folder name style
      */
     public static function getpossiblefoldernamestyles() {
         return array(
             'fullname' => get_string('name_style_fullname', 'block_panopto'),
             'shortname' => get_string('name_style_shortname', 'block_panopto'),
             'combination' => get_string('name_style_combination', 'block_panopto')
+        );
+    }
+    /**
+     * @return
+     */
+    public static function getpossiblessosynctypes() {
+        return array(
+            'nosync' => get_string('sso_type_nosync', 'block_panopto'),
+            'sync' => get_string('sso_type_sync', 'block_panopto'),
+            'asyncsync' => get_string('sso_type_asyncsync', 'block_panopto')
         );
     }
 
@@ -142,7 +159,7 @@ class panopto_data {
         // Get servername and application key specific to Moodle course if ID is specified.
         if (isset($moodlecourseid) && !empty($moodlecourseid)) {
             $this->servername = self::get_panopto_servername($moodlecourseid);
-            $this->applicationkey = get_panopto_app_key($this->servername);
+            $this->applicationkey = panopto_get_app_key($this->servername);
 
             $this->moodlecourseid = $moodlecourseid;
             $this->sessiongroupid = self::get_panopto_course_id($moodlecourseid);
@@ -213,7 +230,7 @@ class panopto_data {
     public function ensure_session_manager() {
         // If no session soap client exists instantiate one.
         if (!isset($this->sessionmanager)) {
-            $this->sessionmanager = instantiate_panopto_session_soap_client(
+            $this->sessionmanager = panopto_instantiate_session_soap_client(
                 $this->uname,
                 $this->servername,
                 $this->applicationkey
@@ -232,7 +249,7 @@ class panopto_data {
         // If no session soap client exists instantiate one.
         if (!isset($this->authmanager)) {
             // If no auth soap client for this instance, instantiate one.
-            $this->authmanager = instantiate_panopto_auth_soap_client(
+            $this->authmanager = panopto_instantiate_auth_soap_client(
                 $this->uname,
                 $this->servername,
                 $this->applicationkey
@@ -254,7 +271,7 @@ class panopto_data {
         if (!isset($this->usermanager) || ($this->usermanager->authparam->UserKey !== $this->panopto_decorate_username($usertomanage))) {
 
             // If no auth soap client for this instance, instantiate one.
-            $this->usermanager = instantiate_panopto_user_soap_client(
+            $this->usermanager = panopto_instantiate_user_soap_client(
                 $usertomanage,
                 $this->servername,
                 $this->applicationkey
@@ -274,10 +291,10 @@ class panopto_data {
     public function provision_course($provisioninginfo, $skipusersync) {
         global $CFG, $USER, $DB;
 
-        self::print_log_verbose(get_string('attempt_provision_course', 'block_panopto', $provisioninginfo->externalcourseid));
-
         if (isset($provisioninginfo->fullname) && !empty($provisioninginfo->fullname) &&
             isset($provisioninginfo->externalcourseid) && !empty($provisioninginfo->externalcourseid)) {
+
+            self::print_log_verbose(get_string('attempt_provision_course', 'block_panopto', $provisioninginfo->externalcourseid));
 
             $this->ensure_session_manager();
 
@@ -297,14 +314,7 @@ class panopto_data {
                 );
             }
 
-            if (isset($courseinfo) && isset($courseinfo->Id)) {
-
-                // If sync on provisioning is set we should keep a list of who was synced and display that
-                $courseinfo->viewers = array();
-                $courseinfo->creators = array();
-                $courseinfo->publishers = array();
-
-                self::print_log_verbose(get_string('provision_successful', 'block_panopto', $this->sessiongroupid));
+            if (isset($courseinfo->Id) && !isset($courseinfo->errormessage)) {
 
                 // Store the Panopto folder Id in the foldermap table so we know it exists.
                 self::set_course_foldermap(
@@ -316,6 +326,8 @@ class panopto_data {
                 );
 
                 $this->sessiongroupid = $courseinfo->Id;
+
+                self::print_log_verbose(get_string('provision_successful', 'block_panopto', $this->moodlecourseid));
 
                 $this->ensure_auth_manager();
 
@@ -333,9 +345,12 @@ class panopto_data {
                 );
 
                 $coursecontext = context_course::instance($this->moodlecourseid);
-                $syncafterprovisioning = get_config('block_panopto', 'sync_after_provisioning');
-                
                 $enrolledusers = get_enrolled_users($coursecontext);
+
+                $courseinfo->viewers = array();
+                $courseinfo->creators = array();
+                $courseinfo->publishers = array();
+                
                 // sync every user enrolled in the course
                 foreach ($enrolledusers as $enrolleduser) {
                     $userrole = self::get_role_from_context($coursecontext, $enrolleduser->id);
@@ -351,12 +366,11 @@ class panopto_data {
                     } else {
                         $courseinfo->viewers[] = $panoptousername;
                     }
+                }
 
-
-                    // syncs every user enrolled in the course, this is fairly expensive so it should be normally turned off.
-                    if ($syncafterprovisioning) {
-                        $this->sync_external_user($enrolleduser->id);
-                    }
+                // syncs every user enrolled in the course, this is fairly expensive so it should be normally turned off.
+                if (get_config('block_panopto', 'sync_after_provisioning')) {
+                    $this->sync_external_user($enrolleduser->id);
                 }
 
                 if (!$skipusersync && $this->uname !== 'guest') {
@@ -384,19 +398,9 @@ class panopto_data {
 
                 $provisionresponse = $courseinfo;
                 // Give the user some basic info they can use to debug or send to AE.
-                $courseinfo = new stdClass;
                 $courseinfo->moodlecourseid = $this->moodlecourseid;
                 $courseinfo->servername = $this->servername;
                 $courseinfo->applicationkey = $this->applicationkey;
-
-                // If the provisioning attempted to target a personal folder let the user know.
-                if ($provisionresponse === panopto_session_soap_client::PERSONAL_FOLDER_ERROR) {
-                    $courseinfo->provisionedpersonalfolder = true;
-                } else {
-                    // Currently the only other known failure from this state would be the Panopto server not being new enough.
-                    $courseinfo->missingrequiredversion = true;
-                    $courseinfo->requiredpanoptoversion = self::$requiredpanoptoversion;
-                }
             }
         } else {
             // Give the user some basic info they can use to debug or send to AE.
@@ -477,22 +481,22 @@ class panopto_data {
             $mappedpanoptocourse = $this->get_folders_by_id_no_sync();
         }
 
-        // The get_folders_by_id api wrapper returns -1 if the api returns a folder not found error.
-        $foundmappedfolder = isset($mappedpanoptocourse) && ($mappedpanoptocourse !== -1);
-
-        // The get_folders_by_id api wrapper returns false if the api call got a user has no access error.
-        $userhasaccesstofolder = $foundmappedfolder && ($mappedpanoptocourse !== false);
-
-        if ($userhasaccesstofolder) {
+        if (isset($mappedpanoptocourse) && !empty($mappedpanoptocourse->Name)) {
             $provisioninginfo->sessiongroupid = $this->sessiongroupid;
             $provisioninginfo->fullname = $mappedpanoptocourse->Name;
-        } else if ($foundmappedfolder && !$userhasaccesstofolder) {
-            // API call returned false, course exists but the user does not have access to the folder.
-            self::print_log(get_string('provision_access_error', 'block_panopto'));
+
+        } 
+        else if (isset($mappedpanoptocourse) && 
+                 isset($mappedpanoptocourse->noaccess) && 
+                 $mappedpanoptocourse->noaccess == true) {
+
             $provisioninginfo->accesserror = true;
             return $provisioninginfo;
         } else {
-            if ($hasvalidpanoptoid && !$foundmappedfolder) {
+            if (isset($mappedpanoptocourse) && 
+                isset($mappedpanoptocourse->notfound) && 
+                $mappedpanoptocourse->notfound == true) {
+
                 // If we had a sessiongroupid set from a previous folder, but that folder was not found on Panopto.
                 // Set the current sessiongroupid to null to allow for a fresh provisioning/folder.
                 // Provisioning will fail if this is not done, the wrong API endpoint will be called.
@@ -513,32 +517,69 @@ class panopto_data {
                 array('id' => $this->moodlecourseid)
             );
 
-            if (!isset($provisioninginfo->shortname) || empty($provisioninginfo->shortname)) {
-                $provisioninginfo->shortname = substr($provisioninginfo->longname, 0, 5);
-            }
-
-            $provisioninginfo->fullname = '';
-
-            $selectednamestyle = get_config('block_panopto', 'folder_name_style');
-
-            switch ($selectednamestyle) {
-                case 'combination':
-                    $provisioninginfo->fullname .= $provisioninginfo->shortname . ': ' . $provisioninginfo->longname;
-                break;
-                case 'shortname':
-                    $provisioninginfo->fullname .= $provisioninginfo->shortname;
-                break;
-                case 'fullname':
-                default:
-                    $provisioninginfo->fullname .= $provisioninginfo->longname;
-                break;
-            }
+            $provisioninginfo->fullname = $this->get_new_folder_name(
+                $provisioninginfo->shortname, 
+                $provisioninginfo->longname
+            );
         }
 
         // Always set this, even in the case of an already existing folder we will overwrite the old Id with this one.
         $provisioninginfo->externalcourseid = $this->instancename . ':' . $this->moodlecourseid;
 
         return $provisioninginfo;
+    }
+
+    /**
+     * Renamed the associated Panopto folder to match the Moodle course name
+     *
+     */
+    public function update_folder_name() {
+       $this->ensure_session_manager();
+       return $this->sessionmanager->update_folder_name($this->sessiongroupid, $this->currentcoursename);
+    }
+
+    public function get_new_folder_name($shortname, $longname) {
+        global $DB;
+
+        if (!isset($shortname) || empty($shortname)) {
+            $shortname = $DB->get_field(
+                'course',
+                'shortname',
+                array('id' => $this->moodlecourseid)
+            );
+        }
+
+        if (!isset($longname) || empty($longname)) {
+            $longname = $DB->get_field(
+                'course',
+                'fullname',
+                array('id' => $this->moodlecourseid)
+            );
+        }
+
+        if (!isset($shortname) || empty($shortname)) {
+            $shortname = substr($longname, 0, 5);
+        }
+
+        $fullname = '';
+
+        $selectednamestyle = get_config('block_panopto', 'folder_name_style');
+
+        switch ($selectednamestyle) {
+            case 'combination':
+                $fullname .= $shortname . ': ' . $longname;
+            break;
+            case 'shortname':
+                $fullname .= $shortname;
+            break;
+            case 'fullname':
+            default:
+                $fullname .= $longname;
+            break;
+        }
+
+        $this->currentcoursename = $fullname;
+        return $fullname;
     }
 
     /**
@@ -628,8 +669,7 @@ class panopto_data {
      *
      */
     public function get_folders_by_id_no_sync() {
-        $ret = false;
-
+        
         if (isset($this->sessiongroupid)) {
             $this->ensure_session_manager();
 
@@ -637,7 +677,6 @@ class panopto_data {
 
         } else {
             // In this case the course is not mapped and the folder does not exist.
-            // I think -1 is fitting here. This case is handled differenty than false in our upgrade script.
             $ret = null;
         }
 
@@ -659,6 +698,25 @@ class panopto_data {
         $this->ensure_session_manager();
 
         $ret = $this->sessionmanager->get_folders_list();
+
+        return $ret;
+    }
+
+    /**
+     * Attempts to get all folders the user has creator access to.
+     *
+     */
+    public function get_creator_folders_list() {
+        global $USER;
+        $ret = false;
+
+
+        // Update permissions so user can see everything they should.
+        $this->sync_external_user($USER->id);
+
+        $this->ensure_session_manager();
+
+        $ret = $this->sessionmanager->get_creator_folders_list();
 
         return $ret;
     }
@@ -1225,7 +1283,7 @@ class panopto_data {
     public function get_course_options() {
         global $DB;
 
-        $panoptofolders = $this->get_folders_list();
+        $panoptofolders = $this->get_creator_folders_list();
         if (!empty($panoptofolders)) {
             $options = array();
             foreach ($panoptofolders as $folderinfo) {
@@ -1375,18 +1433,15 @@ class panopto_data {
         if ($url == null) {
             return false;
         }
-        $ch = curl_init($url);
 
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $curl = new \curl();
+        $options = [
+            'CURLOPT_TIMEOUT' => 10,
+            'CURLOPT_CONNECTTIMEOUT' => 10
+        ];
+        $curl->get($url, null, $options);
 
-        $data = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        curl_close($ch);
-
-        if (($httpcode >= 200 && $httpcode < 300) || $httpcode == 302) {
+        if (!$curl->get_errno()) {
             return true;
         } else {
             return false;
@@ -1398,19 +1453,27 @@ class panopto_data {
 
         $logmessage = substr($logmessage, 0, self::$maxloglength);
 
-        if (get_config('block_panopto', 'print_log_to_file')) {
-            file_put_contents($CFG->dirroot . '/PanoptoLogs.txt', $logmessage . "\n", FILE_APPEND);
+        if (CLI_SCRIPT) {
+            cli_writeln($logmessage);
         } else {
-            error_log($logmessage);
+            if (get_config('block_panopto', 'print_log_to_file')) {
+                $currenttime = time();
+                file_put_contents(
+                    $CFG->dirroot . '/PanoptoLogs.txt', date("Y-m-d-h:i:sA", $currenttime) . ": " . $logmessage . "\n", 
+                    FILE_APPEND
+                );
+            } else {
+                error_log($logmessage);
 
-            // These flush's are needed for longer processes like the Moodle upgrade process and import process.
+                // These flush's are needed for longer processes like the Moodle upgrade process and import process.
 
-            // If the oblength are false then there is no active outbut buffer, if we call ob_flush without an output buffer (e.g. from the cli) it will spit out an error. This doesn't break the execution of the script, but it's ugly and a lot of bloat.
-            $obstatus = ob_get_status();
-            if (isset($obstatus) && !empty($obstatus)) {
-                ob_flush();
+                // If the oblength are false then there is no active outbut buffer, if we call ob_flush without an output buffer (e.g. from the cli) it will spit out an error. This doesn't break the execution of the script, but it's ugly and a lot of bloat.
+                $obstatus = ob_get_status();
+                if (isset($obstatus) && !empty($obstatus)) {
+                    ob_flush();
+                }
+                flush();
             }
-            flush();
         }
     }
 

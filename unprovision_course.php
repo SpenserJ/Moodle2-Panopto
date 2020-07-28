@@ -18,7 +18,7 @@
  * the unprovision course logic for Panopto
  *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @copyright  Panopto 2020
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 global $CFG;
@@ -27,59 +27,11 @@ if (empty($CFG)) {
 }
 
 require_once($CFG->libdir . '/formslib.php');
+require_once(dirname(__FILE__) . '/classes/panopto_unprovision_form.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 
 global $courses;
-
-/**
- * Create form for course selection.
- *
- * @copyright  Panopto 2009 - 2015
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class panopto_unprovision_form extends moodleform {
-
-    /**
-     * @var string $title
-     */
-    protected $title = '';
-
-    /**
-     * @var string $description
-     */
-    protected $description = '';
-
-    /**
-     * Defines a Panopto unprovision form
-     */
-    public function definition() {
-
-        global $DB;
-
-        $mform = & $this->_form;
-        
-        // Get all categories with no children (all leaf nodes)
-        $coursesraw = $DB->get_records_sql(
-            'SELECT id, shortname, fullname FROM {course} WHERE id IN (SELECT moodleid FROM {block_panopto_foldermap})'
-        );
-        $courses = array();
-        if ($coursesraw) {
-            foreach ($coursesraw as $course) {
-                $courses[$course->id] = $course->shortname . ': ' . $course->fullname;
-            }
-        }
-        asort($courses);
-
-        $select = $mform->addElement('select', 'courses', get_string('unprovisioncourseselect', 'block_panopto'), $courses);
-        $select->setMultiple(true);
-        $select->setSize(32);
-        $mform->addHelpButton('courses', 'unprovisioncourseselect', 'block_panopto');
-
-        $this->add_action_buttons(true, get_string('unprovision', 'block_panopto'));
-    }
-
-}
 
 require_login();
 

@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains the logic for the unprovision classes form.
+ * This file contains the logic to unprovision classes.
  *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2016 /With contributions from Spenser Jones (sjones@ambrose.edu)
+ * @copyright  Panopto 2020
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -27,6 +27,7 @@ if (empty($CFG)) {
     require_once(dirname(__FILE__) . '/../../config.php');
 }
 require_once($CFG->libdir . '/formslib.php');
+require_once(dirname(__FILE__) . '/classes/panopto_unprovision_course_form.php');
 require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
@@ -39,32 +40,7 @@ $numservers = isset($numservers) ? $numservers : 0;
 // Increment numservers by 1 to take into account starting at 0.
 ++$numservers;
 
-
-/**
- * Create form for server selection.
- *
- * @package block_panopto
- * @copyright  Panopto 2009 - 2015
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class panopto_unprovision_form extends moodleform {
-
-    /**
-     * Defines a Panopto unprovision form
-     */
-    public function definition() {
-
-        global $DB, $aserverarray;
-
-        $mform = & $this->_form;
-
-        $this->add_action_buttons(true, get_string('unprovision', 'block_panopto'));
-    }
-
-}
-
 require_login();
-
 
 // This page requires a course ID to be passed in as a param. If accessed directly without clicking on a link for the course,
 // no id is passed and the script fails. Similarly if no ID is passed with via a link (should never happen) the script will fail.
@@ -80,7 +56,7 @@ $urlparams['return_url'] = $returnurl;
 $PAGE->set_url('/blocks/panopto/unprovision_course_internal.php?id=' . $courseid, $urlparams);
 $PAGE->set_pagelayout('base');
 
-$mform = new panopto_unprovision_form($PAGE->url);
+$mform = new panopto_unprovision_course_form($PAGE->url);
 // Set Moodle page info.
 $unprovisiontitle = get_string('unprovision_courses', 'block_panopto');
 $PAGE->set_title($unprovisiontitle);

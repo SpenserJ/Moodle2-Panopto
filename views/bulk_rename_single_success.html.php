@@ -25,16 +25,11 @@
 
 <div class='block_panopto'>
     <div class='panoptoProcessInformation'>
-        <div class='value'>
-            <?php
-            if (isset($targetcategory->name) && !empty($targetcategory->name)) {
-            ?>
-                <div class='attribute'><?php echo get_string('attribute_target_branch_leaf', 'block_panopto') ?></div>
-                <div class='value'><?php echo $targetcategory->name ?></div>
-            <?php
-            } else {
-            ?>
-                <div class='errorMessage'><?php echo get_string('error_invalid_category_information', 'block_panopto') ?></div>
-            <?php
-            }
-            ?>
+        <div class='attribute'><?php echo get_string('attempted_target_course_id', 'block_panopto') ?></div>
+        <div class='value'><?php echo $currentfoldernamecontainer->moodleid ?></div>
+        <div class='attribute'><?php echo get_string('attribute_original_name', 'block_panopto') ?></div>
+        <div class='value'><?php echo $currentfoldernamecontainer->oldname ?></div>
+        <div class='attribute'><?php echo get_string('attribute_new_name', 'block_panopto') ?></div>
+        <div class='value'><?php echo $currentfoldernamecontainer->newname ?></div>
+    </div>
+</div>

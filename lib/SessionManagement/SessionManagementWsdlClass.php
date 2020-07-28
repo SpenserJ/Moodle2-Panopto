@@ -2,7 +2,7 @@
 /**
  * File for SessionManagementWsdlClass to communicate with SOAP service
  * @package SessionManagement
- * @author WsdlToPhp Team <contact@wsdltophp.com>
+ * @author Panopto
  * @version 20150429-01
  * @date 2017-01-19
  */
@@ -10,7 +10,7 @@
  * SessionManagementWsdlClass to communicate with SOAP service
  *
  * @package SessionManagement
- * @author WsdlToPhp Team <contact@wsdltophp.com>
+ * @author Panopto
  * @version 20150429-01
  * @date 2017-01-19
  */

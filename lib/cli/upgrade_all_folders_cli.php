@@ -15,39 +15,35 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This logic will iterate through all leaf categories in Moodle and build a matching folder branch on Panopto. 
- *  After all branches are ensured then Panopto should have a folder structure that matches the Moodle category structure.
+ * This logic will get a list of all current Panopto folders on a Moodle server then it will go through each folder
+ * and reprovision them and reinitialize the imports to that folders if the user has access to the folder.
+ * This is needed for the Panopto Generation 1 to Generation 2 migration.
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2017 with contributions from Hittesh Ahuja
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define('CLI_SCRIPT', 1);
-global $CFG;
+// Do not require MOODLE_INTERNAL definition since this is a CLI file. 
+
+define('CLI_SCRIPT', true);
+
+global $CFG, $DB;
 if (empty($CFG)) {
     require_once(dirname(__FILE__) . '/../../../../config.php');
 }
 
 require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->libdir . '/formslib.php');
-require_once(dirname(__FILE__) . '/../panopto_category_data.php');
+require_once(dirname(__FILE__) . '/../panopto_data.php');
+require_once(dirname(__FILE__) . '/../block_panopto_bulk_lib.php');
 
 $admin = get_admin();
 if (!$admin) {
-    mtrace("Error: No admin account was found");
+    mtrace(get_string('error_no_admin_account_found', 'block_panopto'));
     die;
 }
-
 \core\session\manager::set_user(get_admin());
-cli_heading(get_string('cli_heading_build_category_structure', 'block_panopto'));
+cli_heading(get_string('bulk_reprovision_start', 'block_panopto'));
 
-function build_panopto_category_structure($params) {
-	if (!isset($params[1]) || !isset($params[2])) {
-		cli_writeln(get_string('cli_category_invalid_arguments', 'block_panopto'));
-	} else {
-    	panopto_category_data::build_category_structure(false, $params[1], $params[2]);
-    }
-}
-
-build_panopto_category_structure($argv);
+panopto_upgrade_all_folders($argv);

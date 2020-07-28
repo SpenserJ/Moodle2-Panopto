@@ -2,14 +2,14 @@
 /**
  * File for the class which returns the class map definition
  * @package UserManagement
- * @author WsdlToPhp Team <contact@wsdltophp.com>
+ * @author Panopto
  * @version 20150429-01
  * @date 2017-01-19
  */
 /**
  * Class which returns the class map definition by the static method UserManagementClassMap::classMap()
  * @package UserManagement
- * @author WsdlToPhp Team <contact@wsdltophp.com>
+ * @author Panopto
  * @version 20150429-01
  * @date 2017-01-19
  */

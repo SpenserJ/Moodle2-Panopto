@@ -13,24 +13,26 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
- * the template used to display when we begin processing 
+ * Create form for server selection for per course provisioning
  *
  * @package block_panopto
- * @copyright  Panopto 2009 - 2017
+ * @copyright  Panopto 2020
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-?>
-            <?php if (!$hasvalidpanoptoversion) { ?>
-<div class='block_panopto'>
-    <div class='panoptoProcessInformation'>
-        <div class='value'>
-            <div class='errorMessage'><?php echo get_string('categories_need_newer_panopto', 'block_panopto', $panoptoversioninfo) ?></div>
-            <?php } else { ?>
-            <div class='attribute'><?php echo get_string('attribute_ensure_branch_failed', 'block_panopto') ?></div>
-            <div class='value'><?php echo get_string('failed_to_ensure_category_branch', 'block_panopto') ?></div>
-            <?php } ?>
-        </div>
-    </div>
-</div>
+class panopto_provision_course_form extends moodleform {
+
+    /**
+     * Defines a Panopto provision form
+     */
+    public function definition() {
+
+        global $DB, $aserverarray;
+
+        $mform = & $this->_form;
+
+        $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
+
+        $this->add_action_buttons(true, get_string('provision', 'block_panopto'));
+    }
+}

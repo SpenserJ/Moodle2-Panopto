@@ -65,16 +65,22 @@ try {
             if (!$panoptodata->sessiongroupid) {
                 $content->text = get_string('no_course_selected', 'block_panopto');
             } else if (!\panopto_data::is_server_alive('https://' . $panoptodata->servername . '/Panopto')) {
-                \panopto_data::print_log(get_string('server_not_available', 'block_panopto', $panoptodata->servername));
-                $content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
+                $servernotavailableestring = get_string('server_not_available', 'block_panopto', $panoptodata->servername);
+                \panopto_data::print_log($servernotavailableestring);
+                $content->text .= "<span class='error'>" . $servernotavailableestring . '</span>';
             } else {
                 // We can get by external_id but there is no point because atm it calls this method redundantly anyway.
                 $courseinfo = $panoptodata->get_folders_by_id();
 
-                // Panopto course folder was deleted, or an exception was thrown while retrieving course data.
-                if (!isset($courseinfo) || !$courseinfo || $courseinfo === -1) {
-                    $content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
-                } else {
+                if (isset($courseinfo->noaccess) && $courseinfo->noaccess == true) {
+                    // The user did not have access to the Panopto content.
+                    $content->text .= "<span class='error'>" . get_string('no_access', 'block_panopto') . '</span>';
+                } 
+                else if (!empty($courseinfo->errormessage)) { 
+                    // We failed for some other reason, display the error. 
+                    $content->text .= "<span class='error'>" . $courseinfo->errormessage . '</span>';
+                } 
+                else {
                     // SSO form passes instance name in POST to keep URLs portable.
                     $content->text .= "<form name='SSO' method='post'>" .
                         "<input type='hidden' name='instance' value='$panoptodata->instancename' /></form>";
@@ -216,12 +222,11 @@ try {
                 }
             }
         } catch (Exception $e) {
-            $content->text .= "<br><span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
+            $content->text .= "<span class='error'>" . get_string('error_retrieving', 'block_panopto') . '</span>';
+            \panopto_data::print_log($e->getMessage());
         }
 
         $content->footer = '';
-
-
         echo $content->text;
     }
 } catch (Exception $e) {

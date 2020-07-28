@@ -28,48 +28,43 @@
         <div class='value'>
             <?php
             if (!empty($provisioneddata)) {
-                if (isset($provisioneddata->accesserror) && $provisioneddata->accesserror === true) {
+                if (!empty($provisioneddata->errormessage)) {
+                ?>
+                    <div class='errorMessage'>
+                        <?php echo $provisioneddata->errormessage ?>
+                    </div>
+                    <br />
+                    <div class='attribute'><?php echo get_string('attempted_moodle_course_id', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioneddata->moodlecourseid ?></div>
+                    <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
+                    <div class='value'><?php echo $provisioneddata->servername ?></div>
+                <?php
+                } 
+                else if (isset($provisioneddata->accesserror) && $provisioneddata->accesserror === true) {
                 ?>
                     <div class='errorMessage'>
                         <?php echo get_string('provision_access_error', 'block_panopto') ?>
                     </div>
+                    <br />
                     <div class='attribute'><?php echo get_string('attempted_moodle_course_id', 'block_panopto') ?></div>
                     <div class='value'><?php echo $provisioneddata->moodlecourseid ?></div>
                     <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
                     <div class='value'><?php echo $provisioneddata->servername ?></div>
                 <?php
-                } else if (isset($provisioneddata->unknownerror) && $provisioneddata->unknownerror === true) {
+                } 
+                else if (isset($provisioneddata->unknownerror) && $provisioneddata->unknownerror === true) {
                 ?>
                     <div class='errorMessage'>
                         <?php echo get_string('provision_error', 'block_panopto') ?>
                     </div>
-                    <div class='attribute'><?php echo get_string('attempted_moodle_course_id', 'block_panopto') ?></div>
-                    <div class='value'><?php echo $provisioneddata->moodlecourseid ?></div>
-                    <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
-                    <div class='value'><?php echo $provisioneddata->servername ?></div>                <?php
-                } else if (isset($provisioneddata->missingrequiredversion) && $provisioneddata->missingrequiredversion === true) {
-                ?>
-                    <div class='errorMessage'>
-                        <?php echo get_string('missing_required_version', 'block_panopto') ?>
-                    </div>
-                    <div class='attribute'><?php echo get_string('require_panopto_version_title', 'block_panopto') ?></div>
-                    <div class='value'><?php echo $provisioneddata->requiredpanoptoversion ?></div>
+                    <br />
                     <div class='attribute'><?php echo get_string('attempted_moodle_course_id', 'block_panopto') ?></div>
                     <div class='value'><?php echo $provisioneddata->moodlecourseid ?></div>
                     <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
                     <div class='value'><?php echo $provisioneddata->servername ?></div>
                 <?php
-                }  else if (isset($provisioneddata->provisionedpersonalfolder) && $provisioneddata->provisionedpersonalfolder === true) {
-                ?>
-                    <div class='errorMessage'>
-                        <?php echo get_string('attempted_provisioning_personal_folder', 'block_panopto') ?>
-                    </div>
-                    <div class='attribute'><?php echo get_string('attempted_moodle_course_id', 'block_panopto') ?></div>
-                    <div class='value'><?php echo $provisioneddata->moodlecourseid ?></div>
-                    <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
-                    <div class='value'><?php echo $provisioneddata->servername ?></div>
-                <?php
-                } else {
+                }
+                else {
                 ?>
                     <div class='attribute'><?php echo get_string('course_name', 'block_panopto') ?></div>
                     <div class='value'><?php echo $provisioningdata->fullname ?></div>

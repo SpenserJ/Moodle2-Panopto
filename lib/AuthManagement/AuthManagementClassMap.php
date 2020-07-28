@@ -2,14 +2,14 @@
 /**
  * File for the class which returns the class map definition
  * @package AuthManagement
- * @author WsdlToPhp Team <contact@wsdltophp.com>
+ * @author Panopto
  * @version 20150429-01
  * @date 2017-05-25
  */
 /**
  * Class which returns the class map definition by the static method AuthManagementClassMap::classMap()
  * @package AuthManagement
- * @author WsdlToPhp Team <contact@wsdltophp.com>
+ * @author Panopto
  * @version 20150429-01
  * @date 2017-05-25
  */

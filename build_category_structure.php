@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * the form wrapper used to build the Moodle category structure on Panopto
+ * the code used to build the Moodle category structure on Panopto
  *
  * @package block_panopto
  * @copyright  Panopto 2009 - 2017
@@ -27,6 +27,7 @@ if (empty($CFG)) {
 }
 
 require_once($CFG->libdir . '/formslib.php');
+require_once(dirname(__FILE__) . '/classes/panopto_build_category_structure_form.php');
 require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 require_once(dirname(__FILE__) . '/lib/panopto_category_data.php');
@@ -47,8 +48,8 @@ for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
     $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
     $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
 
-    $hasservername = !is_null_or_empty_string($thisservername);
-    if ($hasservername && !is_null_or_empty_string($thisappkey)) {
+    $hasservername = !panopto_is_string_empty($thisservername);
+    if ($hasservername && !panopto_is_string_empty($thisappkey)) {
         $aserverarray[$serverwalker - 1] = $thisservername;
         $appkeyarray[$serverwalker - 1] = $thisappkey;
     }
@@ -61,35 +62,6 @@ if (count($aserverarray) == 1) {
     $key = array_keys($aserverarray);
     $selectedserver = trim($aserverarray[$key[0]]);
     $selectedkey = trim($appkeyarray[$key[0]]);
-}
-
-class panopto_build_category_structure_form extends moodleform {
-
-    /**
-     * @var string $title
-     */
-    protected $title = '';
-
-    /**
-     * @var string $description
-     */
-    protected $description = '';
-
-    /**
-     * Defines a Panopto build category structure form
-     */
-    public function definition() {
-
-        global $DB;
-        global $aserverarray;
-
-        $mform = & $this->_form;
-
-        $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
-        $mform->addHelpButton('servers', 'select_server', 'block_panopto');
-
-        $this->add_action_buttons(true, get_string('begin_building_category_structure', 'block_panopto'));
-    }
 }
 
 require_login();

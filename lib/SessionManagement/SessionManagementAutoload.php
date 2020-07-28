@@ -2,13 +2,13 @@
 /**
  * File to load generated classes once at once time
  * @package SessionManagement
- * @author WsdlToPhp Team <contact@wsdltophp.com>
+ * @author Panopto
  * @version 20150429-01
  * @date 2017-01-19
  */
 /**
  * Includes for all generated classes files
- * @author WsdlToPhp Team <contact@wsdltophp.com>
+ * @author Panopto
  * @version 20150429-01
  * @date 2017-01-19
  */

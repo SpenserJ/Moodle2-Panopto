@@ -75,7 +75,7 @@ class panopto_auth_soap_client extends SoapClient {
             $apiuseruserkey
         );
 
-        $this->serviceparams = generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.2/Auth.svc?singlewsdl');
+        $this->serviceparams = panopto_generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.2/Auth.svc?singlewsdl');
 
     }
 

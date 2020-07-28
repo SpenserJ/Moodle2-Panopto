@@ -87,13 +87,12 @@ class panopto_session_soap_client extends SoapClient {
             $apiuseruserkey
         );
 
-        $this->serviceparams = generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.6/SessionManagement.svc?singlewsdl');
+        $this->serviceparams = panopto_generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.6/SessionManagement.svc?singlewsdl');
     }
 
     // Possibly unneeded since Moodle won't support multiple folders without behavior change.
     public function add_folder($foldername, $parentguids = null, $ispublic = false) {
-        $ret = false;
-
+        
         if (!isset($this->sessionmanagementserviceadd)) {
             $this->sessionmanagementserviceadd = new SessionManagementServiceAdd($this->serviceparams);
         }
@@ -106,12 +105,12 @@ class panopto_session_soap_client extends SoapClient {
         );
 
         if ($this->sessionmanagementserviceadd->AddFolder($folderparams)) {
-            $ret = $this->sessionmanagementserviceadd->getResult();
+            return $this->sessionmanagementserviceadd->getResult();
         } else {
-            \panopto_data::print_log(print_r($this->sessionmanagementserviceadd->getLastError(), true));
+            return $this->handle_error(
+                $this->sessionmanagementserviceadd->getLastError()['SessionManagementServiceAdd::AddFolder']
+            );
         }
-
-        return $ret;
     }
 
     /* 
@@ -120,7 +119,7 @@ class panopto_session_soap_client extends SoapClient {
      * @param int $externalid string the externalId we are finding in Panopto to unmap
      */ 
     public function unprovision_external_course($externalid) {
-        $ret = false;
+        
         if (!isset($this->sessionmanagementserviceunprovision)) {
             $this->sessionmanagementserviceunprovision = new SessionManagementServiceUnprovision($this->serviceparams);
         }
@@ -131,16 +130,16 @@ class panopto_session_soap_client extends SoapClient {
         );
         
         if ($this->sessionmanagementserviceunprovision->UnprovisionExternalCourse($unprovisionexternalcourseparams)) {
-            $ret = $this->sessionmanagementserviceunprovision->getResult()->UnprovisionExternalCourseResult;
+            return  $this->sessionmanagementserviceunprovision->getResult()->UnprovisionExternalCourseResult;
         } else {
-            \panopto_data::print_log(print_r($this->sessionmanagementserviceunprovision->getLastError(), true));
+            return $this->handle_error(
+                $this->sessionmanagementserviceunprovision->getLastError()['SessionManagementServiceUnprovision::UnprovisionExternalCourse']
+            );
         }
-         return $ret;
     }
 
     public function provision_external_course_with_roles($fullname, $externalcourseid) {
-        $ret = false;
-
+        
         if (!isset($this->sessionmanagementserviceprovision)) {
             $this->sessionmanagementserviceprovision = new SessionManagementServiceProvision($this->serviceparams);
         }
@@ -161,17 +160,16 @@ class panopto_session_soap_client extends SoapClient {
 
         if ($this->sessionmanagementserviceprovision->ProvisionExternalCourseWithRoles($provisionparams)) {
             $retobj = $this->sessionmanagementserviceprovision->getResult();
-            $ret = $retobj->ProvisionExternalCourseWithRolesResult;
+            return $retobj->ProvisionExternalCourseWithRolesResult;
         } else {
-            $this->handle_provisioning_error($this->sessionmanagementserviceprovision->getLastError()['SessionManagementServiceProvision::ProvisionExternalCourseWithRoles']);
+            return $this->handle_error(
+                $this->sessionmanagementserviceprovision->getLastError()['SessionManagementServiceProvision::ProvisionExternalCourseWithRoles']
+            );
         }
-
-        return $ret;
     }
 
     public function set_external_course_access_for_roles($fullname, $externalcourseid, $folderids) {
-        $ret = false;
-
+        
         if (!isset($this->sessionmanagementserviceset)) {
             $this->sessionmanagementserviceset = new SessionManagementServiceSet($this->serviceparams);
         }
@@ -200,17 +198,16 @@ class panopto_session_soap_client extends SoapClient {
         if ($this->sessionmanagementserviceset->SetExternalCourseAccessForRoles($courseaccessparams)) {
             $retobj = $this->sessionmanagementserviceset->getResult();
             // We do not support multiple folders per course in Moodle atm so we can assume 1 result.
-            $ret = $retobj->SetExternalCourseAccessForRolesResult->Folder[0];
+            return $retobj->SetExternalCourseAccessForRolesResult->Folder[0];
         } else {
-            $this->handle_provisioning_error($this->sessionmanagementserviceset->getLastError()['SessionManagementServiceSet::SetExternalCourseAccessForRoles']);
+            return $this->handle_error(
+                $this->sessionmanagementserviceset->getLastError()['SessionManagementServiceSet::SetExternalCourseAccessForRoles']
+            );
         }
-
-        return $ret;
     }
 
     public function set_copied_external_course_access_for_roles($fullname, $externalcourseid, $folderids) {
-        $ret = false;
-
+        
         if (!isset($this->sessionmanagementserviceset)) {
             $this->sessionmanagementserviceset = new SessionManagementServiceSet($this->serviceparams);
         }
@@ -238,16 +235,16 @@ class panopto_session_soap_client extends SoapClient {
 
         if ($this->sessionmanagementserviceset->SetCopiedExternalCourseAccessForRoles($copiedaccessparams)) {
             $retobj = $this->sessionmanagementserviceset->getResult();
-            $ret = $retobj->SetCopiedExternalCourseAccessForRolesResult->Folder[0];
+            return $retobj->SetCopiedExternalCourseAccessForRolesResult->Folder[0];
         } else {
-            \panopto_data::print_log(print_r($this->sessionmanagementserviceset->getLastError(), true));
+            return $this->handle_error(
+                $this->sessionmanagementserviceset->getLastError()['SessionManagementServiceSet::SetCopiedExternalCourseAccessForRoles']
+            );
         }
-
-        return $ret;
     }
 
     public function get_folders_by_id($folderids) {
-        $ret = false;
+        
         if (!isset($this->sessionmanagementserviceget)) {
             $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
         }
@@ -261,25 +258,16 @@ class panopto_session_soap_client extends SoapClient {
 
         if ($this->sessionmanagementserviceget->GetFoldersById($getfolderparams)) {
             $retobj = $this->sessionmanagementserviceget->getResult();
-            $ret = $retobj->GetFoldersByIdResult->Folder[0];
+            return $retobj->GetFoldersByIdResult->Folder[0];
         } else {
-            $lasterror = $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetFoldersById'];
-
-            // Parsing error message for not found.
-            if (strpos($lasterror->getMessage(), 'not found') !== false) {
-                // Making ret null since folder was not found.
-                $ret = -1;
-            }
-
-            \panopto_data::print_log(print_r($lasterror, true));
+            return $this->handle_error(
+                $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetFoldersById']
+            );
         }
-
-        return $ret;
     }
 
     public function get_folders_by_external_id($folderids) {
-        $ret = false;
-
+        
         if (!isset($this->sessionmanagementserviceget)) {
             $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
         }
@@ -297,17 +285,105 @@ class panopto_session_soap_client extends SoapClient {
 
         if ($this->sessionmanagementserviceget->GetFoldersByExternalId()) {
             $retobj = $this->sessionmanagementserviceget->getResult();
-            $ret = $retobj->GetFoldersByExternalIdResult->Folder[0];
+            return $retobj->GetFoldersByExternalIdResult->Folder[0];
         } else {
-            \panopto_data::print_log(print_r($this->sessionmanagementserviceget->getLastError(), true));
+            $this->handle_error(
+                $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetFoldersByExternalId']
+            );
         }
 
         return $ret;
     }
 
-    public function get_folders_list() {
-        $result = false;
+    /** 
+     * Attempts to get all folders the user has creator access to.
+     */ 
+    public function get_creator_folders_list() {
+        
+        if (!isset($this->sessionmanagementserviceget)) {
+            $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
+        }
 
+        $resultsperpage = 1000;
+        $currentpage = 0;
+        $pagination = new SessionManagementStructPagination($resultsperpage, $currentpage);
+        $parentfolderid = null;
+        $publiconly = false;
+        $sortby = SessionManagementEnumFolderSortField::VALUE_NAME;
+        $sortincreasing = true;
+        $wildcardsearchnameonly = false;
+
+        $folderlistrequest = new SessionManagementStructListFoldersRequest(
+            $pagination,
+            $parentfolderid,
+            $publiconly,
+            $sortby,
+            $sortincreasing,
+            $wildcardsearchnameonly
+        );
+        $searchquery = null;
+
+        $folderlistparams = new SessionManagementStructGetCreatorFoldersList(
+            $this->authparam,
+            $folderlistrequest,
+            $searchquery
+        );
+
+        if ($this->sessionmanagementserviceget->GetCreatorFoldersList($folderlistparams)) {
+            $retobj = $this->sessionmanagementserviceget->getResult();
+            $totalresults = $retobj->GetCreatorFoldersListResult->TotalNumberResults;
+
+            $folderlist = $retobj->GetCreatorFoldersListResult->Results->Folder;
+
+            if ($totalresults > $resultsperpage) {
+
+                $folderstoget = $totalresults - $resultsperpage;
+                ++$currentpage;
+                while ($folderstoget > 0) {
+                    $pagination = new SessionManagementStructPagination($resultsperpage, $currentpage);
+
+                    $folderlistrequest = new SessionManagementStructListFoldersRequest(
+                        $pagination,
+                        $parentfolderid,
+                        $publiconly,
+                        $sortby,
+                        $sortincreasing,
+                        $wildcardsearchnameonly
+                    );
+
+                    $folderlistparams = new SessionManagementStructGetCreatorFoldersList(
+                        $this->authparam,
+                        $folderlistrequest,
+                        $searchquery
+                    );
+
+                    if ($this->sessionmanagementserviceget->GetCreatorFoldersList($folderlistparams)) {
+                        $retobj = $this->sessionmanagementserviceget->getResult();
+                        $folderlist = array_merge($folderlist, $retobj->GetCreatorFoldersListResult->Results->Folder);
+                    } else {
+                        return $this->handle_error(
+                            $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetCreatorFoldersList']
+                        );
+                    }
+
+                    ++$currentpage;
+                    $folderstoget -= $resultsperpage;
+                }
+            }
+
+            return $folderlist;
+        } else {
+            return $this->handle_error(
+                $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetCreatorFoldersList']
+            );
+        }
+    }
+
+    /** 
+     * Attempts to get all folders the user has access to.
+     */ 
+    public function get_folders_list() {
+        
         if (!isset($this->sessionmanagementserviceget)) {
             $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
         }
@@ -369,8 +445,9 @@ class panopto_session_soap_client extends SoapClient {
                         $retobj = $this->sessionmanagementserviceget->getResult();
                         $folderlist = array_merge($folderlist, $retobj->GetFoldersListResult->Results->Folder);
                     } else {
-                        \panopto_data::print_log(print_r($this->sessionmanagementserviceget->getLastError(), true));
-                        break;
+                        return $this->handle_error(
+                            $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetFoldersList']
+                        );
                     }
 
                     ++$currentpage;
@@ -378,17 +455,16 @@ class panopto_session_soap_client extends SoapClient {
                 }
             }
 
-            $result = $folderlist;
+            return $folderlist;
         } else {
-            \panopto_data::print_log(print_r($this->sessionmanagementserviceget->getLastError(), true));
+            return $this->handle_error(
+                $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetFoldersList']
+            );
         }
-
-        return $result;
     }
 
     public function get_session_list($folderid, $sessionshavespecificorder) {
-        $ret = false;
-
+        
         if (!isset($this->sessionmanagementserviceget)) {
             $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
         }
@@ -427,17 +503,16 @@ class panopto_session_soap_client extends SoapClient {
         );
 
         if ($this->sessionmanagementserviceget->GetSessionsList($getsessionlistparams)) {
-            $ret = $this->sessionmanagementserviceget->getResult()->GetSessionsListResult->Results->Session;
+            return $this->sessionmanagementserviceget->getResult()->GetSessionsListResult->Results->Session;
         } else {
-            \panopto_data::print_log(print_r($this->sessionmanagementserviceget->getLastError(), true));
+            return $this->handle_error(
+                $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetSessionsList']
+            );
         }
-
-        return $ret;
     }
 
     public function ensure_category_branch($categorybranchinfo) {
-        $ret = false;
-
+        
         if (!isset($this->sessionmanagementserviceensure)) {
             $this->sessionmanagementserviceensure = new SessionManagementServiceEnsure($this->serviceparams);
         }
@@ -449,17 +524,16 @@ class panopto_session_soap_client extends SoapClient {
         );
 
         if ($this->sessionmanagementserviceensure->EnsureExternalHierarchyBranch($ensurecategorybranchparams)) {
-            $ret = $this->sessionmanagementserviceensure->getResult()->EnsureExternalHierarchyBranchResult;
+            return $this->sessionmanagementserviceensure->getResult()->EnsureExternalHierarchyBranchResult;
         } else {
-            \panopto_data::print_log(print_r($this->sessionmanagementserviceensure->getLastError(), true));
+            return $this->handle_error(
+                $this->sessionmanagementserviceensure->getLastError()['SessionManagementServiceEnsure::EnsureExternalHierarchyBranch']
+            );
         }
-
-        return $ret;
     }
 
     public function update_folder_parent($folderid, $newparentid) {
-        $ret = false;
-
+        
         if (!isset($this->sessionmanagementserviceupdate)) {
             $this->sessionmanagementserviceupdate = new SessionManagementServiceUpdate($this->serviceparams);
         }
@@ -471,41 +545,73 @@ class panopto_session_soap_client extends SoapClient {
         );
 
         if ($this->sessionmanagementserviceupdate->UpdateFolderParent($updatefolderparentparams)) {
-            $ret = true;
+            return true;
         } else {
-            \panopto_data::print_log(print_r($this->sessionmanagementserviceupdate->getLastError(), true));
+            return $this->handle_error(
+                $this->sessionmanagementserviceupdate->getLastError()['SessionManagementServiceUpdate::UpdateFolderParent']
+            );
+        }
+    }
+
+    public function update_folder_name($folderid, $newname) {
+        
+        if (!isset($this->sessionmanagementserviceupdate)) {
+            $this->sessionmanagementserviceupdate = new SessionManagementServiceUpdate($this->serviceparams);
         }
 
-        return $ret;
+        $updatefoldernameparams = new SessionManagementStructUpdateFolderName(
+            $this->authparam, 
+            $folderid, 
+            $newname
+        );
+
+        if ($this->sessionmanagementserviceupdate->UpdateFolderName($updatefoldernameparams)) {
+            return true;
+        } else {
+            $this->handle_error(
+                $this->sessionmanagementserviceupdate->getLastError()['SessionManagementServiceUpdate::UpdateFolderName']
+            );
+            return false;
+        }
     }
 
     public function get_recorder_download_urls() {
-        $ret = false;
-
         if (!isset($this->sessionmanagementserviceget)) {
             $this->sessionmanagementserviceget = new SessionManagementServiceGet($this->serviceparams);
         }
 
         if ($this->sessionmanagementserviceget->GetRecorderDownloadUrls()) {
-            $ret = $this->sessionmanagementserviceget->getResult()->GetRecorderDownloadUrlsResult;
+            return $this->sessionmanagementserviceget->getResult()->GetRecorderDownloadUrlsResult;
         } else {
-            \panopto_data::print_log(print_r($this->sessionmanagementserviceget->getLastError(), true));
+            return $this->handle_error(
+                $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetRecorderDownloadUrls']
+            );
         }
 
         return $ret;
     }
 
-    private function handle_provisioning_error($lasterror) {
-        $lasterrormessage = $lasterror->getMessage();
+    private function handle_error($lasterror) {
+        $ret = new stdClass;
+        $ret->errormessage = $lasterror->getMessage();
+        
+        
 
-        // Parsing error message to see if the target was a personal.
-        if (strpos($lasterrormessage, 'provision personal folder') !== false) {
-            // Making ret a const since the folder was invalid.
-            $ret = self::PERSONAL_FOLDER_ERROR;
-            panopto_alert_user(get_string('attempted_provisioning_personal_folder', 'block_panopto'));
+        if (!empty($ret->errormessage)) {
+            if (strpos($ret->errormessage, 'not found') !== false) {
+                $ret->notfound = true;
+            }
+
+            if (strpos($ret->errormessage, 'not have access') !== false) {
+                $ret->noaccess = true;
+            }
+            
+            \panopto_data::print_log($ret->errormessage);
+        } else {
+            \panopto_data::print_log(print_r($lasterror, true));
         }
 
-        \panopto_data::print_log($lasterrormessage);
+        return $ret;
     }
 }
 

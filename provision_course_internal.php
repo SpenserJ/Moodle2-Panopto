@@ -27,6 +27,7 @@ if (empty($CFG)) {
     require_once(dirname(__FILE__) . '/../../config.php');
 }
 require_once($CFG->libdir . '/formslib.php');
+require_once(dirname(__FILE__) . '/classes/panopto_provision_course_form.php');
 require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
@@ -48,8 +49,8 @@ for ($serverwalker = 1; $serverwalker <= $numservers; $serverwalker++) {
     $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
     $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
 
-    $hasservername = !is_null_or_empty_string($thisservername);
-    if ($hasservername && !is_null_or_empty_string($thisappkey)) {
+    $hasservername = !panopto_is_string_empty($thisservername);
+    if ($hasservername && !panopto_is_string_empty($thisappkey)) {
         // array reference so we should substract 1 to start at 0.
         $aserverarray[$serverwalker - 1] = $thisservername;
         $appkeyarray[$serverwalker - 1] = $thisappkey;
@@ -63,31 +64,6 @@ if (count($aserverarray) == 1) {
     $key = array_keys($aserverarray);
     $selectedserver = trim($aserverarray[$key[0]]);
     $selectedkey = trim($appkeyarray[$key[0]]);
-}
-
-/**
- * Create form for server selection.
- *
- * @package block_panopto
- * @copyright  Panopto 2009 - 2015
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class panopto_provision_form extends moodleform {
-
-    /**
-     * Defines a Panopto provision form
-     */
-    public function definition() {
-
-        global $DB, $aserverarray;
-
-        $mform = & $this->_form;
-
-        $serverselect = $mform->addElement('select', 'servers', get_string('select_server', 'block_panopto'), $aserverarray);
-
-        $this->add_action_buttons(true, get_string('provision', 'block_panopto'));
-    }
-
 }
 
 require_login();
@@ -107,7 +83,7 @@ $urlparams['return_url'] = $returnurl;
 $PAGE->set_url('/blocks/panopto/provision_course_internal.php?id=' . $courseid, $urlparams);
 $PAGE->set_pagelayout('base');
 
-$mform = new panopto_provision_form($PAGE->url);
+$mform = new panopto_provision_course_form($PAGE->url);
 // Set Moodle page info.
 $provisiontitle = get_string('provision_courses', 'block_panopto');
 $PAGE->set_title($provisiontitle);

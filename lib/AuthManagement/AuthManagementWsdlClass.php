@@ -2,7 +2,7 @@
 /**
  * File for AuthManagementWsdlClass to communicate with SOAP service
  * @package AuthManagement
- * @author WsdlToPhp Team <contact@wsdltophp.com>
+ * @author Panopto
  * @version 20150429-01
  * @date 2017-05-25
  */
@@ -10,7 +10,7 @@
  * AuthManagementWsdlClass to communicate with SOAP service
  *
  * @package AuthManagement
- * @author WsdlToPhp Team <contact@wsdltophp.com>
+ * @author Panopto
  * @version 20150429-01
  * @date 2017-05-25
  */

@@ -52,7 +52,7 @@ class provision_course extends \core\task\adhoc_task {
 
             $panopto = new \panopto_data($eventdata['courseid']);
 
-            $targetservers = get_target_panopto_servers();
+            $targetservers = panopto_get_target_panopto_servers();
             foreach ($targetservers as $targetserver) {
                 $panopto->servername = $targetserver->name;
                 $panopto->applicationkey = $targetserver->appkey;

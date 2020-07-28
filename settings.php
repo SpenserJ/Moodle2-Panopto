@@ -31,31 +31,13 @@ require_once(dirname(__FILE__) . '/classes/admin/trim_configtext.php');
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
 
-// Populate list of servernames to select from.
-$aserverarray = array();
-$appkeyarray = array();
-
 $numservers = get_config('block_panopto', 'server_number');
 $numservers = isset($numservers) ? $numservers : 0;
 
 // Increment numservers by 1 to take into account starting at 0.
 ++$numservers;
 
-$targetserverarray = array();
-for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
-
-    // Generate strings corresponding to potential servernames in the config.
-    $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
-    $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
-
-    $hasservername = !is_null_or_empty_string($thisservername);
-    if ($hasservername && !is_null_or_empty_string($thisappkey)) {
-        $aserverarray[$serverwalker - 1] = $thisservername;
-        $appkeyarray[$serverwalker - 1] = $thisappkey;
-
-        $targetserverarray[$thisservername] = $thisservername;
-    }
-}
+$targetserverarray = panopto_get_configured_panopto_servers();
 
 if ($ADMIN->fulltree) {
 
@@ -144,6 +126,17 @@ if ($ADMIN->fulltree) {
             get_string('block_panopto_async_tasks', 'block_panopto'),
             get_string('block_panopto_async_tasks_desc', 'block_panopto'),
             0
+        )
+    );
+
+    $possiblessosynctypes = \panopto_data::getpossiblessosynctypes();
+    $settings->add(
+        new admin_setting_configselect(
+            'block_panopto/sso_sync_type',
+            get_string('block_panopto_sso_sync_type', 'block_panopto'),
+            get_string('block_panopto_sso_sync_type_desc', 'block_panopto'),
+            'nosync', // Default to authentication without sync
+            $possiblessosynctypes
         )
     );
 
@@ -236,7 +229,7 @@ if ($ADMIN->fulltree) {
             'block_panopto/publisher_role_mapping',
             get_string('block_panopto_publisher_mapping', 'block_panopto'),
             get_string('block_panopto_publisher_mapping_desc', 'block_panopto'),
-            array(1),
+            array(),
             $courserolearray
         )
     );
@@ -322,5 +315,10 @@ if ($ADMIN->fulltree) {
         get_string('block_global_upgrade_all_folders', 'block_panopto') . '</a>';
 
     $settings->add(new admin_setting_heading('block_panopto_upgrade_all_folders', '', $upgradelink));
+
+    $bulkrenamelink = '<a id="panopto_rename_folders_btn" href="' . $CFG->wwwroot . '/blocks/panopto/rename_all_folders.php">' .
+        get_string('block_global_rename_all_folders', 'block_panopto') . '</a>';
+
+    $settings->add(new admin_setting_heading('block_panopto_rename_all_folders', '', $bulkrenamelink));
 }
 /* End of file settings.php */

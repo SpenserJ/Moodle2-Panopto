@@ -51,7 +51,7 @@ class ensure_category extends \core\task\adhoc_task {
             $eventdata = (array) $this->get_custom_data();
             $categoryid = $eventdata['categoryid'];
             
-            $targetservers = get_target_panopto_servers();
+            $targetservers = panopto_get_target_panopto_servers();
             foreach ($targetservers as $targetserver) {
                 $serverpanopto = new \panopto_category_data($categoryid, $targetserver->name, $targetserver->appkey);
 

@@ -95,7 +95,7 @@ class provider implements
     public static function export_user_data(\core_privacy\local\request\approved_contextlist $contextlist) {
         $userinfo = $contextlist->get_user();
         $instancename = \get_config('block_panopto', 'instance_name');
-        $allpanoptos = \get_valid_panopto_servers();
+        $allpanoptos = \panopto_get_valid_panopto_servers();
         $panoptouser = null;
 
 
@@ -108,10 +108,10 @@ class provider implements
             $panoptouser = $currentpanopto->get_user_by_key($instancename . '\\' . $userinfo->username);
 
             if ($panoptouser != null && 
-                !\is_guid_empty($panoptouser->UserId) &&
-                \user_info_valid($panoptouser->FirstName) &&
-                \user_info_valid($panoptouser->LastName) &&
-                \user_info_valid($panoptouser->Email)) {
+                !\panopto_is_guid_empty($panoptouser->UserId) &&
+                \panopto_user_info_valid($panoptouser->FirstName) &&
+                \panopto_user_info_valid($panoptouser->LastName) &&
+                \panopto_user_info_valid($panoptouser->Email)) {
                 $subcontext = array();
                 $subcontext[] = \get_string('pluginname', 'block_panopto');
                 $subcontext[] = $currentpanopto->servername;
@@ -131,7 +131,7 @@ class provider implements
      * @param   approved_userlist       $userlist The approved context and user information to delete information for.
      */
     public static function delete_data_for_users(\core_privacy\local\request\approved_userlist $userlist) {
-        $panoptoservers = \get_valid_panopto_servers();
+        $panoptoservers = \panopto_get_valid_panopto_servers();
         $targetusers = $userlist->get_users();
         $instancename = \get_config('block_panopto', 'instance_name');
 
@@ -146,7 +146,7 @@ class provider implements
                 // search for user in panopto, if they exist then export the below data, if they do not exist then skip.
                 $panoptouser = $currentpanopto->get_user_by_key($instancename . '\\' . $targetuser->username);
 
-                if ($panoptouser != null && !\is_guid_empty($panoptouser->UserId)) {
+                if ($panoptouser != null && !\panopto_is_guid_empty($panoptouser->UserId)) {
                     // Overwrite all of the existing user's current info with '--Deleted--'
                     $currentpanopto->update_contact_info(
                         $panoptouser->UserId, 
@@ -171,7 +171,7 @@ class provider implements
             return;
         }
 
-        $panoptoservers = \get_valid_panopto_servers();
+        $panoptoservers = \panopto_get_valid_panopto_servers();
         $userinfo = $contextlist->get_user();
         $instancename = \get_config('block_panopto', 'instance_name');
 
@@ -184,7 +184,7 @@ class provider implements
             // search for user in panopto, if they exist then export the below data, if they do not exist then skip.
             $panoptouser = $currentpanopto->get_user_by_key($instancename . '\\' . $userinfo->username);
 
-            if ($panoptouser != null && !\is_guid_empty($panoptouser->UserId)) {
+            if ($panoptouser != null && !\panopto_is_guid_empty($panoptouser->UserId)) {
                 // Overwrite all of the existing user's current info with '--Deleted--'
                 $currentpanopto->update_contact_info(
                     $panoptouser->UserId, 
@@ -218,7 +218,7 @@ class provider implements
                 // search for user in panopto, if they exist then export the below data, if they do not exist then skip.
                 $panoptouser = $currentpanopto->get_user_by_key($instancename . '\\' . $enrolleduser->username);
 
-                if ($panoptouser != null && !\is_guid_empty($panoptouser->UserId)) {
+                if ($panoptouser != null && !\panopto_is_guid_empty($panoptouser->UserId)) {
                     // Overwrite all of the existing user's current info with '--Deleted--'
                     $currentpanopto->update_contact_info(
                         $panoptouser->UserId, 
