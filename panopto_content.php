@@ -31,23 +31,54 @@ if (empty($CFG)) {
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
 try {
-    require_login();
+    $courseid = required_param('courseid', PARAM_INT);
+    $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+    require_login($course);
     require_sesskey();
     header('Content-Type: text/html; charset=utf-8');
     global $CFG, $USER;
-
-    $courseid = required_param('courseid', PARAM_INT);
-
+    
     $content = new stdClass;
-
-    // Initialize $content->text to an empty string here to avoid trying to append to it before
-    // it has been initialized and throwing a warning. Bug 33163.
+    
+    // Close the session so that the users other tabs in the same session are not blocked.
+    \core\session\manager::write_close();
     $content->text = '';
 
     // Construct the Panopto data proxy object.
     $panoptodata = new \panopto_data($courseid);
+    $failedautoprovisioning = false;
 
-    if (empty($panoptodata->servername) || empty($panoptodata->instancename) || empty($panoptodata->applicationkey)) {
+    $allowautoprovision = get_config('block_panopto', 'auto_provision_new_courses');
+    if ((empty($panoptodata->servername) || 
+        empty($panoptodata->instancename) || 
+        empty($panoptodata->applicationkey)) &&
+        $panoptodata->can_user_provision($courseid) &&
+        ($allowautoprovision == 'onblockview')) {
+        
+        $task = new \block_panopto\task\provision_course();
+        $task->set_custom_data(array(
+            'courseid' => $courseid
+        ));
+
+        try {
+            $task->execute();
+        }  catch (Exception $e) {
+            $errormessage = $e->getMessage();
+            $content->text .= "<span class='error'>" . $errormessage . '</span>';
+            \panopto_data::print_log($errormessage);
+
+            $content->footer = '';
+
+            echo $content->text;
+            $failedautoprovisioning = true;
+        }
+
+        // Now that the course has been auto-provisioned lets try to get it again.
+        $panoptodata = new \panopto_data($courseid);
+    }
+
+
+    if (!$failedautoprovisioning && (empty($panoptodata->servername) || empty($panoptodata->instancename) || empty($panoptodata->applicationkey))) {
         $content->text = get_string('unprovisioned', 'block_panopto');
 
         if ($panoptodata->can_user_provision($courseid)) {
@@ -59,7 +90,7 @@ try {
         $content->footer = '';
 
         echo $content->text;
-    } else {
+    } else if (!$failedautoprovisioning) {
 
         try {
             if (!$panoptodata->sessiongroupid) {

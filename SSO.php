@@ -36,7 +36,19 @@ $servername = required_param('serverName', PARAM_HOST);
 $callbackurl = required_param('callbackURL', PARAM_URL);
 $configuredserverarray = panopto_get_configured_panopto_servers();
 
-if (isset($configuredserverarray[$servername])) {
+$callbackverified = false;
+foreach($configuredserverarray as  $possibleserver) {
+    if (strcasecmp($possibleserver, $servername) == 0) {
+        $callbackhost = parse_url($callbackurl, PHP_URL_HOST);
+
+        if (stripos($callbackhost, $servername) !== false) {
+            $callbackverified = true;
+            break;
+        }
+    }
+}
+
+if ($callbackverified) {
     if (strpos($callbackurl, 'http%') !== false 
      || strpos($callbackurl, 'https%') !== false) {
         $callbackurl = urldecode($callbackurl);

@@ -34,8 +34,9 @@ defined('MOODLE_INTERNAL') || die();
 require_once(dirname(__FILE__) . '/SessionManagement/SessionManagementAutoload.php');
 require_once(dirname(__FILE__) . '/panopto_data.php');
 require_once(dirname(__FILE__) . '/block_panopto_lib.php');
+require_once(dirname(__FILE__) . '/panopto_timeout_soap_client.php');
 
-class panopto_session_soap_client extends SoapClient {
+class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
     /**
      * @var array $authparam auth param needed for all soap calls.
      */
@@ -287,12 +288,10 @@ class panopto_session_soap_client extends SoapClient {
             $retobj = $this->sessionmanagementserviceget->getResult();
             return $retobj->GetFoldersByExternalIdResult->Folder[0];
         } else {
-            $this->handle_error(
+            return $this->handle_error(
                 $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetFoldersByExternalId']
             );
         }
-
-        return $ret;
     }
 
     /** 
@@ -587,8 +586,6 @@ class panopto_session_soap_client extends SoapClient {
                 $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetRecorderDownloadUrls']
             );
         }
-
-        return $ret;
     }
 
     private function handle_error($lasterror) {

@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 /**
  * File for AuthManagementWsdlClass to communicate with SOAP service
  * @package AuthManagement
@@ -16,6 +30,8 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
+
+require_once(dirname(__FILE__) . '/../panopto_timeout_soap_client.php');
 
 class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,Countable
 {
@@ -153,7 +169,7 @@ class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
     const WSDL_SSL_METHOD = 'wsdl_ssl_method';
     /**
      * Soapclient called to communicate with the actual SOAP Service
-     * @var SoapClient
+     * @var PanoptoTimeoutSoapClient
      */
     private static $soapClient;
     /**
@@ -211,6 +227,14 @@ class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
         {
             foreach($_arrayOfValues as $name=>$value)
                 $this->_set($name,$value);
+        }
+            
+        if(array_key_exists('panopto_socket_timeout', $_arrayOfValues)) {
+            self::$soapClient->__setSocketTimeout($_arrayOfValues['panopto_socket_timeout']);
+        }
+
+        if(array_key_exists('panopto_connection_timeout', $_arrayOfValues)) {
+            self::$soapClient->__setConnectionTimeout($_arrayOfValues['panopto_connection_timeout']);
         }
     }
     /**
@@ -283,6 +307,14 @@ class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
                 $soapClientClassName = self::getSoapClientClassName();
                 self::setSoapClient(new $soapClientClassName($wsdlUrl,$wsdlOptions));
             }
+
+            if(array_key_exists('panopto_socket_timeout', $wsdlOptions)) {
+                self::$soapClient->__setSocketTimeout($wsdlOptions['panopto_socket_timeout']);
+            }
+
+            if(array_key_exists('panopto_connection_timeout', $wsdlOptions)) {
+                self::$soapClient->__setConnectionTimeout($wsdlOptions['panopto_connection_timeout']);
+            }
         }
     }
     /**
@@ -296,10 +328,10 @@ class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
      */
     public static function getSoapClientClassName()
     {
-        if(class_exists('AuthManagementSoapClient') && is_subclass_of('AuthManagementSoapClient','SoapClient'))
+        if(class_exists('AuthManagementSoapClient') && is_subclass_of('AuthManagementSoapClient','PanoptoTimeoutSoapClient'))
             return 'AuthManagementSoapClient';
         else
-            return 'SoapClient';
+            return 'PanoptoTimeoutSoapClient';
     }
     /**
      * Method returning all default options values
@@ -956,7 +988,7 @@ class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
 /**
 * Class AuthManagementSoapClient
 */
-class AuthManagementSoapClient extends SoapClient {
+class AuthManagementSoapClient extends PanoptoTimeoutSoapClient {
 
     /**
      * Constructor wrapper

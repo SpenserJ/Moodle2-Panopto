@@ -47,7 +47,7 @@ if ($ADMIN->fulltree) {
             get_string('block_panopto_server_number_name', 'block_panopto'),
             get_string('block_panopto_server_number_desc', 'block_panopto'),
             0,
-            range(1, 10, 1)
+            range(1, 30, 1)
         )
     );
     $settings->add(
@@ -150,12 +150,15 @@ if ($ADMIN->fulltree) {
             $possiblefoldernamestyles
         )
     );
+
+    $possibleprovisiontypes = \panopto_data::getpossibleprovisiontypes();
     $settings->add(
-        new admin_setting_configcheckbox(
+        new admin_setting_configselect(
             'block_panopto/auto_provision_new_courses',
             get_string('block_panopto_auto_provision', 'block_panopto'),
             get_string('block_panopto_auto_provision_desc', 'block_panopto'),
-            1
+            'oncoursecreation',
+            $possibleprovisiontypes
         )
     );
     $settings->add(
@@ -208,17 +211,18 @@ if ($ADMIN->fulltree) {
     );
 
     $systemcontext = context_system::instance();
-    $systemrolearray = get_assignable_roles($systemcontext, ROLENAME_BOTH);
+    $systemrolearray = panopto_get_all_roles_at_context_and_contextlevel($systemcontext);
+    $systemrolearray = role_fix_names($systemrolearray, $systemcontext, ROLENAME_ALIAS, true);
 
-    $settings->add(
-        new admin_setting_configmultiselect(
-            'block_panopto/publisher_system_role_mapping',
-            get_string('block_panopto_publisher_system_role_mapping', 'block_panopto'),
-            get_string('block_panopto_publisher_system_role_mapping_desc', 'block_panopto'),
-            array(),
-            $systemrolearray
-        )
+    $systempublishersetting = new admin_setting_configmultiselect(
+        'block_panopto/publisher_system_role_mapping',
+        get_string('block_panopto_publisher_system_role_mapping', 'block_panopto'),
+        get_string('block_panopto_publisher_system_role_mapping_desc', 'block_panopto'),
+        array(),
+        $systemrolearray
     );
+    $systempublishersetting->set_updatedcallback('panopto_update_system_publishers');
+    $settings->add($systempublishersetting);
 
     $coursecontext = context_course::instance(SITEID);
     $courserolearray = get_all_roles($coursecontext);
@@ -270,6 +274,26 @@ if ($ADMIN->fulltree) {
             get_string('block_panopto_wsdl_proxy_port_desc', 'block_panopto'),
             '',
             PARAM_TEXT
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configtext_trimmed(
+            'block_panopto/panopto_connection_timeout',
+            get_string('block_panopto_panopto_connection_timeout', 'block_panopto'),
+            get_string('block_panopto_panopto_connection_timeout_desc', 'block_panopto'),
+            15,
+            PARAM_INT
+        )
+    );
+
+    $settings->add(
+        new admin_setting_configtext_trimmed(
+            'block_panopto/panopto_socket_timeout',
+            get_string('block_panopto_panopto_socket_timeout', 'block_panopto'),
+            get_string('block_panopto_panopto_socket_timeout_desc', 'block_panopto'),
+            30,
+            PARAM_INT
         )
     );
 

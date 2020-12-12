@@ -61,7 +61,7 @@ class block_panopto_rollingsync {
 
         $allowautoprovision = get_config('block_panopto', 'auto_provision_new_courses');
 
-        if ($allowautoprovision) {
+        if ($allowautoprovision == 'oncoursecreation') {
             $task = new \block_panopto\task\provision_course();
             $task->set_custom_data(array(
                 'courseid' => $event->courseid,

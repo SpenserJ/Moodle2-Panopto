@@ -299,5 +299,22 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2019070100, 'panopto');
     }
 
+    if ($oldversion < 2020072736) {
+        // This toggle is getting changed from a checkbox to a select with a name value, update it during the upgrade if its set.
+        if (get_config('block_panopto', 'auto_provision_new_courses')) {
+            set_config('auto_provision_new_courses', 'oncoursecreation', 'block_panopto');
+        } else {
+            set_config('auto_provision_new_courses', 'off', 'block_panopto');
+        }
+
+        // This toggle got changed in the 2018030200 upgrade so we should just unset it if it still exists.
+        if (get_config('block_panopto', 'prefix_new_folder_names')) {
+            unset_config('prefix_new_folder_names', 'block_panopto');
+        }
+        
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2020072736, 'panopto');
+    }
+
     return true;
 }

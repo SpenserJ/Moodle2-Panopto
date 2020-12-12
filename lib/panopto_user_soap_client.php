@@ -34,8 +34,9 @@ defined('MOODLE_INTERNAL') || die();
 require_once(dirname(__FILE__) . '/UserManagement/UserManagementAutoload.php');
 require_once(dirname(__FILE__) . '/panopto_data.php');
 require_once(dirname(__FILE__) . '/block_panopto_lib.php');
+require_once(dirname(__FILE__) . '/panopto_timeout_soap_client.php');
 
-class panopto_user_soap_client extends SoapClient {
+class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
     /**
      * @var array $authparam
      */

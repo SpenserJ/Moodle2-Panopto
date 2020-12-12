@@ -61,11 +61,18 @@ function panopto_decorate_username($moodleusername) {
  */
 function panopto_generate_auth_code($payload) {
     $index = 1;
-    for ($x = 0; $x < 10; $x++) {
-        $thisservername = get_config('block_panopto', 'server_name' . ($x + 1));
+
+    $numservers = get_config('block_panopto', 'server_number');
+    $numservers = isset($numservers) ? $numservers : 0;
+
+    // Increment numservers by 1 to take into account starting at 0.
+    ++$numservers;
+
+    for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
+        $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
         if (isset($thisservername) && !empty($thisservername)) {
             if (strpos($payload, $thisservername)) {
-                $index = $x + 1;
+                $index = $serverwalker;
                 break;
             }
         }
@@ -109,6 +116,9 @@ function panopto_generate_wsdl_service_params($apiurl) {
     if (isset($proxyport) && !empty($proxyport)) {
         $serviceparams['wsdl_proxy_port'] = $proxyport;
     }
+
+    $serviceparams['panopto_connection_timeout'] = get_config('block_panopto', 'panopto_connection_timeout');
+    $serviceparams['panopto_socket_timeout'] = get_config('block_panopto', 'panopto_socket_timeout');
 
     return $serviceparams;
 }
@@ -319,5 +329,51 @@ function panopto_user_info_valid($userinfostring) {
     }
 
     return $retVal;
+}
+
+function panopto_get_all_roles_at_context_and_contextlevel($targetcontext) {
+    global $DB;
+
+    $sql = "SELECT r.*, rn.name AS contextalias
+        FROM {role} r
+        INNER JOIN {role_context_levels} rcl ON (rcl.contextlevel = :targetcontextlevel AND rcl.roleid = r.id)
+        LEFT JOIN {role_names} rn ON (rn.contextid = :targetcontext AND rn.roleid = r.id)
+        ORDER BY r.sortorder ASC";
+    return $DB->get_records_sql($sql, array('targetcontext'=>$targetcontext->id, 'targetcontextlevel'=>$targetcontext->contextlevel));
+}
+
+/**
+ * Unsets all system publishers that are not currently mapped 
+ *  and maps all roles that are currently set as publishers to have the proper capability
+ */
+function panopto_update_system_publishers() {
+    global $DB;
+    $capability = 'block/panopto:provision_aspublisher';
+    $systemcontext = context_system::instance();
+    $systemrolearray = panopto_get_all_roles_at_context_and_contextlevel($systemcontext);
+    $publisherrolesstring = get_config('block_panopto', 'publisher_system_role_mapping');
+    $publishersystemroles = explode(',', $publisherrolesstring);
+    $publisherprocessed = false;
+
+    // Remove the system publisher capability from all old publishers. 
+    foreach($systemrolearray as $possiblesystempublisher) {
+        $targetname = !empty($possiblesystempublisher->name) ? $possiblesystempublisher->name : $possiblesystempublisher->shortname;
+        if (!in_array($targetname, $publishersystemroles)) {
+            $publisherprocessed = true;
+            unassign_capability($capability, $possiblesystempublisher->id, $systemcontext);
+        }
+    }
+
+    // Build and process new/old changes to capabilities to roles and capabilities.
+    $publisherprocessed = \panopto_data::build_and_assign_context_capability_to_roles(
+        $systemcontext, 
+        $publishersystemroles, 
+        $capability
+    ) || $publisherprocessed;
+
+    // If any changes where made, context needs to be flagged as dirty to be re-cached.
+    if ($publisherprocessed) {
+        $systemcontext->mark_dirty();
+    }
 }
 /* End of file block_panopto_lib.php */

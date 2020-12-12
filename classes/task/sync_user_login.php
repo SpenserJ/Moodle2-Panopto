@@ -44,11 +44,12 @@ class sync_user_login extends \core\task\adhoc_task {
         try {
             $eventdata = (array) $this->get_custom_data();
             
-            $targetservers = $eventdata['targetservers'];
-            if (!isset($targetservers) || empty($targetservers)) {
+            if (empty($eventdata['targetservers'])) {
                 $targetservers = panopto_get_target_panopto_servers();
+            } else {
+                $targetservers = $eventdata['targetservers'];
             }
-            
+                        
             foreach ($targetservers as $targetserver) {
                 $serverpanopto = new \panopto_data(null);
                 $serverpanopto->applicationkey = $targetserver->appkey;

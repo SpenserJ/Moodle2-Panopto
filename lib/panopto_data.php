@@ -128,7 +128,17 @@ class panopto_data {
         );
     }
     /**
-     * @return
+     * @return returns an array of possible values for the Panopt folder name style
+     */                    
+    public static function getpossibleprovisiontypes() {
+        return array(
+            'off' => get_string('autoprovision_off', 'block_panopto'),
+            'oncoursecreation' => get_string('autoprovision_new_courses', 'block_panopto'),
+            'onblockview' => get_string('autoprovision_on_block_view', 'block_panopto')
+        );
+    }
+    /**
+     * @return the possible list of SSO sync types
      */
     public static function getpossiblessosynctypes() {
         return array(
@@ -366,11 +376,11 @@ class panopto_data {
                     } else {
                         $courseinfo->viewers[] = $panoptousername;
                     }
-                }
 
-                // syncs every user enrolled in the course, this is fairly expensive so it should be normally turned off.
-                if (get_config('block_panopto', 'sync_after_provisioning')) {
-                    $this->sync_external_user($enrolleduser->id);
+                    // syncs every user enrolled in the course, this is fairly expensive so it should be normally turned off.
+                    if (get_config('block_panopto', 'sync_after_provisioning')) {
+                        $this->sync_external_user($enrolleduser->id);
+                    }
                 }
 
                 if (!$skipusersync && $this->uname !== 'guest') {
@@ -770,6 +780,8 @@ class panopto_data {
                     }
                 }
             }
+
+            self::print_log_verbose(get_string('groups_getting_synced', 'block_panopto', implode(', ', $groupstosync)));
 
             // Only try to sync the users if he Panopto server is up.
             if (self::is_server_alive('https://' . $this->servername . '/Panopto')) {
@@ -1391,20 +1403,6 @@ class panopto_data {
             $coursecontext->mark_dirty();
         }
 
-        $systemcontext = context_system::instance();
-        $publisherrolesstring = trim(get_config('block_panopto', 'publisher_system_role_mapping'));
-        if (isset($publisherrolesstring) && !empty($publisherrolesstring)) {
-            $publishersystemroles = explode(',', $publisherrolesstring);
-            // Build and process new/old changes to capabilities to roles and capabilities.
-            $capability = 'block/panopto:provision_aspublisher';
-            $publisherprocessed = self::build_and_assign_context_capability_to_roles($systemcontext, $publishersystemroles, $capability);
-
-            // If any changes where made, context needs to be flagged as dirty to be re-cached.
-            if ($publisherprocessed) {
-                $systemcontext->mark_dirty();
-            }
-        }
-
         self::set_course_role_mappings($courseid, $publisherroles, $creatorroles);
     }
 
@@ -1434,10 +1432,10 @@ class panopto_data {
             return false;
         }
 
-        $curl = new \curl();
+    $curl = new \curl();
         $options = [
-            'CURLOPT_TIMEOUT' => 10,
-            'CURLOPT_CONNECTTIMEOUT' => 10
+            'CURLOPT_TIMEOUT' => get_config('block_panopto', 'panopto_socket_timeout'),
+            'CURLOPT_CONNECTTIMEOUT' => get_config('block_panopto', 'panopto_connection_timeout')
         ];
         $curl->get($url, null, $options);
 
