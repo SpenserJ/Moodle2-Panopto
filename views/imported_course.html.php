@@ -35,33 +35,23 @@
                 <div class='value'><?php echo $courseimport->import_moodle_id ?></div>
                 <div class='attribute'><?php echo get_string('attempted_panopto_server', 'block_panopto') ?></div>
                 <div class='value'><?php echo $targetpanopto->servername ?></div>
-
+                <div class='attribute'><?php echo get_string('import_status', 'block_panopto') ?></div>
                 <?php
-                if (isset($targetpanoptodata->accesserror) && $targetpanoptodata->accesserror === true) {
-                ?>
-                    <div class='errorMessage'>
-                        <?php echo get_string('import_access_error', 'block_panopto') ?>
-                    </div>
-                <?php
-                } else {
-                    ?>
-                    <div class='attribute'><?php echo get_string('import_status', 'block_panopto') ?></div>
-                    <?php
-                    if (isset($importresult)) {
+                foreach($importresults as $importresult) {
+                    if(isset($importresult->errormessage)) {
                     ?>
                         <div class='value'>
-                            <?php echo get_string('import_success', 'block_panopto') ?>
+                            <?php echo get_string('import_error', 'block_panopto', $importresult) ?>
                         </div>
                     <?php
                     } else {
                     ?>
-                        <div class='errorMessage'>
-                            <?php echo get_string('import_error', 'block_panopto') ?>
+                        <div class='value'>
+                            <?php echo get_string('import_success', 'block_panopto', $importresult) ?>
                         </div>
                     <?php
                     }
                 }
-
             } else {
                 if ($targetpanopto === $NO_COURSE_EXISTS) {
                     ?>

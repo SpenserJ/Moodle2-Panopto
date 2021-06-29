@@ -17,6 +17,10 @@
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for test"/>
         </KEYS>
+        <INDEXES>
+            <INDEX NAME="mdl_blocpanofold_moo_ix" UNIQUE="false" FIELDS="moodleid" COMMENT="index on moodle course id"/>
+            <INDEX NAME="mdl_blocpanofold_pan_ix" UNIQUE="false" FIELDS="panopto_server" COMMENT="index on panopto_server"/>
+        </INDEXES>
     </TABLE>
     <TABLE NAME="block_panopto_importmap" COMMENT="Map Moodle courses to imported courses">
         <FIELDS>
@@ -27,6 +31,10 @@
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for import map table"/>
         </KEYS>
+        <INDEXES>
+            <INDEX NAME="mdl_blocpanoimpo_tar_ix" UNIQUE="false" FIELDS="target_moodle_id" COMMENT="index on the import target course id"/>
+            <INDEX NAME="mdl_blocpanoimpo_tar_ix" UNIQUE="false" FIELDS="import_moodle_id" COMMENT="index on the imported course id"/>
+        </INDEXES>
     </TABLE>
     <TABLE NAME="block_panopto_creatormap" COMMENT="a table that maps Moodle roles to the creator capability when provisioning to Panopto">
         <FIELDS>
@@ -37,6 +45,9 @@
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for creator map table"/>
         </KEYS>
+        <INDEXES>
+            <INDEX NAME="mdl_blocpanocrea_moo_ix" UNIQUE="false" FIELDS="moodle_id" COMMENT="index on moodle course id"/>
+        </INDEXES>
     </TABLE>
     <TABLE NAME="block_panopto_publishermap" COMMENT="a table that maps Moodle roles to the publisher capability when provisioning to Panopto">
         <FIELDS>
@@ -47,6 +58,9 @@
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for publisher map table"/>
         </KEYS>
+        <INDEXES>
+            <INDEX NAME="mdl_blocpanopubl_moo_ix" UNIQUE="false" FIELDS="moodle_id" COMMENT="index on moodle course id"/>
+        </INDEXES>
     </TABLE>
     <TABLE NAME="block_panopto_old_foldermap" COMMENT="Map Moodle courses to inactive ClientData style Panopto folders">
         <FIELDS>
@@ -61,6 +75,10 @@
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for test"/>
         </KEYS>
+        <INDEXES>
+            <INDEX NAME="mdl_blocpanooldfold_moo_ix" UNIQUE="false" FIELDS="moodleid" COMMENT="index on moodle course id"/>
+            <INDEX NAME="mdl_blocpanooldfold_pan_ix" UNIQUE="false" FIELDS="panopto_server" COMMENT="index on panopto_server"/>
+        </INDEXES>
     </TABLE>
     <TABLE NAME="block_panopto_categorymap" COMMENT="A list of mapped category folders in Panopto">
         <FIELDS>
@@ -72,6 +90,9 @@
         <KEYS>
             <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for test"/>
         </KEYS>
+        <INDEXES>
+            <INDEX NAME="mdl_blocpanocate_cat_ix" UNIQUE="false" FIELDS="category_id" COMMENT="index on moodle category id"/>
+        </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>
