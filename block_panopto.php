@@ -102,6 +102,12 @@ class block_panopto extends block_base {
             );
 
             $panoptodata = new \panopto_data($this->page->course->id);
+            $oldsessionid = null;
+            if (!empty($panoptodata->sessiongroupid)) {
+                $oldsessionid = $panoptodata->sessiongroupid;
+                $panoptodata->unprovision_course();
+            }
+
 
             // Manually overwrite the sessiongroupid on this Panopto_Data instance so we can test provision the attempted new mapping. If the provision fails do not allow it.
             //  Provision could fail if the user attempts to provision a personal folder.
@@ -110,7 +116,12 @@ class block_panopto extends block_base {
             $provisioninginfo = $panoptodata->get_provisioning_info();
             $provisioneddata = $panoptodata->provision_course($provisioninginfo, false);
             if (isset($provisioneddata->Id) && !empty($provisioneddata->Id)) {
+                $panoptodata->update_folder_external_id_with_provider();
                 \panopto_data::set_panopto_course_id($this->page->course->id, $data->course);
+            } else {
+                $panoptodata->sessiongroupid = $oldsessionid;
+                $provisioninginfo = $panoptodata->get_provisioning_info();
+                $provisioneddata = $panoptodata->provision_course($provisioninginfo, false);
             }
         }
     }
@@ -200,5 +211,13 @@ class block_panopto extends block_base {
         return array('course-view' => true);
     }
 
+    /**
+     * allow more than one instance of the block on a page
+     *
+     * @return boolean
+     */
+    public function instance_allow_multiple() {
+        return false;
+    }
 }
 // End of block_panopto.php.

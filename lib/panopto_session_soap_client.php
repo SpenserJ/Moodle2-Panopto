@@ -552,6 +552,28 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
         }
     }
 
+    public function update_folder_external_id_with_provider($folderid, $externalid, $providername) {
+        
+        if (!isset($this->sessionmanagementserviceupdate)) {
+            $this->sessionmanagementserviceupdate = new SessionManagementServiceUpdate($this->serviceparams);
+        }
+
+        $updatefolderparams = new SessionManagementStructUpdateFolderExternalIdWithProvider(
+            $this->authparam, 
+            $folderid, 
+            $externalid,
+            $providername
+        );
+
+        if ($this->sessionmanagementserviceupdate->UpdateFolderExternalIdWithProvider($updatefolderparams)) {
+            return true;
+        } else {
+            return $this->handle_error(
+                $this->sessionmanagementserviceupdate->getLastError()['SessionManagementServiceUpdate::UpdateFolderExternalIdWithProvider']
+            );
+        }
+    }
+
     public function update_folder_name($folderid, $newname) {
         
         if (!isset($this->sessionmanagementserviceupdate)) {

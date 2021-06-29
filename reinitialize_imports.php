@@ -98,7 +98,7 @@ function reinitialize_all_imports() {
 
             $targetpanoptodata = $targetpanopto->get_provisioning_info();
 
-            $importresult = $targetpanopto->init_and_sync_import($courseimport->import_moodle_id);
+            $importresults = $targetpanopto->init_and_sync_import($courseimport->import_moodle_id);
         }
 
         include('views/imported_course.html.php');

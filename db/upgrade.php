@@ -316,5 +316,66 @@ function xmldb_block_panopto_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2020072736, 'panopto');
     }
 
+    if ($oldversion < 2021050404) {
+
+        $foldermaptable = new xmldb_table('block_panopto_foldermap');
+        $importmaptable = new xmldb_table('block_panopto_importmap');
+        $creatormaptable = new xmldb_table('block_panopto_creatormap');
+        $publishermaptable = new xmldb_table('block_panopto_publishermap');
+        $oldfoldermaptable = new xmldb_table('block_panopto_old_foldermap');
+        $categorymaptable = new xmldb_table('block_panopto_categorymap');
+
+        if ($dbman->table_exists($foldermaptable)) {
+            $moodleidindex = new xmldb_index('mdl_blocpanofold_moo_ix', XMLDB_INDEX_NOTUNIQUE, array('moodleid'), array());
+            $serverindex = new xmldb_index('mdl_blocpanofold_pan_ix', XMLDB_INDEX_NOTUNIQUE, array('panopto_server'), array());
+            $dbman->add_index($foldermaptable, $moodleidindex);
+            $dbman->add_index($foldermaptable, $serverindex);
+        } else {
+            return false;
+        }
+
+        if ($dbman->table_exists($importmaptable)) {
+            $targetidindex = new xmldb_index('mdl_blocpanoimpo_tar_ix', XMLDB_INDEX_NOTUNIQUE, array('target_moodle_id'), array());
+            $importidindex = new xmldb_index('mdl_blocpanoimpo_tar_ix', XMLDB_INDEX_NOTUNIQUE, array('import_moodle_id'), array());
+            $dbman->add_index($importmaptable, $targetidindex);
+            $dbman->add_index($importmaptable, $importidindex);
+        } else {
+            return false;
+        }
+
+        if ($dbman->table_exists($creatormaptable)) {
+            $moodleidindex = new xmldb_index('mdl_blocpanocrea_moo_ix', XMLDB_INDEX_NOTUNIQUE, array('moodle_id'), array());
+            $dbman->add_index($creatormaptable, $moodleidindex);
+        } else {
+            return false;
+        }
+
+        if ($dbman->table_exists($publishermaptable)) {
+            $moodleidindex = new xmldb_index('mdl_blocpanopubl_moo_ix', XMLDB_INDEX_NOTUNIQUE, array('moodle_id'), array());
+            $dbman->add_index($publishermaptable, $moodleidindex);
+        } else {
+            return false;
+        }
+
+        if ($dbman->table_exists($oldfoldermaptable)) {
+            $moodleidindex = new xmldb_index('mdl_blocpanooldfold_moo_ix', XMLDB_INDEX_NOTUNIQUE, array('moodleid'), array());
+            $serverindex = new xmldb_index('mdl_blocpanooldfold_pan_ix', XMLDB_INDEX_NOTUNIQUE, array('panopto_server'), array());
+            $dbman->add_index($oldfoldermaptable, $moodleidindex);
+            $dbman->add_index($oldfoldermaptable, $serverindex);
+        } else {
+            return false;
+        }
+
+        if ($dbman->table_exists($categorymaptable)) {
+            $serverindex = new xmldb_index('mdl_blocpanocate_cat_ix', XMLDB_INDEX_NOTUNIQUE, array('category_id'), array());
+            $dbman->add_index($categorymaptable, $serverindex);
+        } else {
+            return false;
+        }
+        
+        // Panopto savepoint reached.
+        upgrade_block_savepoint(true, 2021050404, 'panopto');
+    }
+
     return true;
 }
