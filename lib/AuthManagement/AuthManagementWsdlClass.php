@@ -293,6 +293,7 @@ class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
             $wsdlOptions = array();
             $wsdlOptions['classmap'] = AuthManagementClassMap::classMap();
             $defaultWsdlOptions = self::getDefaultWsdlOptions();
+            $wsdlOptions['trace'] = true;
             foreach($defaultWsdlOptions as $optioName=>$optionValue)
             {
                 if(array_key_exists($optioName,$_wsdlOptions) && !empty($_wsdlOptions[$optioName]))

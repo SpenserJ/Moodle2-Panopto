@@ -137,10 +137,21 @@ function panopto_bulk_reprovision_callback($mappablecourse) {
     if (!CLI_SCRIPT) {
         include('views/provisioned_course.html.php');
     }
+    $mappablecourse->panopto->ensure_auth_manager();
+    $activepanoptoserverversion = $mappablecourse->panopto->authmanager->get_server_version();
+    $useccv2 = version_compare(
+        $activepanoptoserverversion, 
+        \panopto_data::$ccv2requiredpanoptoversion, 
+        '>='
+    );
 
     $courseimports = \panopto_data::get_import_list($mappablecourse->panopto->moodlecourseid);
     foreach ($courseimports as $importedcourse) {
-        $mappablecourse->panopto->init_and_sync_import($importedcourse);
+        if ($useccv2) {
+            $mappablecourse->panopto->copy_panopto_content($importedcourse);
+        } else {
+            $mappablecourse->panopto->init_and_sync_import_ccv1($importedcourse);
+        }
     }
 }
 

@@ -44,20 +44,18 @@ class sync_user_login extends \core\task\adhoc_task {
         try {
             $eventdata = (array) $this->get_custom_data();
             
-            if (empty($eventdata['targetservers'])) {
-                $targetservers = panopto_get_target_panopto_servers();
+            if (empty($eventdata['targetserver'])) {
+                $targetserver = panopto_get_target_panopto_server();
             } else {
-                $targetservers = $eventdata['targetservers'];
+                $targetserver = $eventdata['targetserver'];
             }
-                        
-            foreach ($targetservers as $targetserver) {
-                $serverpanopto = new \panopto_data(null);
-                $serverpanopto->applicationkey = $targetserver->appkey;
-                $serverpanopto->servername = $targetserver->name;
 
-                // Sync the user to all courses mapped to the server.
-                $serverpanopto->sync_external_user($eventdata['userid']);
-            }
+            $serverpanopto = new \panopto_data(null);
+            $serverpanopto->applicationkey = $targetserver->appkey;
+            $serverpanopto->servername = $targetserver->name;
+
+            // Sync the user to all courses mapped to the server.
+            $serverpanopto->sync_external_user($eventdata['userid']);
         } catch (Exception $e) {
             \panopto_data::print_log(print_r($e->getMessage(), true));
         }

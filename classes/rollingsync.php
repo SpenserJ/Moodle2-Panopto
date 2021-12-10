@@ -31,6 +31,9 @@ if (empty($CFG)) {
 }
 
 require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
+require_once(dirname(__FILE__) . '/../lib/panoptoblock_lti_utility.php');
+require_once($CFG->libdir . '/pagelib.php');
+require_once($CFG->libdir . '/blocklib.php');
 
 /**
  * Handlers for each different event type.
@@ -54,6 +57,51 @@ class block_panopto_rollingsync {
      * @param \core\event\course_created $event
      */
     public static function coursecreated(\core\event\course_created $event) {
+        global $DB;
+
+        if (get_config('block_panopto', 'auto_insert_lti_link_to_new_courses')) {
+            
+            // Get a matching LTI tool for the course. 
+            $tool = \panoptoblock_lti_utility::get_course_tool($event->courseid);
+
+            if (!empty($tool)) {
+                // default intro should be a folderview
+                $draftid_editor = file_get_submitted_draft_itemid('introeditor');
+                file_prepare_draft_area($draftid_editor, null, null, null, null, array('subdirs'=>true));
+
+                $moduleinfo = new stdClass();
+                $moduleinfo->modulename = 'lti';
+                $moduleinfo->course = $event->courseid;
+                $moduleinfo->section = 0;
+                $moduleinfo->name = 'Panopto Course Tool';
+                $moduleinfo->title = $tool->name;
+                $moduleinfo->typeid = $tool->id;
+                $moduleinfo->showdescriptionlaunch = false;
+                $moduleinfo->showtitlelaunch = false;
+                $moduleinfo->launchcontainer = LTI_LAUNCH_CONTAINER_DEFAULT;
+                $moduleinfo->visible = true;
+                $moduleinfo->intro = '';
+                $moduleinfo->icon = 'https://static-contents.panopto.com/prod/panopto_logo_moodle_tool_60x60.png';
+                $moduleinfo->introeditor = array('text'=> $moduleinfo->intro, 'format'=>FORMAT_HTML, 'itemid'=>$draftid_editor);
+                create_module($moduleinfo);
+            }
+        }
+
+        if (get_config('block_panopto', 'auto_add_block_to_new_courses')) {
+            $course = $DB->get_record('course', array('id' => $event->courseid));
+
+            if ($event->courseid == SITEID) {
+                $pagetypepattern = 'site-index';
+            } else {
+                $pagetypepattern = 'course-view-*';
+            }
+
+            $page = new moodle_page();
+            $page->set_course($course);
+            $page->blocks->add_blocks(array(BLOCK_POS_LEFT => array('panopto')), $pagetypepattern);
+        }
+
+
         if (!\panopto_data::is_main_block_configured() ||
             !\panopto_data::has_minimum_version()) {
             return;
@@ -114,7 +162,19 @@ class block_panopto_rollingsync {
                 isset($originalpanoptodata->applicationkey) && !empty($originalpanoptodata->applicationkey) &&
                 isset($originalpanoptodata->sessiongroupid) && !empty($originalpanoptodata->sessiongroupid)) {
 
-                $panoptodata->init_and_sync_import($originalcourseid);
+                $panoptodata->ensure_auth_manager();
+                $activepanoptoserverversion = $panoptodata->authmanager->get_server_version();
+                $useccv2 = version_compare(
+                    $activepanoptoserverversion, 
+                    \panopto_data::$ccv2requiredpanoptoversion, 
+                    '>='
+                );
+
+                if($useccv2)
+                    $panoptodata->copy_panopto_content($originalcourseid);
+                else {
+                    $panoptodata->init_and_sync_import_ccv1($originalcourseid);
+                }
             }
         }
     }

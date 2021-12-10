@@ -118,6 +118,12 @@ class panopto_data {
     public static $unprovisionrequiredpanoptoversion = '7.0.0';
 
     /**
+     * @var string $ccv2requiredpanoptoversion if the Panopto server is using this version then all course copy calls must
+     *   use the new endpoint. 
+     */
+    public static $ccv2requiredpanoptoversion = '12.0.0';
+
+    /**
      * @return returns an array of possible values for the Panopt folder name style
      */
     public static function getpossiblefoldernamestyles() {
@@ -442,7 +448,6 @@ class panopto_data {
         global $CFG, $USER, $DB;
 
         $this->ensure_auth_manager();
-        
         $activepanoptoserverversion = $this->authmanager->get_server_version();
         $hasvalidpanoptoversion = version_compare(
             $activepanoptoserverversion, 
@@ -610,14 +615,109 @@ class panopto_data {
         return $fullname;
     }
 
+    /** 
+     * This will copy Panopto content from one course panopto folder to another course panopto folder
+     * 
+     * @param int $originalcourseid - the moodle id of the course we are trying to copy Panopto content from
+     * 
+     */
+    public function copy_panopto_content($originalcourseid) {
+        global $USER;
+
+        $importresults = array();
+
+        $coursecopytask = new stdClass;
+        $coursecopytask->IdProviderName = $this->instancename;
+        $coursecopytask->SourceCourseContexts = array($originalcourseid);
+        $coursecopytask->TargetCourseContext = $this->moodlecourseid;
+
+        self::print_log_verbose(get_string('copy_course_init', 'block_panopto', $coursecopytask));
+
+        $this->sync_external_user($USER->id);
+
+        $this->add_new_course_import($this->moodlecourseid, $originalcourseid);
+
+        $importpanopto = new \panopto_data($originalcourseid);
+        $provisioninginfo = $this->get_provisioning_info();
+
+        if (!isset($importpanopto->sessiongroupid)) {
+            self::print_log(get_string('import_not_mapped', 'block_panopto'));
+        } else if (!isset($provisioninginfo->accesserror)) {
+            $this->ensure_auth_manager();
+
+            // This call will log the user into Panopto using the SOAP API and it will also store the Panopto cookies
+            $this->authmanager->log_on_with_external_provider();
+
+            // Only do this code if we have proper access to the target Panopto course folder.
+            $location = 'https://'. $this->servername . '/Panopto/api/v1.0-beta/course/copy';
+
+            $curl = new \curl();
+            $aspxauthcookie = "";
+            foreach($this->authmanager->panoptoauthcookies as $key => $value) {
+                if (strpos(strtolower($key), 'aspxauth') !== false) {
+                    $aspxauthcookie = $value;
+                    break;
+                }
+            }
+
+            if (empty($aspxauthcookie)) {
+                $importresult = new stdClass;
+                $importresult->importedcourseid = $originalcourseid;
+                $importresult->errormessage = get_string('copy_api_auth_error', 'block_panopto', $this->servername);
+                $importresults[] = $importresult;
+                \panopto_data::print_log(get_string('copy_api_auth_error', 'block_panopto', $importresult));
+                return $importresults;
+            }
+
+            $options = [
+                'CURLOPT_VERBOSE' => FALSE,
+                'CURLOPT_RETURNTRANSFER' => TRUE,
+                'CURLOPT_HEADER' => FALSE,
+                'CURLOPT_HTTPHEADER' => array('Content-Type: application/json',
+                                              'Cookie: .ASPXAUTH='.$aspxauthcookie)
+            ];
+
+            $socket_timeout = get_config('block_panopto', 'panopto_socket_timeout');
+            $connection_timeout =  get_config('block_panopto', 'panopto_connection_timeout');
+
+            if (!!$socket_timeout) {
+                $options['CURLOPT_TIMEOUT'] = $socket_timeout;
+            }
+
+            if (!!$connection_timeout) {
+                $options['CURLOPT_CONNECTTIMEOUT'] = $connection_timeout;
+            }
+            
+            $response = json_decode($curl->post($location, json_encode($coursecopytask), $options));
+
+            if(empty($response)) {
+                $importresult = new stdClass;
+                $importresult->importedcourseid = $originalcourseid;
+                $importresults[] = $importresult;
+            } else {
+                $importresult = new stdClass;
+                $importresult->importedcourseid = $originalcourseid;
+                $importresult->errormessage = get_string('copy_api_error', 'block_panopto', $importresult);
+                $importresults[] = $importresult;
+                \panopto_data::print_log(get_string('copy_api_error_response', 'block_panopto', $response));
+            }
+        } else {
+            $importresult = new stdClass;
+            $importresult->importedcourseid = $originalcourseid;
+            $importresult->errormessage = get_string('copy_access_error', 'block_panopto', $importresult);
+            $importresults[] = $importresult;
+        }
+
+        return $importresults;
+    }
+
     /**
      * Initializes and syncs a possible new import
      *
      * @param int $newimportid the id of the course being imported
      *
      */
-    public function init_and_sync_import($newimportid, $importresults = array(), $handledimports = array()) {
-
+    public function init_and_sync_import_ccv1($newimportid, $importresults = array(), $handledimports = array()) {
         // If we are importing a nested child make sure we have not already imported 
         if (in_array($newimportid, $handledimports)) {
             return $importresults;
@@ -655,7 +755,7 @@ class panopto_data {
             // We need to make sure this course gets access to anything the course it imported had access to. 
             $nestedimports = self::get_import_list($newimportid);
             foreach ($nestedimports as $nestedimportid) {
-                $importresults = $this->init_and_sync_import($nestedimportid, $importresults, $handledimports);
+                $importresults = $this->init_and_sync_import_ccv1($nestedimportid, $importresults, $handledimports);
             }
         } else {
             $importresult = new stdClass;
@@ -676,21 +776,12 @@ class panopto_data {
         $ret = false;
 
         if (isset($this->sessiongroupid)) {
-            $this->ensure_session_manager();
-            $provisioninginfo = $this->get_provisioning_info();
-            $ret = $this->sessionmanager->get_folders_by_external_id($provisioninginfo->externalcourseid);
-        }
-        
-        if (!$ret || empty($ret) || isset($ret->noaccess) || !empty($ret->errormessage)) {
             // Update permissions so user can see everything they should.
             $this->sync_external_user($USER->id);
 
-            if (isset($this->sessiongroupid)) {
-                $this->ensure_session_manager();
-
-                $provisioninginfo = $this->get_provisioning_info();
-                $ret = $this->sessionmanager->get_folders_by_external_id($provisioninginfo->externalcourseid);
-            }
+            $this->ensure_session_manager();
+            $provisioninginfo = $this->get_provisioning_info();
+            $ret = $this->sessionmanager->get_folders_by_external_id($provisioninginfo->externalcourseid);
         }
 
         return $ret;
@@ -703,13 +794,9 @@ class panopto_data {
     public function get_folders_by_id() {
         global $USER;
 
-        $ret = $this->get_folders_by_id_no_sync();
+        $this->sync_external_user($USER->id);
 
-        if (!$ret || empty($ret) || isset($ret->noaccess) || !empty($ret->errormessage)) {
-            // Update permissions so user can see everything they should.
-            $this->sync_external_user($USER->id);
-            $ret = $this->get_folders_by_id_no_sync();
-        }
+        $ret = $this->get_folders_by_id_no_sync();
 
         return $ret;
     }
@@ -741,7 +828,6 @@ class panopto_data {
         global $USER;
         $ret = false;
 
-
         // Update permissions so user can see everything they should.
         $this->sync_external_user($USER->id);
 
@@ -759,7 +845,6 @@ class panopto_data {
     public function get_creator_folders_list() {
         global $USER;
         $ret = false;
-
 
         // Update permissions so user can see everything they should.
         $this->sync_external_user($USER->id);

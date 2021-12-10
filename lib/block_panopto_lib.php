@@ -150,32 +150,30 @@ function panopto_get_configured_panopto_servers() {
  * Returns a list of objects containing valid servername/appkey pairs we are targeting.
  *
  */
-function panopto_get_target_panopto_servers() {
-    $ret = array();
-    $targetservers = explode(",", get_config('block_panopto', 'automatic_operation_target_server'));
+function panopto_get_target_panopto_server() {
+    $ret = null;
+    $targetserver = get_config('block_panopto', 'automatic_operation_target_server');
 
     $numservers = get_config('block_panopto', 'server_number');
     $numservers = isset($numservers) ? $numservers : 0;
 
     // Increment numservers by 1 to take into account starting at 0.
     ++$numservers;
-
     for ($serverwalker = 1; $serverwalker <= $numservers; ++$serverwalker) {
 
         // Generate strings corresponding to potential servernames in the config.
         $thisservername = get_config('block_panopto', 'server_name' . $serverwalker);
 
-        if (in_array($thisservername, $targetservers)) {
+        if (strcasecmp($thisservername, $targetserver) == 0) {
             $thisappkey = get_config('block_panopto', 'application_key' . $serverwalker);
             $hasvaliddata = isset($thisappkey) && !empty($thisappkey);
 
             // If we have valid data for the server then try to ensure the category branch
             if ($hasvaliddata) {
-
-                $targetserver = new stdClass();
-                $targetserver->name = $thisservername;
-                $targetserver->appkey = $thisappkey;
-                $ret[] = $targetserver;
+                $ret = new stdClass();
+                $ret->name = $thisservername;
+                $ret->appkey = $thisappkey;
+                break;
             }
         }
     }

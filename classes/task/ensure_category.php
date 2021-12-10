@@ -51,13 +51,11 @@ class ensure_category extends \core\task\adhoc_task {
             $eventdata = (array) $this->get_custom_data();
             $categoryid = $eventdata['categoryid'];
             
-            $targetservers = panopto_get_target_panopto_servers();
-            foreach ($targetservers as $targetserver) {
-                $serverpanopto = new \panopto_category_data($categoryid, $targetserver->name, $targetserver->appkey);
+            $targetserver = panopto_get_target_panopto_server();
+            $serverpanopto = new \panopto_category_data($categoryid, $targetserver->name, $targetserver->appkey);
 
-                // Sync the user to all courses mapped to the server.
-                $serverpanopto->ensure_category_branch(false, null);
-            }
+            // Sync the user to all courses mapped to the server.
+            $serverpanopto->ensure_category_branch(false, null);
         } catch (Exception $e) {
             \panopto_data::print_log(print_r($e->getMessage(), true));
         }

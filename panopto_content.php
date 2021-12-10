@@ -170,10 +170,28 @@ try {
 
                     if (!empty($completeddeliveries)) {
                         $i = 0;
+
+                        if (!function_exists('str_contains')) {
+                            function str_contains(string $haystack, string $needle): bool
+                            {
+                                return '' === $needle || false !== strpos($haystack, $needle);
+                            }
+                        }
+                        
                         foreach ($completeddeliveries as $completeddelivery) {
                             // Collapse to 3 lectures by default.
                             if ($i == 3) {
                                 $content->text .= "<div id='hiddenLecturesDiv'>";
+                            }
+
+                            if (!str_contains($completeddelivery->ViewerUrl, '?instance') && 
+                                !str_contains($completeddelivery->ViewerUrl, '&instance')) {
+                                if (str_contains($completeddelivery->ViewerUrl, '?')) {
+                                    $completeddelivery->ViewerUrl .= '&instance=' . $panoptodata->instancename; 
+                                } 
+                                else {
+                                    $completeddelivery->ViewerUrl .= '?instance=' . $panoptodata->instancename; 
+                                }
                             }
 
                             // Alternate gray background for readability.

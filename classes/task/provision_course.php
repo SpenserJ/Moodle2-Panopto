@@ -52,13 +52,11 @@ class provision_course extends \core\task\adhoc_task {
 
             $panopto = new \panopto_data($eventdata['courseid']);
 
-            $targetservers = panopto_get_target_panopto_servers();
-            foreach ($targetservers as $targetserver) {
-                $panopto->servername = $targetserver->name;
-                $panopto->applicationkey = $targetserver->appkey;
-                $provisioninginfo = $panopto->get_provisioning_info();
-                $provisioneddata = $panopto->provision_course($provisioninginfo, false);
-            }
+            $targetserver = panopto_get_target_panopto_server();
+            $panopto->servername = $targetserver->name;
+            $panopto->applicationkey = $targetserver->appkey;
+            $provisioninginfo = $panopto->get_provisioning_info();
+            $provisioneddata = $panopto->provision_course($provisioninginfo, false);
         } catch (Exception $e) {
             \panopto_data::print_log(print_r($e->getMessage(), true));
         }

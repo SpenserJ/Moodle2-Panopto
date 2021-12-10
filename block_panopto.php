@@ -76,52 +76,57 @@ class block_panopto extends block_base {
      * @param bool $nolongerused depcrecated variable
      */
     public function instance_config_save($data, $nolongerused = false) {
+
+        // Add roles mapping.
+        $publisherroles = (isset($data->publisher)) ? $data->publisher : array();
+        $creatorroles = (isset($data->creator)) ? $data->creator : array();
+
+        // Get the current role mappings set for the current course from the db.
+        $mappings = \panopto_data::get_course_role_mappings($this->page->course->id);
+
+        $oldcreators = array_diff($mappings['creator'], $creatorroles);
+        $oldpublishers = array_diff($mappings['publisher'], $publisherroles);
+
+        // Make sure the old unassigned roles get unset.
+        \panopto_data::unset_course_role_permissions(
+            $this->page->course->id,
+            $oldpublishers,
+            $oldcreators
+        );
+
+        \panopto_data::set_course_role_permissions(
+            $this->page->course->id,
+            $publisherroles,
+            $creatorroles
+        );
+        
         if (!empty($data->course)) {
 
-            // Add roles mapping.
-            $publisherroles = (isset($data->publisher)) ? $data->publisher : array();
-            $creatorroles = (isset($data->creator)) ? $data->creator : array();
-
-            // Get the current role mappings set for the current course from the db.
-            $mappings = \panopto_data::get_course_role_mappings($this->page->course->id);
-
-            $oldcreators = array_diff($mappings['creator'], $creatorroles);
-            $oldpublishers = array_diff($mappings['publisher'], $publisherroles);
-
-            // Make sure the old unassigned roles get unset.
-            \panopto_data::unset_course_role_permissions(
-                $this->page->course->id,
-                $oldpublishers,
-                $oldcreators
-            );
-
-            \panopto_data::set_course_role_permissions(
-                $this->page->course->id,
-                $publisherroles,
-                $creatorroles
-            );
-
+            // Only perform this chunk if we are remapping to a new folder.
             $panoptodata = new \panopto_data($this->page->course->id);
-            $oldsessionid = null;
-            if (!empty($panoptodata->sessiongroupid)) {
-                $oldsessionid = $panoptodata->sessiongroupid;
-                $panoptodata->unprovision_course();
-            }
+            
+            if (strcasecmp($panoptodata->sessiongroupid, $data->course) != 0) {
+                $oldsessionid = null;
+                if (!empty($panoptodata->sessiongroupid)) {
+                    $oldsessionid = $panoptodata->sessiongroupid;
+                    $panoptodata->unprovision_course();
+                }
 
 
-            // Manually overwrite the sessiongroupid on this Panopto_Data instance so we can test provision the attempted new mapping. If the provision fails do not allow it.
-            //  Provision could fail if the user attempts to provision a personal folder.
-            $panoptodata->sessiongroupid = $data->course;
+                // Manually overwrite the sessiongroupid on this Panopto_Data instance so we can test provision the attempted new mapping. If the provision fails do not allow it.
+                //  Provision could fail if the user attempts to provision a personal folder.
+                $panoptodata->sessiongroupid = $data->course;
 
-            $provisioninginfo = $panoptodata->get_provisioning_info();
-            $provisioneddata = $panoptodata->provision_course($provisioninginfo, false);
-            if (isset($provisioneddata->Id) && !empty($provisioneddata->Id)) {
-                $panoptodata->update_folder_external_id_with_provider();
-                \panopto_data::set_panopto_course_id($this->page->course->id, $data->course);
-            } else {
-                $panoptodata->sessiongroupid = $oldsessionid;
                 $provisioninginfo = $panoptodata->get_provisioning_info();
                 $provisioneddata = $panoptodata->provision_course($provisioninginfo, false);
+                if (isset($provisioneddata->Id) && !empty($provisioneddata->Id)) {
+                    $panoptodata->update_folder_external_id_with_provider();
+                    \panopto_data::set_panopto_course_id($this->page->course->id, $data->course);
+                } else {
+                    $panoptodata->sessiongroupid = $oldsessionid;
+                    $provisioninginfo = $panoptodata->get_provisioning_info();
+                    $provisioneddata = $panoptodata->provision_course($provisioninginfo, false);
+                }
             }
         }
     }

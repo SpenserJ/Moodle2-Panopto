@@ -94,7 +94,7 @@ if ($callbackverified) {
 
         $ssosynctask->set_custom_data(array(
             'userid' => $USER->id,
-            'targetservers' => array($targetserver)
+            'targetserver' => $targetserver
         ));
 
         switch ($selectedssotype) {

@@ -61,6 +61,17 @@ class panopto_auth_soap_client extends PanoptoTimeoutSoapClient {
     private $authmanagementserviceget;
 
     /**
+     * @var AuthManagementServiceLog authmanagementservicelog object used to call the auth log service
+     */
+    private $authmanagementservicelog;
+
+    /**
+     * @var array panoptoauthcookies - this array will contain the cookies retrieved from the logOnWithExternalProvider response
+     * These cookies are used to call the REST API
+     */
+    public $panoptoauthcookies;
+
+    /**
      * main constructor
      *
      * @param string $servername
@@ -77,6 +88,7 @@ class panopto_auth_soap_client extends PanoptoTimeoutSoapClient {
         );
 
         $this->serviceparams = panopto_generate_wsdl_service_params('https://'. $servername . '/Panopto/PublicAPI/4.2/Auth.svc?singlewsdl');
+        $this->serviceparams['wsdl_trace'] = true;
 
     }
 
@@ -126,6 +138,27 @@ class panopto_auth_soap_client extends PanoptoTimeoutSoapClient {
         }
 
         return $returnvalue;
+    }
+
+    /**
+     * Logs the user into the WS service and retrieves the cookie for later use. 
+     */
+    public function log_on_with_external_provider() {
+        $this->authmanagementservicelog = new AuthManagementServiceLog($this->serviceparams, true);
+
+        $logonparams = new AuthManagementStructLogOnWithExternalProvider(
+            $this->authparam->getUserKey(), 
+            $this->authparam->getAuthCode()
+        );
+
+        if ($this->authmanagementservicelog->LogOnWithExternalProvider($logonparams)) {
+            $soapclient = $this->authmanagementservicelog->getSoapClient();
+
+            $this->panoptoauthcookies = $soapclient->getpanoptocookies();
+        } else {
+            $lasterror = $this->authmanagementservicelog->getLastError()['AuthManagementServiceLog::LogOnWithExternalProvider'];
+            \panopto_data::print_log(print_r($lasterror, true));
+        }
     }
 }
 /* End of file panopto_auth_soap_client.php */

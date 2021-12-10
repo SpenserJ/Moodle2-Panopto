@@ -62,6 +62,7 @@ function reinitialize_all_imports() {
     $NO_COURSE_EXISTS = "NO_COURSE_EXISTS";
     $INVALID_PANOPTO_DATA = "INVALID_PANOPTO_DATA";
 
+
     $courseimports = $DB->get_records('block_panopto_importmap');
 
     $coursepanoptoarray = array();
@@ -96,9 +97,22 @@ function reinitialize_all_imports() {
         if ($targetpanopto !== $NO_COURSE_EXISTS &&
             $targetpanopto !== $INVALID_PANOPTO_DATA) {
 
+            $targetpanopto->ensure_auth_manager();
+            $activepanoptoserverversion = $targetpanopto->authmanager->get_server_version();
+            $useccv2 = version_compare(
+                $activepanoptoserverversion, 
+                \panopto_data::$ccv2requiredpanoptoversion, 
+                '>='
+            );
+            
             $targetpanoptodata = $targetpanopto->get_provisioning_info();
 
-            $importresults = $targetpanopto->init_and_sync_import($courseimport->import_moodle_id);
+            $importresults = null;
+            if ($useccv2) {
+                $importresults = $targetpanopto->copy_panopto_content($courseimport->import_moodle_id);
+            } else {
+                $importresults = $targetpanopto->init_and_sync_import_ccv1($courseimport->import_moodle_id);
+            }
         }
 
         include('views/imported_course.html.php');
