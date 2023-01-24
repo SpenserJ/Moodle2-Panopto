@@ -25,9 +25,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-// No login check is expected since we can run this from console.
-// @codingStandardsIgnoreLine
-require_once(dirname(__FILE__) . '/../../../config.php');
+global $CFG;
+if (empty($CFG)) {
+    // @codingStandardsIgnoreLine
+    require_once(dirname(__FILE__) . '/../../../config.php');
+}
 require_once(dirname(__FILE__) . '/../lib/panopto_data.php');
 require_once(dirname(__FILE__) . '/../lib/lti/panoptoblock_lti_utility.php');
 require_once($CFG->libdir . '/pagelib.php');

@@ -23,6 +23,11 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+if (empty($CFG)) {
+    // @codingStandardsIgnoreLine
+    require_once('../../config.php');
+}
 require_once($CFG->libdir . '/clilib.php');
 require_once($CFG->libdir . '/dmllib.php');
 require_once($CFG->libdir .'/filelib.php');
