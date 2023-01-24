@@ -24,7 +24,12 @@
 
 // This can't be defined Moodle internal because it is called from Panopto to authorize login.
 
-require_once(dirname(__FILE__) . '/../../config.php');
+// @codingStandardsIgnoreLine
+global $CFG;
+if (empty($CFG)) {
+    // @codingStandardsIgnoreLine
+    require_once(dirname(__FILE__) . '/../../config.php');
+}
 require_once($CFG->libdir . '/weblib.php');
 require_once(dirname(__FILE__) . '/lib/block_panopto_lib.php');
 

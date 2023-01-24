@@ -25,7 +25,12 @@
 define('AJAX_SCRIPT', true);
 define('READ_ONLY_SESSION', true);
 
-require_once(dirname(__FILE__) . '/../../config.php');
+// @codingStandardsIgnoreLine
+global $CFG;
+if (empty($CFG)) {
+    // @codingStandardsIgnoreLine
+    require_once(dirname(__FILE__) . '/../../config.php');
+}
 require_once(dirname(__FILE__) . '/lib/panopto_data.php');
 
 try {

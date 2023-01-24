@@ -22,7 +22,12 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(dirname(__FILE__) . '/../../../../config.php');
+// @codingStandardsIgnoreLine
+global $CFG;
+if (empty($CFG)) {
+    // @codingStandardsIgnoreLine
+    require_once(dirname(__FILE__) . '/../../../../config.php');
+}
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 require_once($CFG->libdir . '/weblib.php');
 require_once(dirname(__FILE__) . '/panoptoblock_lti_utility.php');
