@@ -51,13 +51,29 @@ $responsetype = optional_param('response_type', '', PARAM_TEXT);
 $clientid = optional_param('client_id', '', PARAM_TEXT);
 $redirecturi = optional_param('redirect_uri', '', PARAM_URL);
 $loginhint = optional_param('login_hint', '', PARAM_TEXT);
-$ltimessagehint = optional_param('lti_message_hint', '', PARAM_TEXT);
+$ltimessagehintenc = optional_param('lti_message_hint', '', PARAM_TEXT);
 $state = optional_param('state', '', PARAM_TEXT);
 $responsemode = optional_param('response_mode', '', PARAM_TEXT);
 $nonce = optional_param('nonce', '', PARAM_TEXT);
 $prompt = optional_param('prompt', '', PARAM_TEXT);
 
-list($pluginname, $callback, $toolid, $resourcelinkid, $contenturl, $customdata) = explode(',', $ltimessagehint, 6);
+// Specific logic for Moodle 4.1 needed, in order to handle auth.
+$isthismoodle41 = empty($CFG->version) ? false : $CFG->version >= 2022112800.00;
+$ltimessagehint = $isthismoodle41 ? json_decode($ltimessagehintenc) : $ltimessagehintenc;
+
+list(
+    $pluginname,
+    $callback,
+    $toolid,
+    $resourcelinkid,
+    $contenturl,
+    $customdata
+) = explode(
+    ',',
+    $isthismoodle41 ? $ltimessagehint->cmid : $ltimessagehint,
+    6
+);
+
 $ispanoptoplugin = false;
 $pluginpath = '';
 switch($pluginname)
@@ -90,16 +106,24 @@ if (!$ispanoptoplugin) {
                 '&nonce=' . urlencode($nonce) .
                 "&login_hint=$loginhint" .
                 "&prompt=$prompt" .
-                "&lti_message_hint=$ltimessagehint"
+                "&lti_message_hint=$ltimessagehintenc"
             );
 }
 
 $ok = !empty($scope) && !empty($responsetype) && !empty($clientid) &&
       !empty($redirecturi) && !empty($loginhint) &&
-      !empty($nonce) && !empty($SESSION->lti_message_hint);
+      !empty($nonce) && ($isthismoodle41 ? true : !empty($SESSION->lti_message_hint));
 
 if (!$ok) {
     $error = 'invalid_request';
+}
+// This is only Moodle 4.1 check.
+if ($isthismoodle41) {
+    $ok = $ok && isset($ltimessagehint->launchid);
+    if (!$ok) {
+        $error = 'invalid_request';
+        $desc = 'No launch id in LTI hint';
+    }
 }
 if ($ok && ($scope !== 'openid')) {
     $ok = false;
@@ -110,17 +134,18 @@ if ($ok && ($responsetype !== 'id_token')) {
     $error = 'unsupported_response_type';
 }
 if ($ok) {
-    list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 5);
-
-    $ok = true;
-    if (!$ok) {
-        $error = 'invalid_request';
+    if ($isthismoodle41) {
+        $launchid = $ltimessagehint->launchid;
+        list($courseid, $typeid, $id, $messagetype, $foruserid, $titleb64, $textb64) = explode(',', $SESSION->$launchid, 7);
+        unset($SESSION->$launchid);
     } else {
-        $config = lti_get_type_type_config($typeid);
-        $ok = ($clientid === $config->lti_clientid);
-        if (!$ok) {
-            $error = 'unauthorized_client';
-        }
+        list($courseid, $typeid, $id, $titleb64, $textb64) = explode(',', $SESSION->lti_message_hint, 5);
+    }
+
+    $config = lti_get_type_type_config($typeid);
+    $ok = ($clientid === $config->lti_clientid);
+    if (!$ok) {
+        $error = 'unauthorized_client';
     }
 }
 if ($ok && ($loginhint !== $USER->id)) {
@@ -146,7 +171,7 @@ if (empty($config)) {
     throw new moodle_exception('invalidrequest', 'error');
 } else {
     $uris = array_map("trim", explode("\n", $config->lti_redirectionuris));
-    if (!in_array($redirecturi, $uris)) {
+    if (!in_array(strtolower($redirecturi), array_map("strtolower", $uris))) {
         throw new moodle_exception('invalidrequest', 'error');
     }
 }

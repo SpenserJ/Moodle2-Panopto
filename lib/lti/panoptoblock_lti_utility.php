@@ -497,9 +497,10 @@ class panoptoblock_lti_utility {
      * @throws moodle_exception When the LTI tool type does not exist.`
      * @throws coding_exception For invalid media type and presentation target parameters.
      */
-    public static function build_content_item_selection_request($id, $course, moodle_url $returnurl, $title = '', $text = '', $mediatypes = [],
-                                                      $presentationtargets = [], $autocreate = false, $multiple = true,
-                                                      $unsigned = false, $canconfirm = false, $copyadvice = false, $nonce = '', $pluginname = '') {
+    public static function build_content_item_selection_request($id, $course, moodle_url $returnurl, $title = '', $text = '',
+                                                      $mediatypes = [], $presentationtargets = [], $autocreate = false,
+                                                      $multiple = true, $unsigned = false, $canconfirm = false,
+                                                      $copyadvice = false, $nonce = '', $pluginname = '') {
         global $USER, $CFG;
         require_once($CFG->dirroot . '/mod/lti/locallib.php');
 

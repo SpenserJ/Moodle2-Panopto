@@ -162,7 +162,7 @@ class block_panopto extends block_base {
                                     null,
                                     true);
 
-        $this->content->text  = html_writer::tag('div', "<font id='loading_text'>" .
+        $this->content->text = html_writer::tag('div', "<font id='loading_text'>" .
             get_string('fetching_content', 'block_panopto') . '</font>', $params);
 
         $this->content->text .= '<script type="text/javascript">' .

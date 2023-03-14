@@ -136,7 +136,7 @@ if ($callbackverified) {
         $responseparamsencoded =
             'serverName=' . $servername . '&externalUserKey=' . urlencode($userkey) . '&expiration=' . $expiration;
 
-        $fullreturnurl = !empty($returnurl) ? '&ReturnUrl=' . $returnurl . $fragment : "";
+        $fullreturnurl = !empty($returnurl) ? '&ReturnUrl=' . urlencode($returnurl) . $fragment : "";
         $separator = (strpos($url, '?') ? '&' : '?');
         $redirecturl = $url . $separator . $responseparamsencoded . '&authCode=' . $responseauthcode . $fullreturnurl;
 
