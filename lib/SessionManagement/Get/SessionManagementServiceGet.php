@@ -267,6 +267,25 @@ class SessionManagementServiceGet extends SessionManagementWsdlClass
         }
     }
     /**
+     * Method to call the operation originally named GetExtendedCreatorFoldersList
+     * @uses SessionManagementWsdlClass::getSoapClient()
+     * @uses SessionManagementWsdlClass::setResult()
+     * @uses SessionManagementWsdlClass::saveLastError()
+     * @param SessionManagementStructGetExtendedCreatorFoldersList $_sessionManagementStructGetExtendedCreatorFoldersList
+     * @return SessionManagementStructGetExtendedCreatorFoldersListResponse
+     */
+    public function GetExtendedCreatorFoldersList(SessionManagementStructGetExtendedCreatorFoldersList $_sessionManagementStructGetExtendedCreatorFoldersList)
+    {
+        try
+        {
+            return $this->setResult(self::getSoapClient()->GetExtendedCreatorFoldersList($_sessionManagementStructGetExtendedCreatorFoldersList));
+        }
+        catch(SoapFault $soapFault)
+        {
+            return !$this->saveLastError(__METHOD__,$soapFault);
+        }
+    }
+    /**
      * Method to call the operation originally named GetCreatorFoldersWithExternalContextList
      * @uses SessionManagementWsdlClass::getSoapClient()
      * @uses SessionManagementWsdlClass::setResult()
@@ -383,7 +402,7 @@ class SessionManagementServiceGet extends SessionManagementWsdlClass
     /**
      * Returns the result
      * @see SessionManagementWsdlClass::getResult()
-     * @return SessionManagementStructGetAllFoldersByExternalIdResponse|SessionManagementStructGetAllFoldersWithExternalContextByExternalIdResponse|SessionManagementStructGetCreatorFoldersListResponse|SessionManagementStructGetCreatorFoldersWithExternalContextListResponse|SessionManagementStructGetFoldersAvailabilitySettingsResponse|SessionManagementStructGetFoldersByExternalIdResponse|SessionManagementStructGetFoldersByIdResponse|SessionManagementStructGetFoldersListResponse|SessionManagementStructGetFoldersWithExternalContextByExternalIdResponse|SessionManagementStructGetFoldersWithExternalContextByIdResponse|SessionManagementStructGetFoldersWithExternalContextListResponse|SessionManagementStructGetNoteResponse|SessionManagementStructGetPersonalFolderForUserResponse|SessionManagementStructGetRecorderDownloadUrlsResponse|SessionManagementStructGetSessionsAvailabilitySettingsResponse|SessionManagementStructGetSessionsByExternalIdResponse|SessionManagementStructGetSessionsByIdResponse|SessionManagementStructGetSessionsListResponse
+     * @return SessionManagementStructGetAllFoldersByExternalIdResponse|SessionManagementStructGetAllFoldersWithExternalContextByExternalIdResponse|SessionManagementStructGetCreatorFoldersListResponse|SessionManagementStructGetCreatorFoldersWithExternalContextListResponse|SessionManagementStructGetFoldersAvailabilitySettingsResponse|SessionManagementStructGetFoldersByExternalIdResponse|SessionManagementStructGetFoldersByIdResponse|SessionManagementStructGetFoldersListResponse|SessionManagementStructGetFoldersWithExternalContextByExternalIdResponse|SessionManagementStructGetFoldersWithExternalContextByIdResponse|SessionManagementStructGetFoldersWithExternalContextListResponse|SessionManagementStructGetNoteResponse|SessionManagementStructGetPersonalFolderForUserResponse|SessionManagementStructGetRecorderDownloadUrlsResponse|SessionManagementStructGetSessionsAvailabilitySettingsResponse|SessionManagementStructGetSessionsByExternalIdResponse|SessionManagementStructGetSessionsByIdResponse|SessionManagementStructGetSessionsListResponse|SessionManagementStructGetExtendedCreatorFoldersListResponse
      */
     public function getResult()
     {

@@ -114,9 +114,12 @@ require_once dirname(__FILE__) . '/Are/Response/SessionManagementStructAreUsersN
 require_once dirname(__FILE__) . '/Update/Response/SessionManagementStructUpdateSessionOwnerResponse.php';
 require_once dirname(__FILE__) . '/Update/Owner/SessionManagementStructUpdateSessionOwner.php';
 require_once dirname(__FILE__) . '/Array/Folder/SessionManagementStructArrayOfFolder.php';
+require_once dirname(__FILE__) . '/Array/Folder/SessionManagementStructArrayOfExtendedFolder.php';
 require_once dirname(__FILE__) . '/List/Response/SessionManagementStructListSessionsResponse.php';
 require_once dirname(__FILE__) . '/List/Response/SessionManagementStructListFoldersResponse.php';
+require_once dirname(__FILE__) . '/List/Response/SessionManagementStructListExtendedFoldersResponse.php';
 require_once dirname(__FILE__) . '/Folder/SessionManagementStructFolder.php';
+require_once dirname(__FILE__) . '/Folder/SessionManagementStructExtendedFolder.php';
 require_once dirname(__FILE__) . '/Date/Offset/SessionManagementStructDateTimeOffset.php';
 require_once dirname(__FILE__) . '/Array/Session/SessionManagementStructArrayOfSession.php';
 require_once dirname(__FILE__) . '/Array/Context/SessionManagementStructArrayOfFolderWithExternalContext.php';
@@ -152,12 +155,14 @@ require_once dirname(__FILE__) . '/Session/Type/SessionManagementEnumSessionStar
 require_once dirname(__FILE__) . '/Get/List/SessionManagementStructGetFoldersWithExternalContextList.php';
 require_once dirname(__FILE__) . '/Get/Response/SessionManagementStructGetFoldersWithExternalContextListResponse.php';
 require_once dirname(__FILE__) . '/Get/List/SessionManagementStructGetCreatorFoldersList.php';
+require_once dirname(__FILE__) . '/Get/List/SessionManagementStructGetExtendedCreatorFoldersList.php';
 require_once dirname(__FILE__) . '/Get/Response/SessionManagementStructGetFoldersListResponse.php';
 require_once dirname(__FILE__) . '/Get/List/SessionManagementStructGetFoldersList.php';
 require_once dirname(__FILE__) . '/Get/Response/SessionManagementStructGetSessionsByExternalIdResponse.php';
 require_once dirname(__FILE__) . '/Get/List/SessionManagementStructGetSessionsList.php';
 require_once dirname(__FILE__) . '/Get/Response/SessionManagementStructGetSessionsListResponse.php';
 require_once dirname(__FILE__) . '/Get/Response/SessionManagementStructGetCreatorFoldersListResponse.php';
+require_once dirname(__FILE__) . '/Get/Response/SessionManagementStructGetExtendedCreatorFoldersListResponse.php';
 require_once dirname(__FILE__) . '/Get/List/SessionManagementStructGetCreatorFoldersWithExternalContextList.php';
 require_once dirname(__FILE__) . '/Update/Response/SessionManagementStructUpdateSessionDescriptionResponse.php';
 require_once dirname(__FILE__) . '/Update/Broadcast/SessionManagementStructUpdateSessionIsBroadcast.php';

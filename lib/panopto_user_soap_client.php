@@ -100,9 +100,14 @@ class panopto_user_soap_client extends PanoptoTimeoutSoapClient {
      * @param string $lastname user last name
      * @param string $email user email address
      * @param array $externalgroupids array of group ids the user needs to be in
-     * @param boolean $sendemailnotifications whether user gets emails from Panopto updates
+     * @param string $username panopto username
      */
-    public function sync_external_user($firstname, $lastname, $email, $externalgroupids, $sendemailnotifications = false) {
+    public function sync_external_user($firstname, $lastname, $email, $externalgroupids, $username = "") {
+
+        // Get user from panopto, and send notifications status.
+        $instancename = \get_config('block_panopto', 'instance_name');
+        $panoptouser = $this->get_user_by_key($instancename . '\\' . $username);
+        $sendemailnotifications = $panoptouser->EmailSessionNotifications ?? false;
 
         if (!isset($this->usermanagementservicesync)) {
             $this->usermanagementservicesync = new UserManagementServiceSync($this->serviceparams);
