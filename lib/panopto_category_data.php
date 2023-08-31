@@ -325,7 +325,7 @@ class panopto_category_data {
             $ensuredbranch .= $updatedcategory->Name;
 
             // If the returned folder was the leaf course folder no need to save it.
-            if (strcmp($leafcoursesessiongroupid, $updatedcategory->Id) !== 0) {
+            if (strcmp($leafcoursesessiongroupid ?? '', $updatedcategory->Id) !== 0) {
                 // The $updatedcategory->ExternalIds->string[0] is the format the PHP wsdl mapper returns our call data.
                 // We also need to strip <instance_name>// off the externalId to get the true category Id.
                 $row->category_id = str_replace($this->instancename . '\\', '', $updatedcategory->ExternalIds->string[0]);

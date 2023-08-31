@@ -31,6 +31,7 @@ if (empty($CFG)) {
 require_once($CFG->dirroot . '/mod/lti/locallib.php');
 require_once($CFG->libdir . '/weblib.php');
 require_once(dirname(__FILE__) . '/panoptoblock_lti_utility.php');
+require_once(dirname(__FILE__) . '../../panopto_data.php');
 
 global $_POST, $_SERVER;
 
@@ -57,9 +58,10 @@ $responsemode = optional_param('response_mode', '', PARAM_TEXT);
 $nonce = optional_param('nonce', '', PARAM_TEXT);
 $prompt = optional_param('prompt', '', PARAM_TEXT);
 
-// Specific logic for Moodle 4.1 needed, in order to handle auth.
-$isthismoodle41 = empty($CFG->version) ? false : $CFG->version >= 2022112800.00;
-$ltimessagehint = $isthismoodle41 ? json_decode($ltimessagehintenc) : $ltimessagehintenc;
+// Specific logic for Moodle 4.1 and 4.2 needed, in order to handle auth.
+$ismoodle41minimum = empty($CFG->version) ? false : $CFG->version >= 2022112800.00;
+$ltimessagehint = $ismoodle41minimum ? json_decode($ltimessagehintenc) : $ltimessagehintenc;
+$cmid = !empty($ltimessagehint->cmid) ? $ltimessagehint->cmid : '';
 
 list(
     $pluginname,
@@ -68,10 +70,11 @@ list(
     $resourcelinkid,
     $contenturl,
     $customdata
-) = explode(
+) = array_pad(explode(
     ',',
-    $isthismoodle41 ? $ltimessagehint->cmid : $ltimessagehint,
-    6
+    $ismoodle41minimum ? $cmid : $ltimessagehint),
+    6,
+    null
 );
 
 $ispanoptoplugin = false;
@@ -89,6 +92,10 @@ switch($pluginname)
     case 'mod_panoptocourseembed':
         $ispanoptoplugin = true;
         $pluginpath = '/mod/panoptocourseembed/contentitem_return.php';
+        break;
+    case 'tiny_panoptoltibutton':
+        $ispanoptoplugin = true;
+        $pluginpath = '/lib/editor/tiny/plugins/panoptoltibutton/contentitem_return.php';
         break;
     default:
         $ispanoptoplugin = false;
@@ -112,13 +119,13 @@ if (!$ispanoptoplugin) {
 
 $ok = !empty($scope) && !empty($responsetype) && !empty($clientid) &&
       !empty($redirecturi) && !empty($loginhint) &&
-      !empty($nonce) && ($isthismoodle41 ? true : !empty($SESSION->lti_message_hint));
+      !empty($nonce) && ($ismoodle41minimum ? true : !empty($SESSION->lti_message_hint));
 
 if (!$ok) {
     $error = 'invalid_request';
 }
 // This is only Moodle 4.1 check.
-if ($isthismoodle41) {
+if ($ismoodle41minimum) {
     $ok = $ok && isset($ltimessagehint->launchid);
     if (!$ok) {
         $error = 'invalid_request';
@@ -134,7 +141,7 @@ if ($ok && ($responsetype !== 'id_token')) {
     $error = 'unsupported_response_type';
 }
 if ($ok) {
-    if ($isthismoodle41) {
+    if ($ismoodle41minimum) {
         $launchid = $ltimessagehint->launchid;
         list($courseid, $typeid, $id, $messagetype, $foruserid, $titleb64, $textb64) = explode(',', $SESSION->$launchid, 7);
         unset($SESSION->$launchid);
@@ -164,6 +171,20 @@ if (empty($courseid)) {
     $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
     $PAGE->set_context($context);
     $PAGE->set_course($course);
+}
+
+// Specific logic for Moodle 4.2
+$ismoodle42minimum = empty($CFG->version) ? false : $CFG->version >= 2023042400.00;
+if ($ismoodle42minimum) {
+    $panoptodata = new \panopto_data($course->id);
+    $coursemodules = $panoptodata->get_cm_for_course($course->id);
+
+    $cmid = 0;
+    if (!empty($coursemodules)) {
+        $cmid = reset($coursemodules)->id;
+    }
+
+    $_GET['id'] = $cmid;
 }
 
 // If we're unable to load up config; we cannot trust the redirect uri for POSTing to.
@@ -212,6 +233,9 @@ if ($ok) {
                 $lti->custom->$key = $value;
             }
         }
+
+        // If we get to this point we know this is a plug-in based request and will not support grading
+        $lti->custom->grading_not_supported = true;
 
         list($endpoint, $params) = panoptoblock_lti_utility::get_launch_data($lti, $nonce);
     } else {

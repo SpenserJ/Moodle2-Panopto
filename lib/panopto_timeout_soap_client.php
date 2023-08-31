@@ -121,7 +121,7 @@ class PanoptoTimeoutSoapClient extends SoapClient {
      * @param int $version the SOAP version
      * @param bool $one_way determine if response is expected or not
      */
-    public function __doRequest($request, $location, $action, $version, $one_way = false) {
+    public function __doRequest($request, $location, $action, $version, $one_way = false): ?string {
         if (empty($this->socket_timeout) && empty($this->connect_timeout)) {
             // Call via parent because we require no timeout.
             $response = parent::__doRequest($request, $location, $action, $version, $one_way);
@@ -159,6 +159,9 @@ class PanoptoTimeoutSoapClient extends SoapClient {
             if (!empty($this->proxy_port)) {
                 $options['CURLOPT_PROXYPORT'] = $this->proxy_port;
             }
+
+            // Depending on Moodle settings Moodle will not include  connect headers in the header size. This will break all curl calls from here.
+            $options['CURLOPT_SUPPRESS_CONNECT_HEADERS'] = 0;
 
             $response = $curl->post($location, $request, $options);
 

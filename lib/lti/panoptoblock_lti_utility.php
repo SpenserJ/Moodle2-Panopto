@@ -35,8 +35,10 @@ class panoptoblock_lti_utility {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
-        $ltitooltypes = $DB->get_records('lti_types', null, 'name');
         $targetservername = self::get_target_server_name($courseid);
+        $ltitooltypes = !empty($targetservername)
+            ? $DB->get_records('lti_types', ['tooldomain' => $targetservername], 'name')
+            : $DB->get_records('lti_types', null, 'name');
 
         $idmatches = [];
         foreach ($ltitooltypes as $type) {
@@ -84,8 +86,10 @@ class panoptoblock_lti_utility {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
-        $ltitooltypes = $DB->get_records('lti_types', null, 'name');
         $targetservername = self::get_target_server_name($courseid);
+        $ltitooltypes = !empty($targetservername)
+            ? $DB->get_records('lti_types', ['tooldomain' => $targetservername], 'name')
+            : $DB->get_records('lti_types', null, 'name');
 
         $urlmatches = [];
         foreach ($ltitooltypes as $type) {
@@ -417,8 +421,6 @@ class panoptoblock_lti_utility {
         global $DB, $CFG;
         require_once($CFG->dirroot . '/mod/lti/locallib.php');
 
-        $ltitooltypes = $DB->get_records('lti_types', null, 'name');
-
         $targetservername = null;
 
         $blockexists = $DB->get_record('block', array('name' => 'panopto'), 'name');
@@ -430,6 +432,10 @@ class panoptoblock_lti_utility {
         if (empty($targetservername)) {
             $targetservername = get_config('block_panopto', 'automatic_operation_target_server');
         }
+
+        $ltitooltypes = !empty($targetservername)
+            ? $DB->get_records('lti_types', ['tooldomain' => $targetservername], 'name')
+            : $DB->get_records('lti_types', null, 'name');
 
         $idmatches = [];
         foreach ($ltitooltypes as $type) {
@@ -595,17 +601,20 @@ class panoptoblock_lti_utility {
             $customstr = $typeconfig['customparameters'];
         }
 
-        switch($pluginname) {
+        switch ($pluginname) {
             // We need to add the custom parameter that initiates the student submission behavior here.
             case 'mod_panoptosubmission':
                 $submissioncustomparam = "panopto_assignment_submission_content_item=true\npanopto_student_submission_tool=true";
-                if (empty($customstr)) {
-                    $customstr = $submissioncustomparam;
-                } else {
-                    $customstr .= "\n" . $submissioncustomparam;
-                }
+                $customstr = empty($customstr) ? $submissioncustomparam : $customstr . "\n" . $submissioncustomparam;
+                $customstr .= "\ngrading_not_supported=true";
+                break;
+            case 'mod_panoptocourseembed':
+            case 'atto_panoptoltibutton':
+            case 'tiny_panoptoltibutton':
+                $customstr .= "\ngrading_not_supported=true";
                 break;
             default:
+                $customstr = '';
                 break;
         }
 

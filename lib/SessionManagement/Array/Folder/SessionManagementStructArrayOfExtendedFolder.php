@@ -21,7 +21,7 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
  /**
- * File for class SessionManagementStructArrayOfstring
+ * File for class SessionManagementStructArrayOfExtendedFolder
  * @package SessionManagement
  * @subpackage Structs
  * @author Panopto
@@ -29,52 +29,52 @@
  * @date 2017-01-19
  */
 /**
- * This class stands for SessionManagementStructArrayOfstring originally named ArrayOfstring
+ * This class stands for SessionManagementStructArrayOfExtendedFolder originally named ArrayOfFolder
  * Meta informations extracted from the WSDL
- * - from schema : {@link http://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/SessionManagement.svc?xsd=xsd4}
+ * - from schema : {@link http://demo.hosted.panopto.com/Panopto/PublicAPI/4.6/SessionManagement.svc?xsd=xsd3}
  * @package SessionManagement
  * @subpackage Structs
  * @author Panopto
  * @version 20150429-01
  * @date 2017-01-19
  */
-class SessionManagementStructArrayOfstring extends SessionManagementWsdlClass
+class SessionManagementStructArrayOfExtendedFolder extends SessionManagementWsdlClass
 {
     /**
-     * The string
+     * The ExtendedFolder
      * Meta informations extracted from the WSDL
      * - maxOccurs : unbounded
      * - minOccurs : 0
      * - nillable : true
-     * @var string
+     * @var SessionManagementStructExtendedFolder
      */
-    public $string;
+    public $ExtendedFolder;
     /**
-     * Constructor method for ArrayOfstring
+     * Constructor method for ArrayOfExtendedFolder
      * @see parent::__construct()
-     * @param string $_string
-     * @return SessionManagementStructArrayOfstring
+     * @param SessionManagementStructExtendedFolder $_extendedFolder
+     * @return SessionManagementStructArrayOfExtendedFolder
      */
-    public function __construct($_string = NULL)
+    public function __construct($_extendedFolder = NULL)
     {
-        parent::__construct(array('string'=>$_string),false);
+        parent::__construct(array('ExtendedFolder'=>$_extendedFolder),false);
     }
     /**
-     * Get string value
-     * @return string|null
+     * Get ExtendedFolder value
+     * @return SessionManagementStructExtendedFolder|null
      */
-    public function getString()
+    public function getExtendedFolder()
     {
-        return $this->string;
+        return $this->Folder;
     }
     /**
-     * Set string value
-     * @param string $_string the string
-     * @return string
+     * Set ExtendedFolder value
+     * @param SessionManagementStructExtendedFolder $_extendedFolder the ExtendedFolder
+     * @return SessionManagementStructExtendedFolder
      */
-    public function setString($_string)
+    public function setExtendedFolder($_extendedFolder)
     {
-        return ($this->string = $_string);
+        return ($this->ExtendedFolder = $_extendedFolder);
     }
     /**
      * Returns the current element
@@ -89,7 +89,7 @@ class SessionManagementStructArrayOfstring extends SessionManagementWsdlClass
      * Returns the indexed element
      * @see SessionManagementWsdlClass::item()
      * @param int $_index
-     * @return string
+     * @return SessionManagementStructExtendedFolder
      */
     public function item($_index)
     {
@@ -98,7 +98,7 @@ class SessionManagementStructArrayOfstring extends SessionManagementWsdlClass
     /**
      * Returns the first element
      * @see SessionManagementWsdlClass::first()
-     * @return string
+     * @return SessionManagementStructExtendedFolder
      */
     public function first()
     {
@@ -107,7 +107,7 @@ class SessionManagementStructArrayOfstring extends SessionManagementWsdlClass
     /**
      * Returns the last element
      * @see SessionManagementWsdlClass::last()
-     * @return string
+     * @return SessionManagementStructExtendedFolder
      */
     public function last()
     {
@@ -126,11 +126,11 @@ class SessionManagementStructArrayOfstring extends SessionManagementWsdlClass
     /**
      * Returns the attribute name
      * @see SessionManagementWsdlClass::getAttributeName()
-     * @return string string
+     * @return string ExtendedFolder
      */
     public function getAttributeName()
     {
-        return 'string';
+        return 'ExtendedFolder';
     }
     /**
      * Method called when an object has been exported with var_export() functions
@@ -138,7 +138,7 @@ class SessionManagementStructArrayOfstring extends SessionManagementWsdlClass
      * @see SessionManagementWsdlClass::__set_state()
      * @uses SessionManagementWsdlClass::__set_state()
      * @param array $_array the exported values
-     * @return SessionManagementStructArrayOfstring
+     * @return SessionManagementStructArrayOfExtendedFolder
      */
     public static function __set_state(array $_array)
     {
