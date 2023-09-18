@@ -80,7 +80,8 @@ class SessionManagementStructArrayOfAccessRole extends SessionManagementWsdlClas
      * @see SessionManagementWsdlClass::current()
      * @return mixed
      */
-    public function current(): mixed
+    #[\ReturnTypeWillChange]
+    public function current()
     {
         return parent::current();
     }
@@ -118,7 +119,8 @@ class SessionManagementStructArrayOfAccessRole extends SessionManagementWsdlClas
      * @param int $_offset
      * @return mixed
      */
-    public function offsetGet($_offset): mixed
+    #[\ReturnTypeWillChange]
+    public function offsetGet($_offset)
     {
         return parent::offsetGet($_offset);
     }
