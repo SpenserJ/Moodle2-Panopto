@@ -639,7 +639,8 @@ class SessionManagementWsdlClass extends stdClass implements ArrayAccess,Iterato
      * @uses SessionManagementWsdlClass::offsetGet()
      * @return mixed
      */
-    public function current(): mixed
+    #[\ReturnTypeWillChange]
+    public function current()
     {
         return $this->offsetGet($this->internArrayToIterateOffset);
     }
@@ -677,7 +678,8 @@ class SessionManagementWsdlClass extends stdClass implements ArrayAccess,Iterato
      * @uses SessionManagementWsdlClass::getInternArrayToIterateOffset()
      * @return int
      */
-    public function key(): mixed
+    #[\ReturnTypeWillChange]
+    public function key()
     {
         return $this->getInternArrayToIterateOffset();
     }
@@ -776,7 +778,8 @@ class SessionManagementWsdlClass extends stdClass implements ArrayAccess,Iterato
      * @param int $_offset
      * @return mixed
      */
-    public function offsetGet($_offset): mixed
+    #[\ReturnTypeWillChange]
+    public function offsetGet($_offset)
     {
         return $this->offsetExists($_offset)?$this->internArrayToIterate[$_offset]:null;
     }

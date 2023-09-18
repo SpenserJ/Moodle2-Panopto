@@ -640,7 +640,8 @@ class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
      * @uses AuthManagementWsdlClass::offsetGet()
      * @return mixed
      */
-    public function current(): mixed
+    #[\ReturnTypeWillChange]
+    public function current()
     {
         return $this->offsetGet($this->internArrayToIterateOffset);
     }
@@ -678,7 +679,8 @@ class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
      * @uses AuthManagementWsdlClass::getInternArrayToIterateOffset()
      * @return mixed
      */
-    public function key(): mixed
+    #[\ReturnTypeWillChange]
+    public function key()
     {
         return $this->getInternArrayToIterateOffset();
     }
@@ -777,7 +779,8 @@ class AuthManagementWsdlClass extends stdClass implements ArrayAccess,Iterator,C
      * @param int $_offset
      * @return mixed
      */
-    public function offsetGet($_offset): mixed
+    #[\ReturnTypeWillChange]
+    public function offsetGet($_offset)
     {
         return $this->offsetExists($_offset)?$this->internArrayToIterate[$_offset]:null;
     }

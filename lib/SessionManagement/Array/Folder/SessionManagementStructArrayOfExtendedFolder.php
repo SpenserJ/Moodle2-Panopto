@@ -81,7 +81,8 @@ class SessionManagementStructArrayOfExtendedFolder extends SessionManagementWsdl
      * @see SessionManagementWsdlClass::current()
      * @return mixed
      */
-    public function current(): mixed
+    #[\ReturnTypeWillChange]
+    public function current()
     {
         return parent::current();
     }
@@ -119,7 +120,8 @@ class SessionManagementStructArrayOfExtendedFolder extends SessionManagementWsdl
      * @param int $_offset
      * @return mixed
      */
-    public function offsetGet($_offset): mixed
+    #[\ReturnTypeWillChange]
+    public function offsetGet($_offset)
     {
         return parent::offsetGet($_offset);
     }
