@@ -162,11 +162,11 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
             $this->sessionmanagementserviceprovision = new SessionManagementServiceProvision($this->serviceparams);
         }
 
-        $rolestoensure = array(
+        $rolestoensure = [
             "Viewer",
             "Creator",
             "Publisher"
-        );
+        ];
         $rolelist = new SessionManagementStructArrayOfAccessRole($rolestoensure);
 
         $provisionparams = new SessionManagementStructProvisionExternalCourseWithRoles(
@@ -201,16 +201,16 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
         }
 
         if (!is_array($folderids)) {
-            $folderids = array($folderids);
+            $folderids = [$folderids];
         }
 
         $folderidlist = new SessionManagementStructArrayOfguid($folderids);
 
-        $rolestoensure = array(
+        $rolestoensure = [
             "Viewer",
             "Creator",
             "Publisher"
-        );
+        ];
         $rolelist = new SessionManagementStructArrayOfAccessRole($rolestoensure);
 
         $courseaccessparams = new SessionManagementStructSetExternalCourseAccessForRoles(
@@ -246,16 +246,16 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
         }
 
         if (!is_array($folderids)) {
-            $folderids = array($folderids);
+            $folderids = [$folderids];
         }
 
         $folderidlist = new SessionManagementStructArrayOfguid($folderids);
 
-        $rolestoensure = array(
+        $rolestoensure = [
             "Viewer",
             "Creator",
             "Publisher"
-        );
+        ];
         $rolelist = new SessionManagementStructArrayOfAccessRole($rolestoensure);
 
         $copiedaccessparams = new SessionManagementStructSetCopiedExternalCourseAccessForRoles(
@@ -289,7 +289,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
         }
 
         if (!is_array($folderids)) {
-            $folderids = array($folderids);
+            $folderids = [$folderids];
         }
 
         $folderidlist = new SessionManagementStructArrayOfguid($folderids);
@@ -317,7 +317,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
         }
 
         if (!is_array($folderids)) {
-            $folderids = array($folderids);
+            $folderids = [$folderids];
         }
 
         $folderidlist = new SessionManagementStructArrayOfstring($folderids);
@@ -415,7 +415,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
                 }
             } else if ($totalresults === 0) {
                 // In this case folderlist will be null but that is handled poorly in the UI.
-                $folderlist = array();
+                $folderlist = [];
             }
 
             return $folderlist;
@@ -492,7 +492,8 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
 
                     if ($this->sessionmanagementserviceget->GetExtendedCreatorFoldersList($folderlistparams)) {
                         $retobj = $this->sessionmanagementserviceget->getResult();
-                        $folderlist = array_merge($folderlist, $retobj->GetExtendedCreatorFoldersListResult->Results->ExtendedFolder);
+                        $folderlist =
+                            array_merge($folderlist, $retobj->GetExtendedCreatorFoldersListResult->Results->ExtendedFolder);
                     } else {
                         return $this->handle_error(
                             $this->sessionmanagementserviceget->getLastError()['SessionManagementServiceGet::GetCreatorFoldersList']
@@ -504,7 +505,7 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
                 }
             } else if ($totalresults === 0) {
                 // In this case folderlist will be null but that is handled poorly in the UI.
-                $folderlist = array();
+                $folderlist = [];
             }
 
             return $folderlist;
@@ -621,11 +622,11 @@ class panopto_session_soap_client extends PanoptoTimeoutSoapClient {
             : SessionManagementEnumSessionSortField::VALUE_DATE;
         $sortincreasing = $sessionshavespecificorder;
         $states = new SessionManagementStructArrayOfSessionState(
-            array(
+            [
                 SessionManagementEnumSessionState::VALUE_BROADCASTING,
                 SessionManagementEnumSessionState::VALUE_COMPLETE,
                 SessionManagementEnumSessionState::VALUE_RECORDING
-            )
+            ]
         );
 
         $sessionrequest = new SessionManagementStructListSessionsRequest(
